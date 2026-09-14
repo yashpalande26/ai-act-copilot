@@ -21,3 +21,9 @@ Yash — solo engineer, ~3 yrs experience. I am LEARNING the full engineering li
 
 ## Stack (backend-first)
 Python 3.12+, FastAPI, PostgreSQL + pgvector, LangGraph/LangChain, BYO API key. Monorepo: backend/ first, frontend/ later.
+
+## Research and design discipline
+- Verify against current industry practice before recommending. User suggestions and my assumptions are inputs, not conclusions.
+- Research what senior engineers are actually doing in 2026 for the problem at hand; cite it; disagree with evidence when warranted.
+- Design holistically: consider the whole system (data model, users, retrieval, citations, audit) before implementing a piece.
+- Do the design phase explicitly (e.g. schema design before tables), don't discover it mid-build.
