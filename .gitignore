@@ -4,3 +4,4 @@ __pycache__/
 .env
 LEARNING_LOG.md
 .venv/
+backend/data/
