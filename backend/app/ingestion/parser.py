@@ -42,6 +42,51 @@ def _strip_marker_punctuation(text: str) -> str:
     return text.strip().strip("().").strip()
 
 
+def _dedupe_citation_id(base_id: str, used_ids: set[str]) -> str:
+    """Return base_id, or base_id with a numeric suffix if it's already been
+    used. Real cases this handles: a single numbered paragraph containing
+    two separate lettered lists (letters legitimately restart at "(a)"), and
+    bullet lists whose marker (e.g. "-") carries no distinguishing text at
+    all. The first occurrence of any id is always left unmodified.
+    """
+    if base_id not in used_ids:
+        used_ids.add(base_id)
+        return base_id
+    n = 2
+    while f"{base_id}_{n}" in used_ids:
+        n += 1
+    deduped = f"{base_id}_{n}"
+    used_ids.add(deduped)
+    return deduped
+
+
+def split_document(html: str) -> tuple[list[str], list[str]]:
+    """Split the full AI Act HTML into per-article and per-annex blocks.
+
+    Reuses the same structural selectors parse_article/parse_annex expect.
+    The "." not in tag["id"] filter excludes compound sub-ids (e.g. the
+    article title anchor art_6.tit_1) that a loose "^art_"/"^anx_" search
+    would otherwise also match, since BeautifulSoup's id=regex does a
+    search, not a full match.
+    """
+    soup = BeautifulSoup(html, "lxml")
+
+    article_roots = [
+        tag
+        for tag in soup.find_all(
+            "div", class_="eli-subdivision", id=re.compile(r"^art_")
+        )
+        if "." not in tag["id"]
+    ]
+    annex_roots = [
+        tag
+        for tag in soup.find_all("div", id=re.compile(r"^anx_"))
+        if "." not in tag["id"]
+    ]
+
+    return [str(tag) for tag in article_roots], [str(tag) for tag in annex_roots]
+
+
 def parse_article(html: str) -> list[ParsedProvision]:
     soup = BeautifulSoup(html, "lxml")
     root = soup.find("div", id=re.compile(r"^art_"))
@@ -72,6 +117,7 @@ def parse_article(html: str) -> list[ParsedProvision]:
 
     current_marker: str | None = None
     current_paragraph_citation: str | None = None
+    used_citation_ids: set[str] = {f"art_{number}"}
     ordinal = 1
 
     for tag in root.find_all(True):
@@ -82,12 +128,20 @@ def parse_article(html: str) -> list[ParsedProvision]:
             current_marker = None if code == "B" else code
             continue
 
-        if tag.name == "div" and classes == ["norm"]:
+        # A div.norm nested inside a point's own content is quoted text
+        # (e.g. Article 108-style "Amendments to Regulation X" articles
+        # quote new paragraph text being inserted into ANOTHER regulation,
+        # reusing this same norm/no-parag markup) - not a real paragraph of
+        # *this* article. Its text still ends up in the enclosing point's
+        # own text_content; it just isn't independently emitted here.
+        if tag.name == "div" and classes == ["norm"] and not _is_nested_point(tag):
             marker_span = tag.find("span", class_="no-parag", recursive=False)
             if marker_span is None:
                 continue
             par_number = _clean_text(marker_span.get_text()).rstrip(".").strip()
-            citation_id = f"art_{number}.par_{par_number}"
+            citation_id = _dedupe_citation_id(
+                f"art_{number}.par_{par_number}", used_citation_ids
+            )
             content_div = tag.find("div", recursive=False)
             text_content = (
                 _own_text(content_div, exclude_classes=("grid-container", "modref"))
@@ -121,10 +175,15 @@ def parse_article(html: str) -> list[ParsedProvision]:
             content_tag = tag.find("div", class_="grid-list-column-2")
             if marker_tag is None or content_tag is None:
                 continue
-            if current_paragraph_citation is None:
-                raise ValueError("Point found before any paragraph in article")
+            # Some articles (e.g. Article 3 "Definitions") have no numbered
+            # paragraphs at all - just an intro sentence followed directly
+            # by a point list under the article itself. When no paragraph
+            # is currently open, the point's parent is the article.
+            parent_citation = current_paragraph_citation or f"art_{number}"
             letter = _strip_marker_punctuation(marker_tag.get_text())
-            citation_id = f"{current_paragraph_citation}.pt_{letter}"
+            citation_id = _dedupe_citation_id(
+                f"{parent_citation}.pt_{letter}", used_citation_ids
+            )
             text_content = _own_text(content_tag, exclude_classes=("modref",))
             provisions.append(
                 ParsedProvision(
@@ -134,7 +193,7 @@ def parse_article(html: str) -> list[ParsedProvision]:
                     number=f"({letter})",
                     heading=None,
                     text_content=text_content,
-                    parent_citation_id=current_paragraph_citation,
+                    parent_citation_id=parent_citation,
                     amendment_marker=current_marker,
                     ordinal=ordinal,
                 )
@@ -175,6 +234,7 @@ def parse_annex(html: str) -> list[ParsedProvision]:
     ]
 
     current_point_citation: str | None = None
+    used_citation_ids: set[str] = {f"anx_{roman}"}
     ordinal = 1
 
     for tag in root.find_all(True):
@@ -191,7 +251,9 @@ def parse_annex(html: str) -> list[ParsedProvision]:
 
         if not _is_nested_point(tag):
             number = _clean_text(marker_tag.get_text()).rstrip(".").strip()
-            citation_id = f"anx_{roman}.pt_{number}"
+            citation_id = _dedupe_citation_id(
+                f"anx_{roman}.pt_{number}", used_citation_ids
+            )
             text_content = _own_text(
                 content_tag, exclude_classes=("grid-container", "modref")
             )
@@ -214,7 +276,9 @@ def parse_annex(html: str) -> list[ParsedProvision]:
             if current_point_citation is None:
                 raise ValueError("Sub-point found before any top-level point in annex")
             letter = _strip_marker_punctuation(marker_tag.get_text())
-            citation_id = f"{current_point_citation}.sub_{letter}"
+            citation_id = _dedupe_citation_id(
+                f"{current_point_citation}.sub_{letter}", used_citation_ids
+            )
             text_content = _own_text(content_tag, exclude_classes=("modref",))
             provisions.append(
                 ParsedProvision(
