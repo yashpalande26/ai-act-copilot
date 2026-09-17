@@ -2,7 +2,7 @@ import os
 from logging.config import fileConfig
 
 from dotenv import load_dotenv
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 
 from alembic import context
 
@@ -14,9 +14,13 @@ load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 # access to the values within the .ini file in use.
 config = context.config
 
-# Override sqlalchemy.url (intentionally left unset in alembic.ini) with
-# DATABASE_URL from the environment, so credentials are never hardcoded.
-config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+# NOTE: sqlalchemy.url is deliberately never set via config.set_main_option
+# here. DATABASE_URL can contain percent-encoded characters (e.g. %23), and
+# routing it through Alembic's ini-backed Config (a ConfigParser under the
+# hood) raises "invalid interpolation syntax" - ConfigParser treats "%" as
+# the start of an interpolation sequence. run_migrations_online() below
+# reads DATABASE_URL directly and builds the engine from that raw string
+# instead, bypassing ConfigParser entirely.
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -67,11 +71,11 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    # Read the raw URL directly and hand it straight to create_engine,
+    # never through config.set_main_option/get_main_option (ConfigParser
+    # interpolation - see note above).
+    url = os.environ["DATABASE_URL"]
+    connectable = create_engine(url, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(connection=connection, target_metadata=target_metadata)
