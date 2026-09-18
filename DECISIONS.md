@@ -1,6 +1,26 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-7: Lexical retrieval is currently inert on real queries; calibration deferred to eval phase (2026-09-18)
+Context: websearch_to_tsquery AND-joins all terms by default. Across every real query
+tested (step 22 "Article 6(2)", step 23 control "credit scoring high risk", 3 off-topic
+calibration queries), lexical search returned 0 results; vector search carried all retrieval.
+The hybrid/RRF code is correct but dormant on real input.
+Decision: Do NOT switch to OR-joining or plainto_tsquery reactively. Defer lexical
+calibration to the eval phase, where a golden set will measure whether lexical actually
+lifts recall/MRR and justify the query-processing choice with numbers.
+Status: Deferred. Revisit with the eval harness.
+
+## ADR-006: Exact article-reference lookup is deferred to a dedicated structured path (2026-09-18)
+Context: Integration testing showed "Article 6(2)" returns zero lexical results
+(websearch_to_tsquery AND-splits "6(2)"; the reference lives in citation_id
+metadata, not chunk_text). Hybrid retrieval solves conceptual queries, not exact
+reference lookup.
+Decision: Do NOT patch websearch_to_tsquery (e.g. OR-joining terms) to force a
+match. Defer a dedicated reference-lookup path (detect citation pattern in query →
+direct citation_id lookup) until the eval harness quantifies how often it's needed.
+Status: Deferred. Revisit after golden-set exact-reference questions are graded.
+
 ## ADR-005 — Host database on Supabase (managed Postgres + pgvector) (2026-09-16)
 Decision: Move from local Docker Postgres to Supabase (managed Postgres 16 + pgvector) for development. DB TYPE is unchanged — Supabase IS Postgres + pgvector; this is a hosting choice, not an architecture change.
 Why: Visual table browser aids learning/inspection; same platform used in prior RAG project; cloud DB is where we'd deploy anyway. All code reads DATABASE_URL from .env, so the switch is a connection-string change.
