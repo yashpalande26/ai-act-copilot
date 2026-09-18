@@ -1,0 +1,122 @@
+[
+  {
+    "id": "gs_01",
+    "question": "What must deployers of high-risk AI systems do if they find that the system they plan to use has not been registered in the EU database?",
+    "expected_citation_id": "art_26.par_8",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_02",
+    "question": "What measures should be taken to ensure high-risk AI systems are resilient to errors, faults, or inconsistencies?",
+    "expected_citation_id": "art_15.par_4",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_03",
+    "question": "What action does the Commission take if objections are raised regarding an authorisation?",
+    "expected_citation_id": "art_30.par_5",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_04",
+    "question": "What must providers of high-risk AI systems do when a competent authority makes a reasoned request?",
+    "expected_citation_id": "art_21.par_1",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_05",
+    "question": "What must public authorities do before using a high-risk AI system listed in Annex III, except those in point 2?",
+    "expected_citation_id": "art_49.par_3",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_06",
+    "question": "Who is responsible for entering the data listed in Section C of Annex VIII into the EU database?",
+    "expected_citation_id": "art_71.par_3",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_07",
+    "question": "What must high-risk AI systems comply with, considering their intended purpose and the state of the art on AI technologies?",
+    "expected_citation_id": "art_8.par_1",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_08",
+    "question": "What must a downstream provider include in their description when they believe a provider of a general-purpose AI model has infringed the Regulation?",
+    "expected_citation_id": "art_89.par_2.pt_b",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_09",
+    "question": "Where should the CE marking be affixed if it is not possible to place it directly on the high-risk AI system?",
+    "expected_citation_id": "art_16.pt_h",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_10",
+    "question": "By what date is the Commission required to assess the enforcement of the Regulation and report to the European Parliament, the Council, and the European Economic and Social Committee?",
+    "expected_citation_id": "art_112.par_13",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_11",
+    "question": "What presumption is made about high-risk AI systems that have been certified under a cybersecurity scheme pursuant to Regulation (EU) 2019/881?",
+    "expected_citation_id": "art_42.par_2",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_12",
+    "question": "Who must the AI Office inform about any measure according to Articles 91 to 94?",
+    "expected_citation_id": "art_90.par_2",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_13",
+    "question": "Is it prohibited to place on the market an AI system that deploys subliminal techniques beyond a person's consciousness to distort someone's behaviour?",
+    "expected_citation_id": "art_5.par_1.pt_a",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_14",
+    "question": "What is the definition of a 'biometric categorisation system' under the AI Act?",
+    "expected_citation_id": "art_3.pt_40",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_15",
+    "question": "Can a deployer rely on a previously conducted fundamental rights impact assessment instead of carrying out a new one for similar cases?",
+    "expected_citation_id": "art_27.par_2",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_16",
+    "question": "Are providers of high-risk AI systems required to put a quality management system in place?",
+    "expected_citation_id": "art_17.par_1",
+    "expected_abstention": false
+  },
+  {
+    "id": "gs_17",
+    "question": "What is the capital of France?",
+    "expected_citation_id": null,
+    "expected_abstention": true
+  },
+  {
+    "id": "gs_18",
+    "question": "What's the best pizza place in Dublin?",
+    "expected_citation_id": null,
+    "expected_abstention": true
+  },
+  {
+    "id": "gs_19",
+    "question": "How do I train a dog to sit?",
+    "expected_citation_id": null,
+    "expected_abstention": true
+  },
+  {
+    "id": "gs_20",
+    "question": "What's the weather like today?",
+    "expected_citation_id": null,
+    "expected_abstention": true
+  }
+]
