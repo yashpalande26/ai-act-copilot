@@ -5,7 +5,14 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select
 
-from app.db.models import AppUser, ChatSession, Citation, CorpusVersion, Message
+from app.db.models import (
+    AppUser,
+    ChatSession,
+    Citation,
+    CorpusVersion,
+    Message,
+    QueryTrace,
+)
 from app.generation import answer as answer_module
 from app.retrieval.search import FusedResult, SearchResult
 
@@ -70,7 +77,11 @@ def test_abstention_when_retrieval_empty_llm_not_called(monkeypatch):
     session = _make_session()
 
     result = answer_module.generate_grounded_answer(
-        session, "irrelevant query", corpus_version_id=1, chat_session_id=uuid4()
+        session,
+        "irrelevant query",
+        corpus_version_id=1,
+        chat_session_id=uuid4(),
+        write_trace=False,
     )
 
     fake_client.chat.completions.create.assert_not_called()
@@ -78,8 +89,13 @@ def test_abstention_when_retrieval_empty_llm_not_called(monkeypatch):
     assert result.citations == []
     messages = [o for o in session.added if isinstance(o, Message)]
     citations = [o for o in session.added if isinstance(o, Citation)]
-    assert len(messages) == 1
-    assert messages[0].content == answer_module.ABSTENTION_TEXT
+    # Both the user's query and the assistant's refusal are persisted, even
+    # when the LLM is never called.
+    assert len(messages) == 2
+    assert {m.role for m in messages} == {"user", "assistant"}
+    assert messages[0].content == "irrelevant query"
+    assistant_message = next(m for m in messages if m.role == "assistant")
+    assert assistant_message.content == answer_module.ABSTENTION_TEXT
     assert len(citations) == 0
 
 
@@ -94,7 +110,11 @@ def test_grounded_path_returns_answer_and_matching_citations(monkeypatch):
     session = _make_session()
 
     result = answer_module.generate_grounded_answer(
-        session, "some query", corpus_version_id=1, chat_session_id=uuid4()
+        session,
+        "some query",
+        corpus_version_id=1,
+        chat_session_id=uuid4(),
+        write_trace=False,
     )
 
     assert result.answer == "The answer is X (Article 1)."
@@ -112,7 +132,11 @@ def test_temperature_zero_passed_to_llm(monkeypatch):
     session = _make_session()
 
     answer_module.generate_grounded_answer(
-        session, "query", corpus_version_id=1, chat_session_id=uuid4()
+        session,
+        "query",
+        corpus_version_id=1,
+        chat_session_id=uuid4(),
+        write_trace=False,
     )
 
     _, kwargs = fake_client.chat.completions.create.call_args
@@ -130,7 +154,11 @@ def test_citation_quoted_text_not_derived_from_llm_output(monkeypatch):
     session = _make_session()
 
     answer_module.generate_grounded_answer(
-        session, "query", corpus_version_id=1, chat_session_id=uuid4()
+        session,
+        "query",
+        corpus_version_id=1,
+        chat_session_id=uuid4(),
+        write_trace=False,
     )
 
     citations = [o for o in session.added if isinstance(o, Citation)]
@@ -148,13 +176,60 @@ def test_post_llm_abstention_drops_citations(monkeypatch):
     session = _make_session()
 
     result = answer_module.generate_grounded_answer(
-        session, "query", corpus_version_id=1, chat_session_id=uuid4()
+        session,
+        "query",
+        corpus_version_id=1,
+        chat_session_id=uuid4(),
+        write_trace=False,
     )
 
     assert result.answer == answer_module.ABSTENTION_TEXT
     assert result.citations == []
     citations = [o for o in session.added if isinstance(o, Citation)]
     assert len(citations) == 0
+
+
+def test_trace_write_failure_does_not_affect_answer_or_product_data(
+    monkeypatch, capsys
+):
+    fused = [_fr(1, citation_id="art_1")]
+    _patch_retrieval(monkeypatch, fused)
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = _make_llm_response(
+        "A real grounded answer (Article 1)."
+    )
+    monkeypatch.setattr(answer_module, "_get_client", lambda: fake_client)
+
+    session = _make_session()
+    original_add = session.add.side_effect
+
+    def add_with_trace_failure(obj):
+        if isinstance(obj, QueryTrace):
+            # Simulating an infra/DB failure, not a real type error.
+            raise RuntimeError("simulated DB failure writing query_trace")  # noqa: TRY004
+        original_add(obj)
+
+    session.add.side_effect = add_with_trace_failure
+
+    result = answer_module.generate_grounded_answer(
+        session, "some query", corpus_version_id=1, chat_session_id=uuid4()
+    )
+
+    # The answer itself is unaffected by the trace-write failure.
+    assert result.answer == "A real grounded answer (Article 1)."
+    assert [c.chunk_id for c in result.citations] == [1]
+
+    # Product data (both messages + the citation) still persisted intact -
+    # _persist_turn's own transaction already committed before the trace
+    # write was even attempted.
+    messages = [o for o in session.added if isinstance(o, Message)]
+    citations = [o for o in session.added if isinstance(o, Citation)]
+    assert len(messages) == 2  # user + assistant
+    assert len(citations) == 1
+    assert not any(isinstance(o, QueryTrace) for o in session.added)
+
+    # The failure was logged, not silently lost.
+    assert "trace write failed" in capsys.readouterr().err
 
 
 def test_grounded_generation_integration_real_query():
@@ -183,7 +258,11 @@ def test_grounded_generation_integration_real_query():
         session.commit()
 
         result = answer_module.generate_grounded_answer(
-            session, "credit scoring high risk", latest.id, chat_session.id
+            session,
+            "credit scoring high risk",
+            latest.id,
+            chat_session.id,
+            write_trace=False,
         )
 
         print("\n=== Answer ===")

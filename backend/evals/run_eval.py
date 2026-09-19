@@ -97,7 +97,11 @@ def run_generation_eval(
 
     for item in golden_set:
         result = generate_grounded_answer(
-            session, item["question"], corpus_version_id, chat_session_id
+            session,
+            item["question"],
+            corpus_version_id,
+            chat_session_id,
+            write_trace=False,
         )
         correct_abstention = abstention_correct(
             result.answer, result.citations, item["expected_abstention"]
