@@ -11,6 +11,27 @@ calibration to the eval phase, where a golden set will measure whether lexical a
 lifts recall/MRR and justify the query-processing choice with numbers.
 Status: Deferred. Revisit with the eval harness.
 
+Update (2026-09-19) — Wave 1 eval harness delivered the awaited evidence: a golden
+set built specifically to favor lexical (4 questions on rare, verified verbatim
+phrases - "subliminal techniques", "biometric categorisation system", "fundamental
+rights impact assessment", "quality management system") still produced zero rank
+contribution from keyword_search across all 4. Root-caused directly: keyword_search
+returned 0 results for all 4, because websearch_to_tsquery AND-joins every stemmed
+word in a full natural-language question (15-20 words), not just the distinctive
+phrase - requiring all of them to co-occur in one short chunk is essentially
+impossible regardless of how distinctive the target phrase is.
+Decision: This is now a decided fork, not an open question - the lexical half as
+currently built adds nothing, and the cause is query construction, not corpus
+content or phrase rarity. Two options recorded for a future step (neither
+implemented now):
+  (a) Fix query construction - extract key terms / OR-join before
+      websearch_to_tsquery, so a question's distinctive terms can match without
+      requiring every scaffolding word to co-occur too.
+  (b) Drop the lexical half and ship an honest vector-only retriever, removing
+      the dead-weight complexity of a hybrid path that never contributes.
+Status: Decided (lexical as built is inert; cause is query construction, not
+corpus). Choice between (a) and (b) deferred to a later step.
+
 ## ADR-006: Exact article-reference lookup is deferred to a dedicated structured path (2026-09-18)
 Context: Integration testing showed "Article 6(2)" returns zero lexical results
 (websearch_to_tsquery AND-splits "6(2)"; the reference lives in citation_id
