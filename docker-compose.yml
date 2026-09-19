@@ -1,3 +1,7 @@
+# This is a LOCAL/CI test database only - Postgres + pgvector for running
+# integration tests without touching production data.
+# The LIVE database is Supabase, configured via backend/.env DATABASE_URL.
+# Never point application/production use at this compose file.
 services:
   db:
     image: pgvector/pgvector:pg16
