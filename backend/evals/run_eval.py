@@ -11,12 +11,19 @@ from app.db.models import AppUser, ChatSession, CorpusVersion
 from app.db.session import SessionLocal
 from app.generation.answer import (
     ABSTENTION_TEXT,
+    GroundedAnswer,
     generate_grounded_answer,
 )
 from app.retrieval.search import (
     keyword_search,
     rrf_rank_and_fuse,
     vector_search,
+)
+from evals.judge import (
+    judge_answer_relevance,
+    judge_faithfulness,
+    mean_score,
+    pass_at_4_rate,
 )
 
 GOLDEN_SET_PATH = Path(__file__).resolve().parent / "golden_set.yaml"
@@ -94,6 +101,7 @@ def run_generation_eval(
     hit_results = []
     abstention_results = []
     detail = []
+    judgeable: list[tuple[dict, GroundedAnswer]] = []
 
     for item in golden_set:
         result = generate_grounded_answer(
@@ -114,11 +122,32 @@ def run_generation_eval(
             hit_results.append(hit)
             status = "PASS" if hit and correct_abstention else "FAIL"
             detail.append((item["id"], status, hit, citation_ids))
+            # Wave 2 (LLM-as-judge) only makes sense for a real, non-refused
+            # answer - skip anything the model itself abstained on, even if
+            # the golden set expected an answer.
+            if result.answer != ABSTENTION_TEXT:
+                judgeable.append((item, result))
         else:
             status = "PASS" if correct_abstention else "FAIL"
             detail.append((item["id"], status, None, None))
 
-    return hit_results, abstention_results, detail
+    return hit_results, abstention_results, detail, judgeable
+
+
+def run_judge_eval(judgeable: list[tuple[dict, GroundedAnswer]]):
+    faithfulness_results = []
+    relevance_results = []
+    detail = []
+
+    for item, result in judgeable:
+        context_chunks = [c.chunk_text for c in result.citations]
+        faithfulness = judge_faithfulness(result.answer, context_chunks)
+        relevance = judge_answer_relevance(item["question"], result.answer)
+        faithfulness_results.append(faithfulness)
+        relevance_results.append(relevance)
+        detail.append((item["id"], faithfulness, relevance))
+
+    return faithfulness_results, relevance_results, detail
 
 
 def main() -> None:
@@ -161,7 +190,7 @@ def main() -> None:
         session.flush()
         session.commit()
 
-        hit_results, abstention_results, gen_detail = run_generation_eval(
+        hit_results, abstention_results, gen_detail, judgeable = run_generation_eval(
             session, golden_set, latest.id, chat_session.id
         )
 
@@ -188,6 +217,42 @@ def main() -> None:
                 print(
                     f"{gid}  {status}  citation_hit={hit}  got={sorted(citation_ids)}"
                 )
+
+        faithfulness_results, relevance_results, judge_detail = run_judge_eval(
+            judgeable
+        )
+
+        print("\n=== Wave 2: LLM-as-judge (faithfulness + answer-relevance) ===")
+        n_judged = len(faithfulness_results)
+        faithfulness_failures = sum(1 for r in faithfulness_results if r.score == 0)
+        relevance_failures = sum(1 for r in relevance_results if r.score == 0)
+        print(
+            f"mean_faithfulness:      {mean_score(faithfulness_results):.3f}  "
+            f"(parse failures: {faithfulness_failures}/{n_judged})"
+        )
+        print(
+            f"mean_answer_relevance:  {mean_score(relevance_results):.3f}  "
+            f"(parse failures: {relevance_failures}/{n_judged})"
+        )
+        print(f"faithfulness_pass@4:    {pass_at_4_rate(faithfulness_results):.3f}")
+        print(f"relevance_pass@4:       {pass_at_4_rate(relevance_results):.3f}")
+
+        print("\n--- per-question judge detail ---")
+        for gid, faithfulness, relevance in judge_detail:
+            print(
+                f'{gid}  faithfulness={faithfulness.score}  "{faithfulness.rationale}"'
+            )
+            print(f'{gid}  relevance={relevance.score}  "{relevance.rationale}"')
+
+        judged_ids = {item["id"] for item, _ in judgeable}
+        skipped_ids = [
+            item["id"] for item in golden_set if item["id"] not in judged_ids
+        ]
+        if skipped_ids:
+            print(
+                f"\n(skipped: {', '.join(skipped_ids)} - off-topic/abstained, "
+                "faithfulness/relevance don't apply to a fixed refusal)"
+            )
     finally:
         session.close()
 
