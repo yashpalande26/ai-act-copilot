@@ -13,6 +13,8 @@ from app.db.models import AppUser, ChatSession, CorpusVersion
 from app.db.session import SessionLocal
 from app.generation.answer import (
     ABSTENTION_TEXT,
+    RETRIEVAL_LEXICAL_WEIGHT,
+    RETRIEVAL_VECTOR_WEIGHT,
     GroundedAnswer,
     generate_grounded_answer,
 )
@@ -113,10 +115,22 @@ def _run_retrieval(
         lexical_results = bm25_search(
             session, question, corpus_version_id, top_k=RETRIEVAL_DEPTH
         )
-    else:
-        lexical_results = keyword_search(
-            session, question, corpus_version_id, top_k=RETRIEVAL_DEPTH
+        # Track the shipped production weights so the harness measures what we
+        # actually serve. The "hybrid" FTS config below deliberately keeps
+        # rrf_rank_and_fuse's 0.7/0.3 defaults - it exists to reproduce the
+        # historical Stage 1/2 reference numbers.
+        fused = rrf_rank_and_fuse(
+            vector_results,
+            lexical_results,
+            vector_weight=RETRIEVAL_VECTOR_WEIGHT,
+            lexical_weight=RETRIEVAL_LEXICAL_WEIGHT,
+            top_k=RETRIEVAL_DEPTH,
         )
+        return [f.result.citation_id for f in fused]
+
+    lexical_results = keyword_search(
+        session, question, corpus_version_id, top_k=RETRIEVAL_DEPTH
+    )
     fused = rrf_rank_and_fuse(vector_results, lexical_results, top_k=RETRIEVAL_DEPTH)
     return [f.result.citation_id for f in fused]
 

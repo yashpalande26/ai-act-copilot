@@ -14,6 +14,7 @@ from app.db.models import (
     QueryTrace,
 )
 from app.generation import answer as answer_module
+from app.retrieval.bm25_index import StaleIndexError
 from app.retrieval.search import FusedResult, SearchResult
 
 
@@ -46,7 +47,10 @@ def _make_llm_response(text):
 
 def _patch_retrieval(monkeypatch, fused_result):
     monkeypatch.setattr(answer_module, "vector_search", lambda *a, **kw: [])
-    monkeypatch.setattr(answer_module, "keyword_search", lambda *a, **kw: [])
+    # Production's lexical leg is BM25; pretend an index exists so these tests
+    # exercise the hybrid_bm25 path rather than the degraded one.
+    monkeypatch.setattr(answer_module, "load_index", lambda cv: object())
+    monkeypatch.setattr(answer_module, "bm25_search", lambda *a, **kw: [])
     monkeypatch.setattr(
         answer_module, "rrf_rank_and_fuse", lambda *a, **kw: fused_result
     )
@@ -187,6 +191,108 @@ def test_post_llm_abstention_drops_citations(monkeypatch):
     assert result.citations == []
     citations = [o for o in session.added if isinstance(o, Citation)]
     assert len(citations) == 0
+
+
+# --- BM25 lexical leg: degradation boundary -----------------------------
+
+
+def _captured_trace_config(session):
+    traces = [o for o in session.added if isinstance(o, QueryTrace)]
+    assert len(traces) == 1
+    return traces[0].retrieval_config
+
+
+def _run_one_turn(monkeypatch, session):
+    """A normal grounded turn with the trace enabled, so retrieval_config is
+    actually written."""
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = _make_llm_response("An answer.")
+    monkeypatch.setattr(answer_module, "_get_client", lambda: fake_client)
+    return answer_module.generate_grounded_answer(
+        session,
+        "query",
+        corpus_version_id=1,
+        chat_session_id=uuid4(),
+        write_trace=True,
+    )
+
+
+def test_index_present_uses_hybrid_bm25_and_records_it(monkeypatch):
+    _patch_retrieval(monkeypatch, [_fr(1, citation_id="art_1")])
+    called = {}
+    monkeypatch.setattr(
+        answer_module,
+        "bm25_search",
+        lambda *a, **kw: called.setdefault("yes", True) or [],
+    )
+    session = _make_session()
+
+    result = _run_one_turn(monkeypatch, session)
+
+    assert result.answer == "An answer."
+    assert called.get("yes") is True
+    assert _captured_trace_config(session) == "hybrid_bm25"
+
+
+def test_missing_index_degrades_without_calling_bm25(monkeypatch, capsys):
+    _patch_retrieval(monkeypatch, [_fr(1, citation_id="art_1")])
+    monkeypatch.setattr(answer_module, "load_index", lambda cv: None)
+
+    def _boom(*a, **kw):
+        raise AssertionError("bm25_search must not run when no index exists")
+
+    monkeypatch.setattr(answer_module, "bm25_search", _boom)
+    session = _make_session()
+
+    result = _run_one_turn(monkeypatch, session)
+
+    assert result.answer == "An answer."
+    assert _captured_trace_config(session) == "vector_only_degraded"
+    # A missing index means the deploy step never ran - it must be loud, not
+    # only visible in the trace table.
+    stderr = capsys.readouterr().err
+    assert "ACTION REQUIRED" in stderr
+    assert "build_bm25_index.py" in stderr
+
+
+def test_stale_index_degrades_loudly_instead_of_raising(monkeypatch, capsys):
+    _patch_retrieval(monkeypatch, [_fr(1, citation_id="art_1")])
+
+    def _stale(cv):
+        raise StaleIndexError("built for corpus_version 999, not 1")
+
+    monkeypatch.setattr(answer_module, "load_index", _stale)
+    session = _make_session()
+
+    result = _run_one_turn(monkeypatch, session)
+
+    # The whole point: a stale index must not take the copilot down, and must
+    # not serve BM25 results resolved against the wrong chunk_id mapping.
+    assert result.answer == "An answer."
+    assert _captured_trace_config(session) == "vector_only_degraded"
+    stderr = capsys.readouterr().err
+    assert "ACTION REQUIRED" in stderr
+    assert "build_bm25_index.py" in stderr
+
+
+def test_unexpected_bm25_failure_degrades_under_a_distinct_banner(monkeypatch, capsys):
+    _patch_retrieval(monkeypatch, [_fr(1, citation_id="art_1")])
+
+    def _corrupt(cv):
+        raise RuntimeError("corrupt index file")
+
+    monkeypatch.setattr(answer_module, "load_index", _corrupt)
+    session = _make_session()
+
+    result = _run_one_turn(monkeypatch, session)
+
+    assert result.answer == "An answer."
+    assert _captured_trace_config(session) == "vector_only_degraded"
+    stderr = capsys.readouterr().err
+    # Distinct from the stale banner, so a real bug never hides behind the
+    # expected operational case.
+    assert "UNEXPECTED" in stderr
+    assert "ACTION REQUIRED" not in stderr
 
 
 def test_trace_write_failure_does_not_affect_answer_or_product_data(

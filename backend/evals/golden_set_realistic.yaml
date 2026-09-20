@@ -1,0 +1,709 @@
+[
+  {
+    "id": "gr_01",
+    "question": "How long are the logs of personal data processing kept in the AI regulatory sandbox?",
+    "expected_citation_id": "art_59.par_1.pt_h",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Further processing of personal data for developing certain AI systems in the public interest in the AI regulatory sandbox",
+    "heading_only_terms": [
+      "ai",
+      "certain",
+      "develop",
+      "further",
+      "interest",
+      "public",
+      "regulatori",
+      "system"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_02",
+    "question": "What measures are required for human oversight to safely interrupt a high-risk AI system?",
+    "expected_citation_id": "art_14.par_4.pt_e",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Human oversight",
+    "heading_only_terms": [
+      "human",
+      "oversight"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_03",
+    "question": "What detailed information must be included in the technical documentation regarding the monitoring, functioning, and control of the AI system?",
+    "expected_citation_id": "anx_IV.pt_3",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Technical documentation referred to in Article 11(1)",
+    "heading_only_terms": [
+      "11",
+      "document",
+      "refer"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_04",
+    "question": "What authority does the Commission have to amend Annexes VI and VII in the conformity assessment process?",
+    "expected_citation_id": "art_43.par_5",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Conformity assessment",
+    "heading_only_terms": [
+      "assess",
+      "conform"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_05",
+    "question": "What authority does the Commission have to amend the classification rules for high-risk AI systems?",
+    "expected_citation_id": "art_6.par_6",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Classification rules for high-risk AI systems",
+    "heading_only_terms": [
+      "classif",
+      "high",
+      "rule"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_06",
+    "question": "What tasks does the Board have in facilitating a shared understanding among market operators and competent authorities?",
+    "expected_citation_id": "art_66.pt_g",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Tasks of the Board",
+    "heading_only_terms": [
+      "board",
+      "task"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_07",
+    "question": "What actions must Member States take if the Commission deems a national measure regarding an AI system to be justified under the Union safeguard procedure?",
+    "expected_citation_id": "art_81.par_2",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Union safeguard procedure",
+    "heading_only_terms": [
+      "procedur",
+      "safeguard",
+      "union"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_08",
+    "question": "What confidentiality obligations apply to information obtained by market surveillance authorities for AI systems in the Union market?",
+    "expected_citation_id": "art_74.par_14",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Market surveillance and control of AI systems in the Union market",
+    "heading_only_terms": [
+      "ai",
+      "control",
+      "system",
+      "union"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_09",
+    "question": "What tasks does the Board have concerning opinions from Member States on qualified alerts about general-purpose AI models?",
+    "expected_citation_id": "art_66.pt_o",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Tasks of the Board",
+    "heading_only_terms": [
+      "board",
+      "task"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_10",
+    "question": "What requirements must be considered when adopting implementing acts for AI systems that are safety components under the amendment to Regulation (EU) 2019/2144?",
+    "expected_citation_id": "art_109.par_‘3",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Amendment to Regulation (EU) 2019/2144",
+    "heading_only_terms": [
+      "2019",
+      "2144",
+      "amend"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_11",
+    "question": "What are the notification requirements for using a 'real-time' remote biometric identification system in publicly accessible spaces for law enforcement purposes under prohibited AI practices?",
+    "expected_citation_id": "art_5.par_4",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Prohibited AI practices",
+    "heading_only_terms": [
+      "ai",
+      "practic",
+      "prohibit"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_12",
+    "question": "What are the obligations of providers of general-purpose AI models with systemic risk regarding model evaluation?",
+    "expected_citation_id": "art_55.par_1.pt_a",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Obligations of providers of general-purpose AI models with systemic risk",
+    "heading_only_terms": [
+      "ai",
+      "general",
+      "oblig",
+      "provider",
+      "purpos"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_13",
+    "question": "What happens to special categories of personal data after bias detection and correction?",
+    "expected_citation_id": "art_4a.par_1.pt_e",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Processing of special categories of personal data for bias detection and correction",
+    "heading_only_terms": [
+      "detect",
+      "process"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_14",
+    "question": "How should references to an economic operator under Regulation (EU) 2019/1020 be interpreted in the context of market surveillance and control of AI systems in the Union market?",
+    "expected_citation_id": "art_74.par_1.pt_a",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "Market surveillance and control of AI systems in the Union market",
+    "heading_only_terms": [
+      "ai",
+      "control",
+      "market",
+      "surveil",
+      "system",
+      "union"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_15",
+    "question": "What are high-risk AI systems intended to be used for in educational and vocational training institutions?",
+    "expected_citation_id": "anx_III.pt_3.sub_b",
+    "expected_abstention": false,
+    "category": "heading_dependent",
+    "heading": "High-risk AI systems referred to in Article 6(2)",
+    "heading_only_terms": [
+      "articl",
+      "high",
+      "refer",
+      "risk"
+    ],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_16",
+    "question": "What action should market surveillance authorities take if they have sufficient reason to consider general-purpose AI systems non-compliant with the Regulation's requirements?",
+    "expected_citation_id": "art_75.par_2",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Market surveillance and control of AI systems and mutual assistance",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_17",
+    "question": "What shall the implementing act include provisions on regarding the scientific panel and its members?",
+    "expected_citation_id": "art_68.par_5",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Scientific panel of independent experts",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_18",
+    "question": "What must the AI Office do before deciding to prohibit or restrict an AI system on a national market?",
+    "expected_citation_id": "art_75.par_1d",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Market surveillance and control of AI systems and mutual assistance",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_19",
+    "question": "What powers are Member States required to confer on their market surveillance authorities regarding high-risk AI systems?",
+    "expected_citation_id": "art_60.par_6",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Testing of high-risk AI systems in real world conditions outside AI regulatory sandboxes",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_20",
+    "question": "What is required for the use of an AI system that generates or manipulates realistic images, videos, or audio of an identifiable person engaged in sexually explicit activities?",
+    "expected_citation_id": "art_5.par_1.pt_ba",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Prohibited AI practices",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_21",
+    "question": "What power do national public authorities or bodies have regarding information or documentation related to obligations under Union law protecting fundamental rights?",
+    "expected_citation_id": "art_77.par_1",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Powers of authorities protecting fundamental rights and cooperation with market surveillance authorities",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_22",
+    "question": "What must the AI Office inform the provider of when conducting an inspection?",
+    "expected_citation_id": "art_75a.par_4",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Supervisory and enforcement powers of the AI Office",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_23",
+    "question": "What is presumed about high-risk AI systems that have been trained and tested on data reflecting their intended geographical, behavioural, contextual, or functional setting?",
+    "expected_citation_id": "art_42.par_1",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Presumption of conformity with certain requirements",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_24",
+    "question": "What can the deployer include in the fundamental rights impact assessment if obligations are already met through a data protection impact assessment?",
+    "expected_citation_id": "art_27.par_4",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Fundamental rights impact assessment for high-risk AI systems",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_25",
+    "question": "Who can be addressed by the AI Office or the competent authorities on issues related to ensuring compliance with the Regulation?",
+    "expected_citation_id": "art_54.par_4",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Authorised representatives of providers of general-purpose AI models",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_26",
+    "question": "What are AI systems intended to be used for in relation to educational and vocational training institutions?",
+    "expected_citation_id": "anx_III.pt_3.sub_a",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "High-risk AI systems referred to in Article 6(2)",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_27",
+    "question": "Who is liable for any damage caused during testing in real world conditions?",
+    "expected_citation_id": "art_60.par_9",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Testing of high-risk AI systems in real world conditions outside AI regulatory sandboxes",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_28",
+    "question": "Under what conditions can the exit report be made publicly available through the single information platform?",
+    "expected_citation_id": "art_57.par_8",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "AI regulatory sandboxes",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_29",
+    "question": "What must entities do when competent authorities make a reasoned request regarding a high-risk AI system?",
+    "expected_citation_id": "art_22.par_3.pt_d",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "Authorised representatives of providers of high-risk AI systems",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_30",
+    "question": "What is the sole purpose of AI systems used for biometric verification that are not included in remote biometric identification systems?",
+    "expected_citation_id": "anx_III.pt_1.sub_a",
+    "expected_abstention": false,
+    "category": "body_dependent",
+    "heading": "High-risk AI systems referred to in Article 6(2)",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_31",
+    "question": "What is the goal of considering the effects and possible interaction resulting from the combined application of the requirements?",
+    "expected_citation_id": "art_9.par_4",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "heading": "Risk management system",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_32",
+    "question": "What does the strategy for regulatory compliance include regarding high-risk AI systems?",
+    "expected_citation_id": "art_17.par_1.pt_a",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "heading": "Quality management system",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_33",
+    "question": "What characteristics must a general-purpose AI model display to be considered capable of performing a wide range of distinct tasks?",
+    "expected_citation_id": "art_3.pt_63",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "heading": "Definitions",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_34",
+    "question": "What will the Commission evaluate regarding the AI Office by 2 August 2028 to determine if an upgrade is needed?",
+    "expected_citation_id": "art_112.par_5",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "heading": "Evaluation and review",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_35",
+    "question": "What does 'informed consent' require in terms of a subject's expression of willingness to participate in testing?",
+    "expected_citation_id": "art_3.pt_59",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "heading": "Definitions",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_36",
+    "question": "What must deployers do if they envisage using a high-risk AI system that has not been registered in the EU database?",
+    "expected_citation_id": "art_26.par_8",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "heading": "Obligations of deployers of high-risk AI systems",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_37",
+    "question": "When must the report be made after establishing a causal link between the AI system and a serious incident?",
+    "expected_citation_id": "art_73.par_2",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "heading": "Reporting of serious incidents",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_38",
+    "question": "What is the objective or effect of using an AI system that exploits the vulnerabilities of a person or group belonging to a specific social or economic situation?",
+    "expected_citation_id": "art_5.par_1.pt_b",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "heading": "Prohibited AI practices",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_39",
+    "question": "What is the purpose of a biometric categorisation system in terms of assigning natural persons?",
+    "expected_citation_id": "art_3.pt_40",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "heading": "Definitions",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_40",
+    "question": "Why might persons be dependent on the outcome produced by an AI system, particularly if they suffer an adverse impact?",
+    "expected_citation_id": "art_7.par_2.pt_g",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "heading": "Amendments to Annex III",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_41",
+    "question": "Does the processing of personal data in the sandbox impact the rights of data subjects under Union law?",
+    "expected_citation_id": "art_59.par_1.pt_f",
+    "expected_abstention": false,
+    "category": "near_duplicate",
+    "heading": "Further processing of personal data for developing certain AI systems in the public interest in the AI regulatory sandbox",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": [
+      "art_59.par_1.pt_h"
+    ]
+  },
+  {
+    "id": "gr_42",
+    "question": "For what specific purpose can 'real-time' remote biometric identification systems be deployed in publicly accessible spaces for law enforcement according to the given text?",
+    "expected_citation_id": "art_5.par_2",
+    "expected_abstention": false,
+    "category": "near_duplicate",
+    "heading": "Prohibited AI practices",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": [
+      "art_5.par_5"
+    ]
+  },
+  {
+    "id": "gr_43",
+    "question": "When is the Commission required to draw up a report regarding the delegation of power?",
+    "expected_citation_id": "art_97.par_2",
+    "expected_abstention": false,
+    "category": "near_duplicate",
+    "heading": "Exercise of the delegation",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": [
+      "art_97.par_3"
+    ]
+  },
+  {
+    "id": "gr_44",
+    "question": "What marking must be affixed to a high-risk AI system to indicate conformity with the regulation?",
+    "expected_citation_id": "art_16.pt_h",
+    "expected_abstention": false,
+    "category": "near_duplicate",
+    "heading": "Obligations of providers of high-risk AI systems",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": [
+      "art_16.pt_b"
+    ]
+  },
+  {
+    "id": "gr_45",
+    "question": "What specific aspect of AI development is the Commission required to review and report on by 2 August 2028 and every four years thereafter?",
+    "expected_citation_id": "art_112.par_6",
+    "expected_abstention": false,
+    "category": "near_duplicate",
+    "heading": "Evaluation and review",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": [
+      "art_112.par_2"
+    ]
+  },
+  {
+    "id": "gr_46",
+    "question": "What is the intended use of AI systems by law enforcement authorities that involves profiling natural persons during the detection, investigation, or prosecution of criminal offences?",
+    "expected_citation_id": "anx_III.pt_6.sub_e",
+    "expected_abstention": false,
+    "category": "near_duplicate",
+    "heading": "High-risk AI systems referred to in Article 6(2)",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": [
+      "anx_III.pt_6.sub_b",
+      "anx_III.pt_6.sub_a",
+      "anx_III.pt_6.sub_c"
+    ]
+  },
+  {
+    "id": "gr_47",
+    "question": "What information must be provided on a high-risk AI system, its packaging, or accompanying documentation to identify the responsible entity?",
+    "expected_citation_id": "art_16.pt_b",
+    "expected_abstention": false,
+    "category": "near_duplicate",
+    "heading": "Obligations of providers of high-risk AI systems",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": [
+      "art_16.pt_h"
+    ]
+  },
+  {
+    "id": "gr_48",
+    "question": "What is the intended use of AI systems by law enforcement authorities that involves assessing the risk of a natural person offending or re-offending, without relying solely on profiling?",
+    "expected_citation_id": "anx_III.pt_6.sub_d",
+    "expected_abstention": false,
+    "category": "near_duplicate",
+    "heading": "High-risk AI systems referred to in Article 6(2)",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": [
+      "anx_III.pt_6.sub_b",
+      "anx_III.pt_6.sub_e",
+      "anx_III.pt_6.sub_a"
+    ]
+  },
+  {
+    "id": "gr_49",
+    "question": "In which fields should cooperation with Union institutions and expert groups be prioritized according to the EU AI Act?",
+    "expected_citation_id": "art_66.pt_h",
+    "expected_abstention": false,
+    "category": "control",
+    "heading": "Tasks of the Board",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_50",
+    "question": "What are some purposes for which AI systems are intended to be used in work-related relationships according to the EU AI Act?",
+    "expected_citation_id": "anx_III.pt_4.sub_b",
+    "expected_abstention": false,
+    "category": "control",
+    "heading": "High-risk AI systems referred to in Article 6(2)",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_51",
+    "question": "What is the intended use of AI systems by law enforcement authorities or Union institutions in the context of criminal investigations?",
+    "expected_citation_id": "anx_III.pt_6.sub_c",
+    "expected_abstention": false,
+    "category": "control",
+    "heading": "High-risk AI systems referred to in Article 6(2)",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_52",
+    "question": "What is the time frame within which the market surveillance authority must take appropriate measures after receiving the notification?",
+    "expected_citation_id": "art_73.par_8",
+    "expected_abstention": false,
+    "category": "control",
+    "heading": "Reporting of serious incidents",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_53",
+    "question": "Who are the entities responsible for coordinating activities and cooperating within the framework of the Board according to the EU AI Act?",
+    "expected_citation_id": "art_57.par_14",
+    "expected_abstention": false,
+    "category": "control",
+    "heading": "AI regulatory sandboxes",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_54",
+    "question": "Who can submit applications for participation in AI regulatory sandboxes?",
+    "expected_citation_id": "art_58.par_2.pt_b",
+    "expected_abstention": false,
+    "category": "control",
+    "heading": "Detailed arrangements for, and functioning of, AI regulatory sandboxes",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_55",
+    "question": "What does this Regulation not affect regarding the liability of providers of intermediary services?",
+    "expected_citation_id": "art_2.par_5",
+    "expected_abstention": false,
+    "category": "control",
+    "heading": "Scope",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_56",
+    "question": "What happens if a provider does not bring an AI system into compliance with the requirements and obligations within the specified period?",
+    "expected_citation_id": "art_80.par_4",
+    "expected_abstention": false,
+    "category": "control",
+    "heading": "Procedure for dealing with AI systems classified by the provider as non-high-risk in application of Annex III",
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_57",
+    "question": "What is the capital of France?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "heading": null,
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_58",
+    "question": "What's the best pizza place in Dublin?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "heading": null,
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_59",
+    "question": "How do I train a dog to sit?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "heading": null,
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_60",
+    "question": "What's the weather like today?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "heading": null,
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_61",
+    "question": "How do I bake sourdough bread at home?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "heading": null,
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  },
+  {
+    "id": "gr_62",
+    "question": "Who won the most recent football World Cup?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "heading": null,
+    "heading_only_terms": [],
+    "confusable_sibling_ids": []
+  }
+]

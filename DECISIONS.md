@@ -198,6 +198,95 @@ Status: RESOLVED - BM25 adopted as the lexical leg, native FTS stays reverted.
 Production is still UNWIRED: generate_grounded_answer is untouched, pending the
 Stage 3 weight decision. Wiring BM25 into the production path is a separate gate.
 
+Update (2026-09-20, Stage 5) — SHIPPED. Hybrid retrieval is now the production
+path: RRF at vector 0.4 / lexical 0.6, k=60, candidate breadth 10, with the BM25
+leg indexing index_text (heading + body). generate_grounded_answer fuses
+vector_search with bm25_search; keyword_search remains in the repo only as
+run_eval's historical "hybrid" FTS reference config.
+
+THE ROOT CAUSE, and why it took this long to find. vector_search embeds
+index_text (contextual prefix + body) but the BM25 leg indexed chunk_text (body
+only). That asymmetry is a violation of documented practice, not a subtle
+judgement call: Anthropic's Contextual Retrieval prepends context to a chunk
+"before embedding it and before creating the BM25 index" - BOTH indexes. We did
+the first and not the second. The Stage 2 decision to index chunk_text was made
+deliberately, for one-variable comparability with Stage 1, and explicitly
+recorded as an untested lever; it turned out to be the bug.
+Concretely: for "What obligations apply to providers of high-risk AI systems?",
+the gold provision art_16.pt_a has a body reading only "ensure that their
+high-risk AI systems are compliant with the requirements set out in Section 2;".
+The query's two discriminating terms - "obligations" and "providers" - appear
+ONLY in the article heading. BM25 over chunk_text ranked it nowhere in its top
+50, so RRF's "present in both lists" bonus promoted topical-but-wrong chunks
+over it, and the copilot ABSTAINED on a question vector-only answered. Over
+index_text it ranks 2nd and is cited first.
+
+WHY THE EVAL MISSED IT - the most transferable lesson here. Both original golden
+sets generate their questions by feeding provision.text_content to an LLM
+(build_golden_set.py:68, build_golden_set_hard.py:184). text_content is exactly
+what chunk_text holds, so every question in those sets is guaranteed answerable
+from chunk_text alone, and a heading-dependent failure CANNOT appear in them.
+The sets were not merely small - they were structurally blind to this failure
+class, and therefore could not help but overstate a chunk_text BM25 leg. Both
+scored hybrid_bm25 as a clean win while production broke on the first realistic
+query tried. The failure was found by 8 ad-hoc out-of-sample queries, not by the
+harness. Lesson: an eval set generated from the same field the retriever indexes
+cannot test whether that field is the right one to index.
+
+Remedy: evals/golden_set_realistic.yaml (62 entries, built by
+build_golden_set_realistic.py) - a heading-aware set with a heading_dependent
+category whose questions are programmatically verified to carry terms present in
+the article heading and ABSENT from the body, plus body_dependent, exact_term,
+near_duplicate, control and abstention tiers. Unlike golden_set_hard.yaml it
+applies NO adversarial screening, so it can rule for or against hybrid.
+
+Measured (Recall@5 / MRR / nDCG@10), breadth 10, k=60:
+                              realistic(56)      hard(35)        easy(16)
+  vector_only              0.982/0.875/0.902  0.914/0.563/0.660  1.000/0.896/0.923
+  hybrid@0.5 chunk_text    1.000/0.914/0.935  1.000/0.857/0.895  1.000/0.896/0.923
+  hybrid@0.6 index_text    1.000/0.939/0.955  1.000/0.902/0.927  1.000/0.885/0.914
+Diagnostic, heading_dependent tier, sparse leg alone: bm25_only[chunk_text]
+0.867/0.783 vs bm25_only[index_text] 1.000/0.852 - chunk_text was the ONLY
+config that failed to retrieve heading-dependent golds. Sibling discrimination
+was NOT traded away: near_duplicate is identical at 1.000/0.875 for both sparse
+legs and 1.000/1.000 for both fused configs. Weight 0.6 beat 0.5 on all three
+sets independently, which is better evidence than a peak on any one set.
+Honest cost: the easy set still prefers vector-only by 0.011 MRR (0.896 vs
+0.885) - about one question slipping one rank out of 16, inside this corpus's
+noise floor.
+
+Rejected with evidence, not assumption:
+  - Candidate breadth (10/20/30/50): closed. Never recovered art_16.pt_a at any
+    depth (absent from BM25's top 50 entirely under chunk_text) and regressed
+    hard-tier exact_term Recall@5 1.000 -> 0.957 at breadth 30+.
+  - Field-weighted BM25 (BM25F): bm25s has no multi-field support (verified).
+    The closest single-field equivalent, repeating the heading 3x, matched
+    index_text on the realistic set (0.938 vs 0.939 MRR) but was worse on hard
+    (0.882 vs 0.902) and carries a repetition hack. Rejected for the simpler
+    option that also matches what the dense leg embeds.
+  - Query router (max-IDF gate deciding vector vs hybrid per query): REJECTED.
+    No threshold beat always-hybrid; >=0.0 and >=3.0 merely reproduced it and
+    >=4.0/5.0/6.0 were worse. This independently reproduces 2026 findings that
+    an oracle per-query weight exists but tested signals fail to localise it.
+Status: SHIPPED. ADR-7 is closed.
+
+Known gaps carried forward from Stage 5 (none blocking, all deliberate):
+  (a) scripts/build_bm25_index.py MUST run on every deploy and after every
+      re-ingest. If it does not, production silently serves vector_only_degraded
+      - correct answers, but vector-only quality. No deploy pipeline enforces
+      this yet.
+  (b) The missing-index warning fires PER REQUEST, by design (a missing index
+      degrades all traffic, so it should be loud). It will be noisy in that
+      state - revisit the cadence once real log aggregation exists.
+  (c) 5 of the 7 flagged golden_set_realistic.yaml sample entries are still
+      unverified against EUR-Lex. Until then the weight-0.6 decision rests on
+      LLM-generated labels. All three eval sets are LLM-generated; none is
+      human-authored, so they may share a blind spot the way the first two
+      shared the heading one.
+  (d) load_index caches per process, so a rebuilt index is NOT picked up until
+      restart. A deploy that rebuilds the index without restarting the app will
+      keep serving the old one.
+
 ## ADR-006: Exact article-reference lookup is deferred to a dedicated structured path (2026-09-18)
 Context: Integration testing showed "Article 6(2)" returns zero lexical results
 (websearch_to_tsquery AND-splits "6(2)"; the reference lives in citation_id

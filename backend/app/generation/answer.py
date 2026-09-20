@@ -7,15 +7,28 @@ from sqlalchemy.orm import Session
 
 from app.db.models import Citation, Message, QueryTrace, RetrievalTrace
 from app.ingestion.embedder import _get_client
+from app.retrieval.bm25_index import StaleIndexError, load_index
 from app.retrieval.search import (
     FusedResult,
     SearchResult,
-    keyword_search,
+    bm25_search,
     rrf_rank_and_fuse,
     vector_search,
 )
 
 CHAT_MODEL = "gpt-4o"
+
+# RRF fusion weights for the production retriever, paired with a BM25 leg over
+# index_text (see bm25_index.fetch_indexable_chunks). Measured on three eval
+# sets, 0.6 beat 0.5 on ALL of them independently - realistic MRR 0.939 vs
+# 0.914, hard 0.902 vs 0.826, easy 0.885 vs 0.865 - which is stronger evidence
+# than a peak on any single set. Honest cost: the easy set still prefers
+# vector-only by 0.011 MRR (0.896 vs 0.885), roughly one question slipping one
+# rank out of 16, and inside this corpus's noise floor.
+# Passed explicitly rather than changed in rrf_rank_and_fuse's defaults, which
+# still back run_eval's historical "hybrid" FTS reference config.
+RETRIEVAL_VECTOR_WEIGHT = 0.4
+RETRIEVAL_LEXICAL_WEIGHT = 0.6
 
 # Candidate breadth for vector/lexical retrieval AND for rrf_rank_and_fuse's
 # own top_k - kept wide so used_in_context on RetrievalTrace rows is
@@ -43,6 +56,55 @@ class GroundedAnswer(BaseModel):
     answer: str
     citations: list[SearchResult]
     message_id: UUID
+
+
+def _lexical_leg(
+    session: Session, query: str, corpus_version_id: int
+) -> tuple[list[SearchResult], str]:
+    """BM25 retrieval with a safe fallback. Returns (results, retrieval_config).
+
+    Two hard rules meet here. We must never serve WRONG citations: a stale
+    index resolves its doc->chunk_id mapping against the wrong rows, so it can
+    never be used. And we must never take the whole copilot down over
+    retrieval infrastructure: vector-only results are always correct, so
+    degrading to them satisfies that without violating the first rule.
+
+    The returned config string is what actually ran, not what we intended to
+    run - so query_trace can answer "how long have we been degraded?".
+    """
+    try:
+        # Checked explicitly rather than inferred from an empty result: BM25
+        # can legitimately return [] for a query whose terms are all stopwords
+        # while the index is perfectly healthy, and that is NOT degradation.
+        if load_index(corpus_version_id) is None:
+            # Logged on every request, deliberately: a missing index means the
+            # deploy step never ran and EVERY turn is silently degraded. Noisy
+            # is the right failure mode for a misconfiguration that costs
+            # retrieval quality on all traffic.
+            print(
+                "ACTION REQUIRED: no bm25 index for corpus_version "
+                f"{corpus_version_id}, serving vector-only. Build it with "
+                "scripts/build_bm25_index.py.",
+                file=sys.stderr,
+            )
+            return [], "vector_only_degraded"
+        results = bm25_search(
+            session, query, corpus_version_id, top_k=RETRIEVAL_CANDIDATE_BREADTH
+        )
+        return results, "hybrid_bm25"
+    except StaleIndexError as exc:
+        print(
+            "ACTION REQUIRED: bm25 index is stale, serving vector-only. "
+            f"Rebuild with scripts/build_bm25_index.py. {exc}",
+            file=sys.stderr,
+        )
+        return [], "vector_only_degraded"
+    except Exception as exc:  # noqa: BLE001 - uptime beats a hard failure when a correct fallback exists; the distinct banner keeps real bugs visible
+        print(
+            f"UNEXPECTED bm25 failure, serving vector-only: {exc!r}",
+            file=sys.stderr,
+        )
+        return [], "vector_only_degraded"
 
 
 def _build_user_prompt(query: str, fused: list[FusedResult]) -> str:
@@ -100,6 +162,7 @@ def _write_trace_safe(
     completion_tokens: int | None,
     all_fused: list[FusedResult],
     final_context_size: int,
+    retrieval_config: str,
 ) -> None:
     """Best-effort. Called strictly AFTER _persist_turn has already committed
     the product message/citations, as a fully independent transaction. Any
@@ -113,7 +176,10 @@ def _write_trace_safe(
             answer_text=result.answer,
             abstained=(result.answer == ABSTENTION_TEXT),
             model=CHAT_MODEL,
-            retrieval_config="hybrid",
+            # What actually served this turn - "hybrid_bm25" or
+            # "vector_only_degraded" - never a fixed string, so a silent
+            # degradation is queryable rather than invisible.
+            retrieval_config=retrieval_config,
             retrieval_latency_ms=retrieval_latency_ms,
             generation_latency_ms=generation_latency_ms,
             prompt_tokens=prompt_tokens,
@@ -161,11 +227,17 @@ def generate_grounded_answer(
         top_k=RETRIEVAL_CANDIDATE_BREADTH,
         min_similarity=min_similarity,
     )
-    lexical_results = keyword_search(
-        session, query, corpus_version_id, top_k=RETRIEVAL_CANDIDATE_BREADTH
-    )
+    lexical_results, retrieval_config = _lexical_leg(session, query, corpus_version_id)
+    # With an empty lexical list every candidate scores
+    # RETRIEVAL_VECTOR_WEIGHT * 1/(k + rank + 1), a strictly decreasing
+    # function of the vector rank - so a degraded turn reproduces
+    # vector_search's ordering exactly, not merely approximately.
     all_fused = rrf_rank_and_fuse(
-        vector_results, lexical_results, top_k=RETRIEVAL_CANDIDATE_BREADTH
+        vector_results,
+        lexical_results,
+        vector_weight=RETRIEVAL_VECTOR_WEIGHT,
+        lexical_weight=RETRIEVAL_LEXICAL_WEIGHT,
+        top_k=RETRIEVAL_CANDIDATE_BREADTH,
     )
     retrieval_latency_ms = int((time.monotonic() - retrieval_start) * 1000)
 
@@ -196,6 +268,7 @@ def generate_grounded_answer(
                 completion_tokens=None,
                 all_fused=all_fused,
                 final_context_size=final_context_size,
+                retrieval_config=retrieval_config,
             )
         return result
 
@@ -248,5 +321,6 @@ def generate_grounded_answer(
             completion_tokens,
             all_fused=all_fused,
             final_context_size=final_context_size,
+            retrieval_config=retrieval_config,
         )
     return result

@@ -156,25 +156,45 @@ def fetch_indexable_chunks(
     session: Session, corpus_version_id: int
 ) -> list[tuple[int, str]]:
     """The chunks BM25 indexes - deliberately the same universe vector_search
-    can reach.
+    can reach, over the same TEXT vector_search embeds.
+
+    Indexes index_text (contextual prefix + body), NOT chunk_text. This follows
+    contextual retrieval (Anthropic, 2024), which prepends context to a chunk
+    "before embedding it and before creating the BM25 index" - both indexes, not
+    just the dense one. embedder.py already embeds index_text; indexing
+    chunk_text here left the sparse leg blind to the article heading.
+
+    That blindness was a measured production bug, not a theoretical one. For
+    "What obligations apply to providers of high-risk AI systems?", the gold
+    provision art_16.pt_a has a body reading only "ensure that their high-risk
+    AI systems are compliant with the requirements set out in Section 2;" - the
+    query's two discriminating terms, "obligations" and "providers", appear ONLY
+    in the heading "Obligations of providers of high-risk AI systems". BM25 over
+    chunk_text ranked it nowhere in its top 50, so RRF dropped it from the fused
+    top-5 and the copilot abstained on a question vector-only answered. Over
+    index_text it ranks 2nd.
+
+    Measured on a heading-aware eval set: heading-dependent Recall@5 0.867 ->
+    1.000 for the sparse leg, with sibling discrimination unchanged (the prefix
+    is identical across an article's siblings, so IDF makes it near-inert
+    WITHIN an article while still discriminating BETWEEN articles).
 
     vector_search filters only on corpus_version_id, but a NULL embedding gives
     a NULL cosine distance and Postgres sorts NULLs last, so un-embedded chunks
     are unreachable in practice. Filtering on embedding IS NOT NULL here makes
-    both legs draw from an identical candidate set STRUCTURALLY, so the
-    comparison cannot be skewed by chunks only one leg can see.
+    both legs draw from an identical candidate set STRUCTURALLY.
 
     Ordered by id so a rebuild over unchanged data produces an identical index.
     """
     rows = session.execute(
-        select(Chunk.id, Chunk.chunk_text)
+        select(Chunk.id, Chunk.index_text)
         .where(
             Chunk.corpus_version_id == corpus_version_id,
             Chunk.embedding.isnot(None),
         )
         .order_by(Chunk.id)
     ).all()
-    return [(r.id, r.chunk_text) for r in rows]
+    return [(r.id, r.index_text) for r in rows]
 
 
 def build_index(session: Session, corpus_version_id: int) -> dict:
