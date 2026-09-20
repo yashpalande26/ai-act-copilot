@@ -32,6 +32,51 @@ implemented now):
 Status: Decided (lexical as built is inert; cause is query construction, not
 corpus). Choice between (a) and (b) deferred to a later step.
 
+Update (2026-09-20) — Stage 0 of the BM25 work built a discriminating eval set
+(evals/golden_set_hard.yaml, 41 entries: 23 exact_term, 12 control, 6 abstention)
+via evals/build_golden_set_hard.py, and it produced two findings that bear
+directly on the (a)/(b) fork above.
+
+1. Hard-tier lexical floor is zero. Every one of the 23 hard entries - each one a
+question where vector-only ranks the gold provision at 2+ or misses it entirely -
+returns 0 rows from keyword_search. Not "ranked poorly": zero rows. This reproduces
+the 2026-09-19 finding on a larger, purpose-built, harder set rather than on 4
+hand-picked questions, and confirms the AND-join diagnosis is the mechanism.
+Consequence for measurement: on the hard tier the lexical baseline is exactly
+0.000, so any Stage 1 lift is attributable to fixing query construction, not to
+BM25's scoring function per se. Caveat recorded honestly: during the build, 1 of
+the 25 hard candidates ("any refusal, restriction, suspension or withdrawal of a
+Union technical documentation assessment certificate...") DID retrieve gold
+lexically - a rare, contiguous phrase surviving the AND-join. That entry was
+removed in human review for label ambiguity (gold and its rank-1 distractor were
+near-identical adjacent points), not because of its lexical behaviour. So the
+mechanism is overwhelmingly dominant but not absolute.
+
+2. Negative result: near-duplicate provisions do NOT break vector search. One
+standing argument for keeping lexical was that semantically near-identical sibling
+provisions would confuse embeddings. Tested directly: 57 near-duplicate candidates
+(difflib ratio > 0.5 within a parent), each given a question generated with the
+target AND its confusable siblings in the prompt, instructed to turn on the detail
+that distinguishes them. 39 passed the question-quality screen and reached
+retrieval; 37 of those 39 (95%) were ranked #1 by vector-only. Only 2 survived the
+rank filter and both then failed the discrimination screen. The near_duplicate tier
+is therefore shipped DECLARED EMPTY - the category is retained in the schema and
+the builder so the negative result stays visible, rather than deleted as if never
+attempted. Interpretation: once a question actually names the distinguishing
+detail, semantic search handles near-duplicates correctly; the earlier probe's
+apparent failures were vague questions whose near-twin answered them equally well,
+i.e. broken labels rather than retrieval weakness.
+Consequence for the fork: this removes one of the motivations for option (a). It
+does not decide the fork - the hard tier still shows vector-only failing 23 real
+questions that lexical currently cannot help with at all.
+Status: unchanged - still Decided that lexical as built is inert; choice between
+(a) and (b) still deferred, now with a measuring instrument that can tell them
+apart per-category.
+Caveat on that instrument: the hard tier is selected adversarially against
+vector-only, so vector-only scoring ~0 on it is a property of the sampling, not a
+finding; the control tier is biased the opposite way (selected at vector rank 1).
+Report per-category, never pooled.
+
 ## ADR-006: Exact article-reference lookup is deferred to a dedicated structured path (2026-09-18)
 Context: Integration testing showed "Article 6(2)" returns zero lexical results
 (websearch_to_tsquery AND-splits "6(2)"; the reference lives in citation_id

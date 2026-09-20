@@ -1,0 +1,546 @@
+[
+  {
+    "id": "gh_01",
+    "question": "What activities involving AI systems and facial images are mentioned in relation to facial recognition databases?",
+    "expected_citation_id": "art_5.par_1.pt_e",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 2,
+      "vector_only_rank1_citation_id": "art_5.par_1.pt_h",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_02",
+    "question": "What factors must Member States consider regarding the economic viability of SMEs when imposing penalties for infringements of the Regulation?",
+    "expected_citation_id": "art_99.par_1",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 2,
+      "vector_only_rank1_citation_id": "art_99.par_6",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_03",
+    "question": "What must Member States do within 30 days following the adoption of rules regarding the authorisations for the use of remote biometric identification systems?",
+    "expected_citation_id": "art_5.par_5",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 3,
+      "vector_only_rank1_citation_id": "art_5.par_6",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_04",
+    "question": "What criteria must AI systems meet to not qualify as safety components according to the regulation?",
+    "expected_citation_id": "art_6.par_1a",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 2,
+      "vector_only_rank1_citation_id": "art_6.par_1b",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_05",
+    "question": "What factors should be considered when tackling the challenges of systemic risks at the Union level?",
+    "expected_citation_id": "art_56.par_2.pt_d",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 2,
+      "vector_only_rank1_citation_id": "art_56.par_2.pt_c",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_06",
+    "question": "What must accompany the application for notification if an accreditation certificate exists?",
+    "expected_citation_id": "art_29.par_2",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 2,
+      "vector_only_rank1_citation_id": "art_29.par_3",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_07",
+    "question": "What powers are conferred on market surveillance authorities to ensure the safe development of testing in real world conditions?",
+    "expected_citation_id": "art_60.par_6",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 2,
+      "vector_only_rank1_citation_id": "art_76.par_1",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_08",
+    "question": "What action can the Commission take if there is evidence of the existence of AI systems that do not pose a significant risk?",
+    "expected_citation_id": "art_6.par_6",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 8,
+      "vector_only_rank1_citation_id": "art_80.par_1",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_09",
+    "question": "What information about the AI project developed in the sandbox is published on the website of the competent authorities?",
+    "expected_citation_id": "art_59.par_1.pt_j",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 3,
+      "vector_only_rank1_citation_id": "art_57.par_15",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_10",
+    "question": "What role does the AI Office play in alerting about systemic risks of general-purpose AI models at the Union level?",
+    "expected_citation_id": "art_68.par_3.pt_a",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 3,
+      "vector_only_rank1_citation_id": "art_90.par_2",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_11",
+    "question": "What action must the AI Office take promptly regarding serious incidents reported by providers of high-risk AI systems?",
+    "expected_citation_id": "art_75.par_1a",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 3,
+      "vector_only_rank1_citation_id": "art_73.par_2",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_12",
+    "question": "What is the AI Office authorized to reclaim from the relevant operator in instances of non-compliance?",
+    "expected_citation_id": "art_75a.par_1",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 5,
+      "vector_only_rank1_citation_id": "art_75c.par_5",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_13",
+    "question": "What information must be included in the template provided by the Commission to Member States and authorities regarding requests for authorisations?",
+    "expected_citation_id": "art_5.par_6",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": null,
+      "vector_only_rank1_citation_id": "art_45.par_1.pt_d",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_14",
+    "question": "What procedure does the conformity assessment body undergoes when applying for designation under both this Regulation and the Union harmonisation legislation?",
+    "expected_citation_id": "art_28.par_8",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 3,
+      "vector_only_rank1_citation_id": "art_29.par_4",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_15",
+    "question": "What requirements must notified bodies satisfy to fulfil their tasks?",
+    "expected_citation_id": "art_31.par_2",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 3,
+      "vector_only_rank1_citation_id": "art_31.par_3",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_16",
+    "question": "Under what condition can activities be subcontracted or carried out by a subsidiary?",
+    "expected_citation_id": "art_33.par_3",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": null,
+      "vector_only_rank1_citation_id": "art_63.par_1",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_17",
+    "question": "What must providers of AI systems who intend to integrate a general-purpose AI model have access to?",
+    "expected_citation_id": "art_53.par_1.pt_b",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 4,
+      "vector_only_rank1_citation_id": "art_53.par_2",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_18",
+    "question": "What must accompany a notification to the market surveillance authority when requesting an extension for testing in real world conditions?",
+    "expected_citation_id": "art_60.par_4.pt_f",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 4,
+      "vector_only_rank1_citation_id": "anx_IX.pt_5",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_19",
+    "question": "What factors will the Commission consider when submitting proposals to amend the Regulation?",
+    "expected_citation_id": "art_112.par_10",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 4,
+      "vector_only_rank1_citation_id": "art_7.par_2",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_20",
+    "question": "When will Chapters I and II of the EU AI Act apply?",
+    "expected_citation_id": "art_113.pt_a",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 2,
+      "vector_only_rank1_citation_id": "art_113.pt_c",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_21",
+    "question": "What information is provided about the degrees of accuracy for specific persons or groups in relation to the AI system's intended purpose?",
+    "expected_citation_id": "anx_IV.pt_3",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 2,
+      "vector_only_rank1_citation_id": "art_15.par_3",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_22",
+    "question": "What should be included within the high-risk AI system to ensure proper collection, storage, and interpretation of logs?",
+    "expected_citation_id": "art_13.par_3.pt_f",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 4,
+      "vector_only_rank1_citation_id": "art_12.par_1",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_23",
+    "question": "What must deployers do if they envisage using a high-risk AI system that has not been registered in the EU database?",
+    "expected_citation_id": "art_26.par_8",
+    "expected_abstention": false,
+    "category": "exact_term",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 2,
+      "vector_only_rank1_citation_id": "art_49.par_3",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_24",
+    "question": "Who is responsible for making a list of planned and existing AI sandboxes publicly available?",
+    "expected_citation_id": "art_57.par_15",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "art_57.par_15",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_25",
+    "question": "What may the Commission request from the provider of a general-purpose AI model to assess compliance with the Regulation?",
+    "expected_citation_id": "art_91.par_1",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "art_91.par_1",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_26",
+    "question": "Who is responsible for granting access to information or documentation to the relevant public authority or body?",
+    "expected_citation_id": "art_77.par_1a",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "art_77.par_1a",
+      "lexical_result_count": 10,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_27",
+    "question": "What determines the duration of participation in the AI regulatory sandbox?",
+    "expected_citation_id": "art_58.par_2.pt_h",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "art_58.par_2.pt_h",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_28",
+    "question": "What must notified bodies document and implement to ensure impartiality in their activities?",
+    "expected_citation_id": "art_31.par_6",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "art_31.par_6",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_29",
+    "question": "What is deemed to fulfill the obligation for financial institutions to have a quality management system under the EU AI Act?",
+    "expected_citation_id": "art_17.par_4",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "art_17.par_4",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_30",
+    "question": "What is the purpose of the scientific panel of independent experts established by the Commission?",
+    "expected_citation_id": "art_68.par_1",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "art_68.par_1",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_31",
+    "question": "What is presumed when an AI system has been made available to at least 10,000 registered business users established in the Union?",
+    "expected_citation_id": "anx_XIII.pt_(f)",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "anx_XIII.pt_(f)",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_32",
+    "question": "What is presumed about high-risk AI systems or general-purpose AI models that conform to harmonised standards published in the Official Journal of the European Union?",
+    "expected_citation_id": "art_40.par_1",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "art_40.par_1",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_33",
+    "question": "What must national competent authorities do immediately in the event of a serious incident?",
+    "expected_citation_id": "art_73.par_11",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "art_73.par_11",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_34",
+    "question": "What should deployers do if they identify a serious incident with a high-risk AI system?",
+    "expected_citation_id": "art_26.par_5",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "art_26.par_5",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_35",
+    "question": "For how long are the logs of the processing of personal data kept in the context of the sandbox?",
+    "expected_citation_id": "art_59.par_1.pt_h",
+    "expected_abstention": false,
+    "category": "control",
+    "confusable_sibling_ids": [],
+    "build_provenance": {
+      "vector_only_rank": 1,
+      "vector_only_rank1_citation_id": "art_59.par_1.pt_h",
+      "lexical_result_count": 0,
+      "lexical_found_gold": false
+    }
+  },
+  {
+    "id": "gh_36",
+    "question": "What is the capital of France?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "confusable_sibling_ids": [],
+    "build_provenance": {}
+  },
+  {
+    "id": "gh_37",
+    "question": "What's the best pizza place in Dublin?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "confusable_sibling_ids": [],
+    "build_provenance": {}
+  },
+  {
+    "id": "gh_38",
+    "question": "How do I train a dog to sit?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "confusable_sibling_ids": [],
+    "build_provenance": {}
+  },
+  {
+    "id": "gh_39",
+    "question": "What's the weather like today?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "confusable_sibling_ids": [],
+    "build_provenance": {}
+  },
+  {
+    "id": "gh_40",
+    "question": "How do I bake sourdough bread at home?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "confusable_sibling_ids": [],
+    "build_provenance": {}
+  },
+  {
+    "id": "gh_41",
+    "question": "Who won the most recent football World Cup?",
+    "expected_citation_id": null,
+    "expected_abstention": true,
+    "category": "abstention",
+    "confusable_sibling_ids": [],
+    "build_provenance": {}
+  }
+]
