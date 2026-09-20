@@ -218,7 +218,12 @@ def generate_grounded_answer(
     final_context_size: int = 5,
     min_similarity: float = 0.3,
     write_trace: bool = True,
+    max_output_tokens: int | None = None,
 ) -> GroundedAnswer:
+    """max_output_tokens bounds the expensive half of a call (gpt-4o output is
+    4x input cost). Default None preserves the previous unbounded behaviour
+    exactly, so existing callers and eval runs are unaffected; the HTTP
+    surface passes an explicit ceiling."""
     retrieval_start = time.monotonic()
     vector_results = vector_search(
         session,
@@ -274,13 +279,21 @@ def generate_grounded_answer(
 
     prompt = _build_user_prompt(query, fused)
     generation_start = time.monotonic()
+    # Omit max_tokens entirely when unset rather than passing None, so the
+    # request body is byte-identical to before for existing callers.
+    optional_kwargs = (
+        {"max_tokens": max_output_tokens} if max_output_tokens is not None else {}
+    )
     response = _get_client().chat.completions.create(
         model=CHAT_MODEL,
         temperature=0,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
+            # The question is a SEPARATE user message; distinct API roles mean
+            # user text cannot structurally replace or edit SYSTEM_PROMPT.
             {"role": "user", "content": prompt},
         ],
+        **optional_kwargs,
     )
     generation_latency_ms = int((time.monotonic() - generation_start) * 1000)
     answer_text = response.choices[0].message.content
