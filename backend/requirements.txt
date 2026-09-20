@@ -9,3 +9,5 @@ python-dotenv==1.2.3
 beautifulsoup4==4.15.0
 lxml==6.1.3
 openai==3.5.0
+bm25s==0.3.11
+PyStemmer==3.1.0

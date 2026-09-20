@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, aliased
 from app.db.models import Chunk, Provision
 from app.ingestion.chunker import citation_label
 from app.ingestion.embedder import DIMENSIONS, MODEL, _get_client
+from app.retrieval.bm25_index import load_index, tokenize_query
 
 
 class SearchResult(BaseModel):
@@ -118,6 +119,68 @@ def keyword_search(
             )
         )
     return results[:top_k]
+
+
+def bm25_search(
+    session: Session,
+    query: str,
+    corpus_version_id: int,
+    top_k: int = 10,
+) -> list[SearchResult]:
+    """BM25 retrieval over the on-disk bm25s index for this corpus_version.
+
+    Returns SearchResult (the same shape vector_search returns), with
+    `similarity` holding the BM25 score rather than a cosine similarity - both
+    are "higher is better" relevance scores but not comparable in magnitude,
+    which is exactly why RRF fuses by *rank*, not by raw score. Same convention
+    keyword_search uses for ts_rank_cd.
+
+    Returns [] when no index has been built (callers then degrade to
+    vector-only, as they already do for an empty lexical leg); raises
+    StaleIndexError when an index exists but belongs to another
+    corpus_version. See bm25_index.StaleIndexError for why that asymmetry.
+    """
+    loaded = load_index(corpus_version_id)
+    if loaded is None:
+        return []
+
+    query_tokens = tokenize_query(query)
+    doc_indices, scores = loaded.retriever.retrieve(
+        query_tokens, k=min(top_k, len(loaded.chunk_ids)), show_progress=False
+    )
+
+    # retrieve() returns one row per query; we always pass exactly one.
+    ranked: list[tuple[int, float]] = [
+        (loaded.chunk_ids[int(doc_idx)], float(score))
+        for doc_idx, score in zip(doc_indices[0], scores[0], strict=True)
+    ]
+    if not ranked:
+        return []
+
+    score_by_chunk_id = dict(ranked)
+    Ancestor = aliased(Provision)
+    stmt = (
+        select(Chunk, Provision, Ancestor)
+        .join(Provision, Chunk.provision_id == Provision.id)
+        .outerjoin(Ancestor, Chunk.parent_provision_id == Ancestor.id)
+        .where(Chunk.id.in_(score_by_chunk_id))
+    )
+    hydrated = {
+        chunk.id: SearchResult(
+            chunk_id=chunk.id,
+            citation_id=provision.citation_id,
+            citation_label=citation_label(provision.citation_id),
+            chunk_text=chunk.chunk_text,
+            similarity=score_by_chunk_id[chunk.id],
+            article_heading=ancestor.heading if ancestor is not None else None,
+        )
+        for chunk, provision, ancestor in session.execute(stmt).all()
+    }
+
+    # WHERE id IN (...) returns rows in ARBITRARY order, so rebuild the BM25
+    # ranking explicitly - relying on DB order here would silently reorder
+    # results and corrupt every rank-based metric downstream.
+    return [hydrated[cid] for cid, _ in ranked if cid in hydrated]
 
 
 class FusedResult(BaseModel):

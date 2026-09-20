@@ -16,7 +16,9 @@ from app.generation.answer import (
     GroundedAnswer,
     generate_grounded_answer,
 )
+from app.retrieval.bm25_index import load_index
 from app.retrieval.search import (
+    bm25_search,
     keyword_search,
     rrf_rank_and_fuse,
     vector_search,
@@ -75,6 +77,10 @@ def load_golden_set(path: Path = GOLDEN_SET_PATH) -> list[dict]:
     return json.loads(path.read_text())
 
 
+BASE_CONFIGS = ("vector_only", "hybrid")
+BM25_CONFIGS = ("bm25_only", "hybrid_bm25")
+
+
 def _run_retrieval(
     session, question: str, corpus_version_id: int, config: str
 ) -> list[str]:
@@ -88,6 +94,12 @@ def _run_retrieval(
         )
         return [r.citation_id for r in results]
 
+    if config == "bm25_only":
+        results = bm25_search(
+            session, question, corpus_version_id, top_k=RETRIEVAL_DEPTH
+        )
+        return [r.citation_id for r in results]
+
     vector_results = vector_search(
         session,
         question,
@@ -95,23 +107,32 @@ def _run_retrieval(
         top_k=RETRIEVAL_DEPTH,
         min_similarity=0.0,
     )
-    lexical_results = keyword_search(
-        session, question, corpus_version_id, top_k=RETRIEVAL_DEPTH
-    )
+    # Candidate breadth stays at RETRIEVAL_DEPTH for both legs so these numbers
+    # stay comparable with every prior run; deeper breadth is a Stage 3 lever.
+    if config == "hybrid_bm25":
+        lexical_results = bm25_search(
+            session, question, corpus_version_id, top_k=RETRIEVAL_DEPTH
+        )
+    else:
+        lexical_results = keyword_search(
+            session, question, corpus_version_id, top_k=RETRIEVAL_DEPTH
+        )
     fused = rrf_rank_and_fuse(vector_results, lexical_results, top_k=RETRIEVAL_DEPTH)
     return [f.result.citation_id for f in fused]
 
 
-def run_retrieval_eval(session, golden_set: list[dict], corpus_version_id: int):
+def run_retrieval_eval(
+    session,
+    golden_set: list[dict],
+    corpus_version_id: int,
+    configs: tuple[str, ...] = BASE_CONFIGS,
+):
     answerable = [g for g in golden_set if not g["expected_abstention"]]
-    results: dict[str, list[tuple[float, float, float]]] = {
-        "vector_only": [],
-        "hybrid": [],
-    }
+    results: dict[str, list[tuple[float, float, float]]] = {c: [] for c in configs}
     by_category: dict[tuple[str, str], list[tuple[float, float, float]]] = {}
     detail = []
 
-    for config in ("vector_only", "hybrid"):
+    for config in configs:
         for item in answerable:
             retrieved_ids = _run_retrieval(
                 session, item["question"], corpus_version_id, config
@@ -227,13 +248,26 @@ def main() -> None:
             print("No corpus_version found.", file=sys.stderr)
             sys.exit(1)
 
+        # BM25 configs run only when an index exists for this corpus_version -
+        # the index is a gitignored artifact, so a fresh clone and CI must keep
+        # working without it.
+        configs = BASE_CONFIGS
+        if load_index(latest.id) is not None:
+            configs = BASE_CONFIGS + BM25_CONFIGS
+        else:
+            print(
+                f"bm25 index not found for corpus_version {latest.id} - skipping "
+                "bm25 configs (build it with scripts/build_bm25_index.py)",
+                file=sys.stderr,
+            )
+
         ret_results, ret_by_category, ret_detail = run_retrieval_eval(
-            session, golden_set, latest.id
+            session, golden_set, latest.id, configs
         )
 
-        print("=== Retrieval: vector_only vs hybrid (Recall@5 / MRR / nDCG@10) ===")
+        print("=== Retrieval (Recall@5 / MRR / nDCG@10) ===")
         print(f"{'config':<14}{'recall@5':<11}{'mrr':<9}ndcg@10")
-        for config in ("vector_only", "hybrid"):
+        for config in configs:
             mean_recall, mean_rr, mean_ndcg = _mean_metrics(ret_results[config])
             print(f"{config:<14}{mean_recall:<11.3f}{mean_rr:<9.3f}{mean_ndcg:.3f}")
 
@@ -249,7 +283,7 @@ def main() -> None:
                 f"{'recall@5':<11}{'mrr':<9}ndcg@10"
             )
             for category in categories:
-                for config in ("vector_only", "hybrid"):
+                for config in configs:
                     rows = ret_by_category.get((category, config), [])
                     mean_recall, mean_rr, mean_ndcg = _mean_metrics(rows)
                     print(

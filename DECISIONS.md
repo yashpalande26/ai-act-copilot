@@ -133,6 +133,71 @@ Status: (a) implemented, measured, reverted. Lexical remains inert on main by
 choice, with the reason now quantified rather than assumed. Stage 2 (bm25s) is
 the next step.
 
+Update (2026-09-20, Stage 2) — RESOLVED. The lexical leg is BM25, not native
+FTS. Stage 1's hypothesis was that ts_rank_cd's missing IDF term caused the
+precision regression; Stage 2 tested that directly by swapping in a real
+IDF-weighted ranker and changing nothing else. The hypothesis held.
+
+Implementation: bm25s==0.3.11 + PyStemmer==3.1.0 (both wheel-installed, no
+source build; base bm25s needs only numpy, already present). In-process index
+over the active corpus_version's chunks, persisted as a 243.6 KiB file artifact
+under backend/data/bm25_index/v{id}/ - gitignored and rebuildable via
+scripts/build_bm25_index.py, because it is derived data that must never drift
+from the DB. Fused through the EXISTING rrf_rank_and_fuse at unchanged 0.7/0.3
+weights, k=60, candidate breadth 10, so the comparison isolates the ranker.
+Measured on golden_set_hard.yaml, retrieval only:
+
+                        vector_only   Stage 1 OR-join   hybrid_bm25   bm25_only
+  exact_term Recall@5      0.870           0.783           0.913        1.000
+  exact_term MRR           0.335           0.590           0.703        0.913
+  exact_term nDCG@10       0.483           0.682           0.757        0.936
+  control    Recall@5      1.000           0.917           1.000        1.000
+  control    MRR           1.000           0.917           1.000        0.833
+  easy-set hybrid MRR      0.896           0.854           0.906          -
+
+hybrid_bm25 reproduces the hard-tier ranking gain WITHOUT the precision cost
+that forced the Stage 1 revert. It also repairs a pre-existing defect: the
+control-tier hybrid baseline was 0.958 MRR (the inert FTS leg was perturbing
+gh_26); hybrid_bm25 returns all 12 controls to rank 1. On the less-biased easy
+set it beats vector-only outright (MRR 0.896 -> 0.906, nDCG 0.923 -> 0.931)
+where Stage 1 had degraded it to 0.854.
+Decision: ADOPT BM25 as the lexical leg. The native-FTS OR-join stays reverted.
+
+Candidate-set fairness, checked before trusting any of the above: 1128 chunks
+for the corpus_version, 1128 vector-searchable, 1128 indexed. Enforced
+structurally - fetch_indexable_chunks filters embedding IS NOT NULL, the same
+universe vector_search can actually reach - so BM25 can never win by seeing
+documents the vector leg cannot return.
+
+Tokenization: Snowball via PyStemmer + bm25s English stopwords, with a
+protected-term passthrough. Deliberately NOT carried over from Stage 1: the
+3-character token floor, which existed only to stop "AI" from diluting
+ts_rank_cd. BM25 solves that automatically (a term in nearly every document
+gets IDF ~ 0), so keeping the hack would have discarded distinctive short
+tokens for no reason. Protected terms were chosen from a measured stem-collision
+analysis, not guessed - only where stemming fuses legally DISTINCT concepts:
+systemic (vs system/systems, swamped 21:1), notified + notifying (notified body
+vs notifying authority), operator(s), provider(s), deployer(s). Ordinary plural
+folding (model/models, importer/importers) was left alone.
+
+Two open levers, both evidence-backed rather than speculative:
+  (1) The 0.3 lexical RRF weight is now the BINDING CONSTRAINT, not an untested
+      default. gh_13 and gh_16 are the two hard entries vector-only misses
+      entirely; bm25_only ranks BOTH at #1; hybrid_bm25 still misses both,
+      because with 0.7/0.3 a document absent from vector's top-10 scores at
+      most 0.3/61 = 0.00492, below every vector hit. BM25 finds them and RRF
+      discards them. Stage 3 should be a one-variable A/B on that weight.
+  (2) Hybrid, not BM25-alone, is the answer. bm25_only is the strongest config
+      on the hard tier (exact_term Recall@5 1.000, gold-at-rank-1 19/23) but the
+      WORST on control (MRR 0.833; gh_27, gh_30, gh_34 all fall off rank 1). Its
+      hard-tier dominance is substantially manufactured: that tier was built by
+      selecting rare-distinctive-term provisions where vector-only fails, which
+      is close to a BM25-favouring construction. The control tier is the honest
+      check, and it says BM25 alone is a downgrade.
+Status: RESOLVED - BM25 adopted as the lexical leg, native FTS stays reverted.
+Production is still UNWIRED: generate_grounded_answer is untouched, pending the
+Stage 3 weight decision. Wiring BM25 into the production path is a separate gate.
+
 ## ADR-006: Exact article-reference lookup is deferred to a dedicated structured path (2026-09-18)
 Context: Integration testing showed "Article 6(2)" returns zero lexical results
 (websearch_to_tsquery AND-splits "6(2)"; the reference lives in citation_id
