@@ -1,5 +1,5 @@
 # PROJECT BRIEF — AI Act Copilot
-*Single source of truth. Lives in the repo root (canonical) and mirrored into the Claude Project knowledge section so every chat shares the same end goal. Last updated: 19 Sep 2026 (v3 — retrieval + generation + eval Wave 1 complete; deferred-items register added).*
+*Single source of truth. Lives in the repo root (canonical) and mirrored into the Claude Project knowledge section so every chat shares the same end goal. Last updated: 20 Sep 2026 (v4 — hybrid retrieval SHIPPED to production (vector + BM25 over index_text, RRF @ lexical 0.6); trace logging and eval infra complete; two eval sets; next is the chat UI).*
 
 ---
 
@@ -51,17 +51,20 @@ EU startup founders, developers, and small-company compliance owners needing a f
 Core pattern (proven in the builder's fintech work): **keep deterministic logic OUT of the LLM path; wrap it in an advisory, grounded AI layer.**
 
 1. **Deterministic classification engine (code, not LLM).** Encodes Annex III / Art 5 / Art 50 rules → risk tier + triggering article + obligations + deadlines. Auditable, unit-tested, reproducible. *This is the verdict.* [BUILT — financial slice]
-2. **Grounded RAG copilot (advisory).** Retrieval over the official AI Act text on Postgres + pgvector. Every answer carries enforced citations; ungrounded output is blocked. [BUILT — hybrid retrieval + grounded generation with abstention]
+2. **Grounded RAG copilot (advisory).** Retrieval over the official AI Act text on Postgres + pgvector. Every answer carries enforced citations; ungrounded output is blocked. [COMPLETE — hybrid retrieval (vector + BM25, RRF @ lexical 0.6) shipped to the production answer path, with safe degrade to vector-only and per-turn trace logging]
 3. **Guardrails.** Prompt-injection detection, groundedness gate, abstention. [PARTIAL — abstention built; injection detection + groundedness gate deferred]
 4. **Human-in-the-loop.** Low-confidence classifications escalate. [DEFERRED — v2]
 5. **MCP.** Expose classifier + retrieval as MCP tools. [DEFERRED — v2+]
-6. **Evaluation harness (the spine).** Golden Q/A set, groundedness/faithfulness, citation precision, retrieval recall@k, LLM-as-judge, CI regression gate, tracing + cost/latency. [Wave 1 BUILT — deterministic golden-set metrics; Wave 2 (LLM-as-judge) + CI gate + tracing deferred]
+6. **Evaluation harness (the spine).** Golden Q/A set, groundedness/faithfulness, citation precision, retrieval recall@k, LLM-as-judge, CI regression gate, tracing + cost/latency. [COMPLETE — Wave 1 deterministic metrics + Wave 2 LLM-as-judge; per-category Recall@5 / MRR / nDCG@10; three eval sets; `query_trace` / `retrieval_trace` logging per turn. CI regression gate still deferred]
 
 ### 6.1 Locked technical decisions (from deep research, Sep 2026)
 - **Source:** EUR-Lex consolidated **XHTML**, CELEX `02024R1689-20260727` — NOT the PDF. Authoritative markup beats PDF extraction.
 - **Chunking:** structural-unit. Paragraph/point = embedded unit; article = parent returned for generation (small-to-big). Contextual prefixes generated once at ingest.
-- **Retrieval:** hybrid — pgvector cosine + Postgres full-text (tsvector), fused with **Reciprocal Rank Fusion (k=60)**. Lexical is non-optional in principle (embeddings blur "Article 6(2)"). *NOTE: Wave 1 eval showed the lexical half is currently inert on real queries — see ADR-7 and §17.*
-- **Reranker:** add ONLY if the eval harness proves lift. (LegalBench-RAG found general rerankers can *hurt* on legal text.)
+- **Retrieval (SHIPPED):** hybrid — pgvector cosine + **BM25 (`bm25s`, in-process, IDF-weighted)**, fused with **Reciprocal Rank Fusion (k=60)** at **vector 0.4 / lexical 0.6**, candidate breadth 10. The original Postgres full-text leg was measured inert, its OR-join fix regressed precision, and both were replaced by BM25 (ADR-7).
+  - **The sparse leg indexes `index_text` — the SAME text the dense leg embeds** (contextual prefix: `EU AI Act — Article 16 (Obligations of providers of high-risk AI systems), point (a):` + body). This follows contextual retrieval (Anthropic): prepend context *before embedding AND before creating the BM25 index*.
+  - **Why it matters — a real bug, not theory.** BM25 previously indexed `chunk_text` (body only) while vectors embedded `index_text`. That asymmetry made the sparse leg blind to article headings: for *"What obligations apply to providers of high-risk AI systems?"*, gold `art_16.pt_a` has a body reading only "ensure that their high-risk AI systems are compliant with the requirements set out in Section 2;" — the query's discriminating terms **"obligations"** and **"providers"** exist only in the heading. BM25 ranked it nowhere in its top 50, RRF dropped it, and the copilot **abstained on a question vector-only answered**. Over `index_text` it ranks 2nd and is cited first.
+  - **Degrade path:** stale index (corpus-version mismatch) → raises → caught → logged loudly → vector-only; missing index → `[]` → vector-only. Production is never down and never serves citations resolved against the wrong mapping. `query_trace.retrieval_config` records which actually ran (`hybrid_bm25` / `vector_only_degraded`).
+- **Reranker:** add ONLY if the eval harness proves lift. (LegalBench-RAG found general rerankers can *hurt* on legal text.) Now gated on the heading-aware eval set — v2 experiment.
 - **Embeddings:** `text-embedding-3-large` at **1536 dims** (3072 risks exceeding pgvector's indexable limit). Reversible behind eval; legal-domain models (Voyage/Kanon) are a later A/B.
 - **Index:** HNSW with `vector_cosine_ops` (must match the `<=>` query operator or it silently falls back to a sequential scan).
 - **Corpus versioning:** bitemporal from day one — the Act has already been amended once.
@@ -101,12 +104,14 @@ Inspected the real HTML (854 KB, CONVEX-generated). Findings that override the r
 - `POST /classify` endpoint. [DONE]
 - Postgres schema with corpus versioning + provisions hierarchy. [DONE — 9 tables + Alembic]
 - Ingestion pipeline: fetch -> parse -> chunk with computed provenance -> embed -> store. [DONE — 1,255 provisions, 1,128 chunks, all embedded]
-- Hybrid retrieval (pgvector + FTS + RRF). [DONE — Step 22]
-- Grounded generation with enforced citations + abstention. [DONE — Step 23]
-- Golden eval set + deterministic retrieval/generation metrics. [DONE — Step 24, Wave 1]
-- Eval Wave 2 (LLM-as-judge faithfulness/relevance) + CI regression gate. [TODO]
-- Minimal Next.js chat UI with clickable citations. [TODO]
-- **Deployed live** + README with the real metrics table. [TODO]
+- Hybrid retrieval (pgvector + BM25 + RRF @ lexical 0.6, shipped to production). [DONE]
+- Grounded generation with enforced citations + abstention. [DONE]
+- Query + retrieval trace logging (`query_trace` / `retrieval_trace`). [DONE]
+- Eval infra: Wave 1 deterministic metrics + Wave 2 LLM-as-judge + per-category Recall@5 / MRR / nDCG@10, across `golden_set.yaml`, `golden_set_hard.yaml`, `golden_set_realistic.yaml`. [DONE]
+- **NEXT → Minimal Next.js chat UI with clickable citations.** [TODO]
+- **Then → Deployed live.** [TODO]
+- **Then → README with the real metrics table.** [TODO]
+- CI regression gate wiring eval metrics into GitHub Actions. [TODO — deferred, not blocking the UI]
 
 ### v2 — Harden & make it agentic
 Adaptive/agentic RAG routing (LangGraph) + reranker; guardrails; HITL escalation queue; Annex IV doc scaffolding; tamper-evident audit log; red-team eval suite; recitals corpus; MCP tools.
@@ -133,6 +138,18 @@ Second corpus (DORA / GDPR Art 22); Irish national layer; evidence-pack export; 
 - Abstention accuracy: **1.000** (20/20)
 - Golden set human-spot-checked against EUR-Lex: 5/5 labels verified correct.
 - *Caveat (kept honest): 16 answerable questions is a small set (one miss ≈ 6pts of recall); semantic questions were LLM-generated then retrieved against the same model family, a mild self-agreement bias. This is a clean Wave 1 baseline, not proof of quality at scale. Wave 2 (LLM-judge) + a larger set are where it gets stress-tested.*
+
+**Shipped retrieval config measured (20 Sep 2026) — Recall@5 / MRR / nDCG@10, breadth 10, k=60:**
+
+| config | realistic (56) | hard (35) | easy (16) |
+|---|---|---|---|
+| vector_only | 0.982 / 0.875 / 0.902 | 0.914 / 0.563 / 0.660 | 1.000 / **0.896** / **0.923** |
+| **hybrid@0.6, BM25 over `index_text`** | **1.000 / 0.939 / 0.955** | **1.000 / 0.902 / 0.927** | 1.000 / 0.885 / 0.914 |
+
+- Hybrid **beats vector-only on the realistic and hard sets**, and is **~parity on easy** — it gives up 0.011 MRR there (0.896 → 0.885), roughly one question slipping one rank out of 16, inside this corpus's noise floor.
+- The diagnostic that justified the change: on the `heading_dependent` tier, the sparse leg over `chunk_text` scored **0.867 / 0.783** vs **1.000 / 0.852** over `index_text` — the only config that failed to retrieve heading-dependent golds. Sibling discrimination was *not* traded away (`near_duplicate` identical at 1.000/0.875 both sparse legs, 1.000/1.000 both fused).
+- Weight 0.6 beat 0.5 on all three sets independently, which is better evidence than a peak on any single set.
+- *Caveat: all three sets are LLM-generated; none is human-authored. 5 of 7 flagged realistic-set labels are still unverified against EUR-Lex (§17). Differences under ~0.02 MRR at these sample sizes are probably noise.*
 
 ## 10. Tech stack
 - **Backend:** Python 3.11, FastAPI 0.136.3, uvicorn 0.52.4, Pydantic 2.13.5.
@@ -161,6 +178,10 @@ Second corpus (DORA / GDPR Art 22); Irish national layer; evidence-pack export; 
 - **The loop, every step:** planner gives (1) short design rationale, (2) copy-paste prompt for Claude Code (ending with the constant closer `Follow CLAUDE.md.`), (3) what to verify. Yash runs it, pastes results. Planner verifies, then gives the LEARNING_LOG entry + next step.
 - **Commit discipline:** after every build step the planner hands Yash the full git command(s) to commit + push himself. Claude Code never runs git. Any repo action that touches git (e.g. `git rm`) is Yash's to run, not Claude Code's.
 - **Plan mode** in Claude Code for structural work; skip for trivial edits.
+- **Planner review-check — verify cross-cutting invariants, not just each choice.** Before approving a plan, check the properties that span components, because a plan can be locally correct at every step and still wrong as a whole. Specifically: (1) **symmetry** — do any two things being compared or *fused* operate on the same representation? (2) **eval blind spots** — what failure class can this eval not see *by construction*? (3) **reversibility** — how hard is this to undo? The BM25 heading bug passed every step-level review and was caught by none of them: each decision was individually defensible, but nothing checked that the fused legs read the same field, and the eval was structurally incapable of showing the gap.
+- **Review depth by reversibility.** Production path, schema/migrations, and anything irreversible get the tight loop: plan → approve → execute → verify by *causing* the failure, not mocking it. Exploration, research, and measurement run autonomously end-to-end and report once. Match the ceremony to the blast radius; don't spend plan-mode rigour on a throwaway probe, and don't skip it on the answer path.
+- **Retrospective-to-rules habit.** When a bug escapes review, don't just fix it — ask what *class* of check would have caught it, and write that check into `CLAUDE.md` as a standing rule. That's how the Engineering-invariants block came to exist. Rules earned from real failures beat rules copied from blog posts.
+- **See `CLAUDE.md` → "Engineering invariants — check these, don't just follow the steps"** for the standing, executable version of the above (symmetry of fused components; eval validity before eval results; never ship on curated-eval green alone; per-category reporting for adversarial tiers; review depth by reversibility).
 - **Answer style:** crisp bullet points, no long theory, always state the next step.
 - **Four files:**
   - `PROJECT_BRIEF.md` — this north-star spec (repo root = canonical; mirrored to Project knowledge).
@@ -168,14 +189,14 @@ Second corpus (DORA / GDPR Art 22); Irish national layer; evidence-pack export; 
   - `CLAUDE.md` — rules FOR Claude Code (committed). Holds the standing rules the tail line `Follow CLAUDE.md.` points to, including the git rule.
   - `LEARNING_LOG.md` — private learning notes, one entry per concept-bearing step (gitignored; authored by the planning chat; needs manual backup). Entry format: what we did / concept / why it matters / interview angle.
 
-## 13. Current status (19 Sep 2026)
+## 13. Current status (20 Sep 2026)
 **Phase 1 — Foundation: COMPLETE.**
 - Private GitHub repo, backend-first monorepo, venv, pinned deps
 - FastAPI app with `/health`
 - ruff, pytest, GitHub Actions CI — green
 - `CLAUDE.md`, `DECISIONS.md`, `LEARNING_LOG.md`
 
-**Phase 2 — Features: RETRIEVAL + GENERATION + EVAL WAVE 1 COMPLETE.**
+**Phase 2 — Features: RETRIEVAL, GENERATION, TRACE LOGGING and EVAL INFRA all COMPLETE.**
 - Domain models (Pydantic): RiskTier, UseCase, SystemDescription, ClassificationResult [DONE]
 - Deterministic classifier engine (Annex III point 5 financial slice), branch tests [DONE]
 - `POST /classify` endpoint + integration tests [DONE]
@@ -186,11 +207,16 @@ Second corpus (DORA / GDPR Art 22); Irish national layer; evidence-pack export; 
 - Chunking → **1,128 chunks** with contextual prefixes [DONE]
 - Embeddings → all 1,128 embedded (1536-dim), resumable/idempotent [DONE]
 - Indexes: HNSW (cosine) + GIN full-text via migration; verified used via EXPLAIN [DONE]
-- **Step 22 — Hybrid retrieval:** `keyword_search()` (Postgres FTS) + `rrf_rank_and_fuse()` (RRF, vector 0.7 / lexical 0.3, k=60) [DONE]
-- **Step 23 — Grounded generation:** `generate_grounded_answer()` — closed-context gpt-4o @ temp 0, citations persisted from retrieved chunks (never parsed from model prose), fixed abstention with two convergent paths [DONE]
-- **Step 24 — Eval harness Wave 1:** source-grounded golden set (20 entries) + deterministic runner (Recall@5, MRR, citation hit rate, abstention accuracy) + pure-function metric tests [DONE]
-- Full test suite: 58 passing.
-- **NEXT: eval Wave 2 (LLM-as-judge faithfulness/relevance) OR the ADR-7 lexical fork — planner to sequence.**
+- **Grounded generation:** `generate_grounded_answer()` — closed-context gpt-4o @ temp 0, citations persisted from retrieved chunks (never parsed from model prose), fixed abstention with two convergent paths [DONE]
+- **Trace logging:** `query_trace` + `retrieval_trace` written per turn — latency, tokens, per-candidate RRF/vector/lexical ranks, `used_in_context`, and `retrieval_config`. Best-effort by design: an independent transaction that can never roll back or block the user's answer [DONE]
+- **Eval infra [COMPLETE]:**
+  - Wave 1 deterministic metrics (Recall@5, MRR, citation hit rate, abstention accuracy) + **nDCG@10**, reported **per category** for every retrieval config
+  - Wave 2 LLM-as-judge (faithfulness + answer-relevance, blind, strict-JSON with defensive parsing)
+  - `run_eval --hard` / `--retrieval-only` flags
+  - **Two curated sets beyond the original:** `golden_set_hard.yaml` (41 entries, adversarially selected against vector-only — report per-category, never pooled) and `golden_set_realistic.yaml` (62 entries, **heading-aware**, no adversarial screening, with a `heading_dependent` tier verified to carry heading-only terms)
+- **Hybrid retrieval SHIPPED to production:** vector + BM25 (`bm25s` over `index_text`) fused via RRF @ vector 0.4 / lexical 0.6, breadth 10, k=60, with safe degrade to vector-only [DONE]
+- Full test suite: **83 passing**; ruff clean.
+- **NEXT: minimal Next.js chat UI with clickable citations**, then live deploy, then the README metrics table.
 
 ## 14. Key decisions & rationale
 - **AI Act as v1 corpus:** cleanest deterministic classification; deeply researched. DORA/GDPR deferred to v3. *(Flip-able — architecture is identical.)*
@@ -198,9 +224,9 @@ Second corpus (DORA / GDPR Art 22); Irish national layer; evidence-pack export; 
 - **Deterministic-first, then RAG:** build the trustworthy core before the advisory layer; needs no external services.
 - **Fresh repo, not a ScoutAI fork:** learn each decision from the ground up; ScoutAI kept as a *reference* for the agent/streaming layer.
 - **Eval-first:** the key senior-level differentiator for 2026 AI engineering.
-- **RRF over score normalization:** fuse retrievers by rank, not raw score — cosine (~0-1) and `ts_rank_cd` (unbounded, corpus-dependent) are incomparable magnitudes; normalization goes stale as the corpus grows. (ADR / Step 22.)
+- **RRF over score normalization:** fuse retrievers by rank, not raw score. Cosine similarity (~0-1, bounded) and a BM25 score (unbounded, corpus- and length-dependent) are incomparable magnitudes, and any normalization mapping between them goes stale as the corpus grows. Fusing by rank sidesteps the problem entirely — which is why the rationale survived swapping the lexical leg twice (Postgres `ts_rank_cd` → BM25) without touching the fusion code.
 - **Citations persisted from retrieval, not model prose:** the audit trail is built from what we fed the model, so it survives even if the answer text forgets to cite. (Step 23.)
-- **Deterministic eval before LLM-judge:** Wave 1 is free, reproducible, defensible; RAGAS-style LLM-judge is added only once a measured gap justifies it. (Step 24.)
+- **Deterministic eval before LLM-judge:** Wave 1 came first because it is free, reproducible and defensible. The LLM-judge layer (Wave 2 — faithfulness + answer-relevance, blind, strict-JSON) was added afterwards, once Wave 1's ceiling-level scores showed deterministic metrics alone couldn't tell whether an answer's *content* held up. Built as a thin custom judge rather than pulling in RAGAS — no new dependency for two prompts and a parser.
 - **Not a legal-research copilot or eval platform:** those markets are capital-intensive and consolidated (Harvey ~$11B, Legora ~$5.5B; Braintrust/Langfuse/LangSmith well-funded). A vertical, self-serve, cited, measured compliance tool is where a solo builder is credible.
 
 ### Verified dates (EUR-Lex, Sep 2026)
@@ -224,17 +250,23 @@ The Digital Omnibus (**Regulation (EU) 2026/1744**) is enacted and in force sinc
 - **ADR-004** — 6 annexes (I, VII, VIII, X, XI, XIV) deferred: different section structure needs a new parser.
 - **ADR-005** — `docker-compose.yml` fate: originally "keep for offline fallback," but Supabase is the sole live DB and the file has repeatedly caused local-vs-Supabase confusion. **Resolution pending Yash's call** (supersede ADR-005 and `git rm` the file, or keep it and stop treating it as dead).
 - **ADR-6** — exact article-reference lookup deferred: detect citation pattern in query → direct `citation_id` lookup; revisit once eval quantifies how often it's needed.
-- **ADR-7** — lexical retrieval inert as built: decided fork (see §17).
+- **ADR-7** — **RESOLVED (20 Sep 2026): hybrid retrieval SHIPPED.** Native FTS was measured inert; its OR-join fix lifted hard-case ranking but regressed precision and was reverted; BM25 (`bm25s`, IDF-weighted) replaced it and now ships at RRF lexical 0.6 over `index_text`. Root cause of the late-breaking bug: BM25 indexed `chunk_text` while vectors embedded `index_text` — an asymmetry that made the sparse leg heading-blind. Breadth and a per-query router were both tested and rejected with numbers.
 
 ## 17. Deferred / To-Verify register
 *Single place for everything we consciously postponed, so no chat loses it. The files remember; nothing else does. Review this section at the start of each new phase.*
 
 **Deferred decisions (settled we'd wait — logged as ADRs):**
 - **ADR-6** — exact article-reference lookup (query citation-pattern → direct `citation_id` lookup). Deferred until eval quantifies need.
-- **ADR-7** — lexical retrieval adds nothing as currently built. Confirmed by Wave 1: even a golden set built specifically to favor lexical (4 questions on rare, verified verbatim phrases) produced zero rank contribution — root cause is `websearch_to_tsquery` AND-semantics on full-question phrasing (every stemmed word must co-occur in one chunk), not the corpus. **Open fork for a later step:** (a) fix query construction — extract key terms / OR-join before `websearch_to_tsquery`; or (b) drop the lexical half and ship honest vector-only. Decide with the eval numbers in hand.
+- **ADR-7** — **CLOSED. Hybrid shipped** (see §16). No longer an open fork.
+
+**Operational gaps from shipping hybrid retrieval (20 Sep 2026):**
+- **`build_bm25_index.py` MUST run on every deploy and after every re-ingest.** If it doesn't, production silently serves `vector_only_degraded` — correct answers, but vector-only quality. No deploy pipeline enforces this yet. *Fold into the deploy step.*
+- **The missing-index warning fires PER REQUEST.** Deliberate (a missing index degrades all traffic, so it should be loud), but it will be noisy in that state. Revisit the cadence once real log aggregation exists.
+- **5 of 7 flagged `golden_set_realistic.yaml` labels are still unverified against EUR-Lex.** Until then the weight-0.6 decision rests on LLM-generated labels. All three eval sets are LLM-generated; none is human-authored, so they may share a blind spot the way the first two shared the heading one.
+- **`load_index` caches per process** — a rebuilt index is NOT picked up until restart. A deploy that rebuilds the index without restarting the app keeps serving the old one.
 
 **Deferred build work:**
-- **Eval Wave 2** — RAGAS-style faithfulness / answer-relevance via LLM-as-judge (gpt-4o-mini). Add only once Wave 1 gaps justify it.
+- **Reranker — v2 experiment, gated on the heading-aware eval.** LegalBench-RAG found general rerankers can *hurt* on legal text, so this only ships if `golden_set_realistic.yaml` proves lift. Do not add it on general-purpose reputation.
 - **CI regression gate** — wire eval metrics into GitHub Actions to block regressions (DeepEval, pytest-native).
 - **Observability / tracing** — Langfuse or Arize Phoenix. Planned for the eval/observability phase; nothing built yet. *This is where the eval numbers get a dashboard instead of terminal output.*
 - **Audit logging** — `classification_run` table population. Planned, not built.
