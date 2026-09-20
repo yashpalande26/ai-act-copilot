@@ -27,3 +27,18 @@ Python 3.12+, FastAPI, PostgreSQL + pgvector, LangGraph/LangChain, BYO API key. 
 - Research what senior engineers are actually doing in 2026 for the problem at hand; cite it; disagree with evidence when warranted.
 - Design holistically: consider the whole system (data model, users, retrieval, citations, audit) before implementing a piece.
 - Do the design phase explicitly (e.g. schema design before tables), don't discover it mid-build.
+
+## Engineering invariants — check these, don't just follow the steps
+1. Symmetry of compared/fused components: any two things compared or combined (e.g. two
+   retrievers fused by RRF) MUST operate on the same representation/inputs. Before comparing
+   or fusing, verify they see the same data; flag any asymmetry explicitly.
+2. Eval validity before eval results: for any eval, state the failure class it CANNOT see by
+   construction. An eval whose questions are generated from the same field the system
+   indexes/returns is blind to failures in the un-indexed parts — treat its numbers as
+   provisional until validated on out-of-sample, real inputs.
+3. Never ship on curated-eval green alone: validate any retrieval/quality change on
+   out-of-sample real queries before recommending it ships. Green on a curated (especially
+   adversarially-built) set overstates.
+4. Adversarial eval tiers: report per-category, never a pooled headline; name the bias.
+5. Review depth by reversibility: production/schema/irreversible changes get
+   plan -> verify -> execute; exploration/research/measurement runs autonomously and reports once.
