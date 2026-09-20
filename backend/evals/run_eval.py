@@ -1,4 +1,6 @@
+import argparse
 import json
+import math
 import sys
 from pathlib import Path
 from uuid import uuid4
@@ -27,6 +29,14 @@ from evals.judge import (
 )
 
 GOLDEN_SET_PATH = Path(__file__).resolve().parent / "golden_set.yaml"
+GOLDEN_SET_HARD_PATH = Path(__file__).resolve().parent / "golden_set_hard.yaml"
+
+# Retrieval depth. Recall@5/MRR slice [:RANK_CUTOFF] from this; nDCG uses the
+# full depth. Fetching 10 and slicing is equivalent to fetching 5 - vector
+# search is ORDER BY distance LIMIT n, and rrf_rank_and_fuse sorts the whole
+# candidate union before slicing top_k - so the top 5 is unchanged either way.
+RETRIEVAL_DEPTH = 10
+RANK_CUTOFF = 5
 
 
 def recall_at_k(retrieved_ids: list[str], expected_id: str) -> float:
@@ -40,14 +50,29 @@ def reciprocal_rank(retrieved_ids: list[str], expected_id: str) -> float:
     return 0.0
 
 
+def ndcg_at_k(retrieved_ids: list[str], expected_id: str, k: int = 10) -> float:
+    """nDCG@k with exactly one relevant document per query.
+
+    IDCG is then 1 (the ideal ranking puts gold first), so this collapses to
+    1/log2(rank+1) - the same rank information MRR uses under a gentler
+    discount, NOT an independent third signal. Its value here is depth:
+    Recall/MRR are measured at 5, this at 10, so it distinguishes "gold at
+    rank 8" (partial credit) from "gold absent entirely" (zero).
+    """
+    for i, cid in enumerate(retrieved_ids[:k], start=1):
+        if cid == expected_id:
+            return 1.0 / math.log2(i + 1)
+    return 0.0
+
+
 def abstention_correct(answer: str, citations: list, expected_abstention: bool) -> bool:
     if expected_abstention:
         return answer == ABSTENTION_TEXT and len(citations) == 0
     return answer != ABSTENTION_TEXT
 
 
-def load_golden_set() -> list[dict]:
-    return json.loads(GOLDEN_SET_PATH.read_text())
+def load_golden_set(path: Path = GOLDEN_SET_PATH) -> list[dict]:
+    return json.loads(path.read_text())
 
 
 def _run_retrieval(
@@ -55,21 +80,35 @@ def _run_retrieval(
 ) -> list[str]:
     if config == "vector_only":
         results = vector_search(
-            session, question, corpus_version_id, top_k=5, min_similarity=0.0
+            session,
+            question,
+            corpus_version_id,
+            top_k=RETRIEVAL_DEPTH,
+            min_similarity=0.0,
         )
         return [r.citation_id for r in results]
 
     vector_results = vector_search(
-        session, question, corpus_version_id, top_k=10, min_similarity=0.0
+        session,
+        question,
+        corpus_version_id,
+        top_k=RETRIEVAL_DEPTH,
+        min_similarity=0.0,
     )
-    lexical_results = keyword_search(session, question, corpus_version_id, top_k=10)
-    fused = rrf_rank_and_fuse(vector_results, lexical_results, top_k=5)
+    lexical_results = keyword_search(
+        session, question, corpus_version_id, top_k=RETRIEVAL_DEPTH
+    )
+    fused = rrf_rank_and_fuse(vector_results, lexical_results, top_k=RETRIEVAL_DEPTH)
     return [f.result.citation_id for f in fused]
 
 
 def run_retrieval_eval(session, golden_set: list[dict], corpus_version_id: int):
     answerable = [g for g in golden_set if not g["expected_abstention"]]
-    results: dict[str, list[tuple[float, float]]] = {"vector_only": [], "hybrid": []}
+    results: dict[str, list[tuple[float, float, float]]] = {
+        "vector_only": [],
+        "hybrid": [],
+    }
+    by_category: dict[tuple[str, str], list[tuple[float, float, float]]] = {}
     detail = []
 
     for config in ("vector_only", "hybrid"):
@@ -77,22 +116,33 @@ def run_retrieval_eval(session, golden_set: list[dict], corpus_version_id: int):
             retrieved_ids = _run_retrieval(
                 session, item["question"], corpus_version_id, config
             )
-            recall = recall_at_k(retrieved_ids, item["expected_citation_id"])
-            rr = reciprocal_rank(retrieved_ids, item["expected_citation_id"])
-            results[config].append((recall, rr))
+            expected = item["expected_citation_id"]
+            # Recall@5/MRR judge the top 5; nDCG looks the full depth.
+            recall = recall_at_k(retrieved_ids[:RANK_CUTOFF], expected)
+            rr = reciprocal_rank(retrieved_ids[:RANK_CUTOFF], expected)
+            ndcg = ndcg_at_k(retrieved_ids, expected, k=RETRIEVAL_DEPTH)
+            results[config].append((recall, rr, ndcg))
+            by_category.setdefault(
+                (item.get("category", "uncategorised"), config), []
+            ).append((recall, rr, ndcg))
             rank = next(
-                (
-                    i + 1
-                    for i, cid in enumerate(retrieved_ids)
-                    if cid == item["expected_citation_id"]
-                ),
+                (i + 1 for i, cid in enumerate(retrieved_ids) if cid == expected),
                 None,
             )
-            detail.append(
-                (config, item["id"], recall == 1.0, rank, item["expected_citation_id"])
-            )
+            detail.append((config, item["id"], recall == 1.0, rank, expected))
 
-    return results, detail
+    return results, by_category, detail
+
+
+def _mean_metrics(rows: list[tuple[float, float, float]]) -> tuple[float, float, float]:
+    if not rows:
+        return 0.0, 0.0, 0.0
+    n = len(rows)
+    return (
+        sum(r for r, _, _ in rows) / n,
+        sum(rr for _, rr, _ in rows) / n,
+        sum(nd for _, _, nd in rows) / n,
+    )
 
 
 def run_generation_eval(
@@ -151,7 +201,20 @@ def run_judge_eval(judgeable: list[tuple[dict, GroundedAnswer]]):
 
 
 def main() -> None:
-    golden_set = load_golden_set()
+    parser = argparse.ArgumentParser(description="Run the AI Act Copilot eval harness.")
+    parser.add_argument(
+        "--hard",
+        action="store_true",
+        help="Load golden_set_hard.yaml instead of golden_set.yaml.",
+    )
+    parser.add_argument(
+        "--retrieval-only",
+        action="store_true",
+        help="Skip the generation and LLM-judge passes; retrieval metrics only.",
+    )
+    args = parser.parse_args()
+
+    golden_set = load_golden_set(GOLDEN_SET_HARD_PATH if args.hard else GOLDEN_SET_PATH)
 
     session = SessionLocal()
     try:
@@ -164,22 +227,44 @@ def main() -> None:
             print("No corpus_version found.", file=sys.stderr)
             sys.exit(1)
 
-        ret_results, ret_detail = run_retrieval_eval(session, golden_set, latest.id)
+        ret_results, ret_by_category, ret_detail = run_retrieval_eval(
+            session, golden_set, latest.id
+        )
 
-        print("=== Retrieval: vector_only vs hybrid (Recall@5 / MRR) ===")
-        print(f"{'config':<14}{'recall@5':<11}mrr")
+        print("=== Retrieval: vector_only vs hybrid (Recall@5 / MRR / nDCG@10) ===")
+        print(f"{'config':<14}{'recall@5':<11}{'mrr':<9}ndcg@10")
         for config in ("vector_only", "hybrid"):
-            recalls = [r for r, _ in ret_results[config]]
-            rrs = [rr for _, rr in ret_results[config]]
-            mean_recall = sum(recalls) / len(recalls) if recalls else 0.0
-            mean_rr = sum(rrs) / len(rrs) if rrs else 0.0
-            print(f"{config:<14}{mean_recall:<11.3f}{mean_rr:.3f}")
+            mean_recall, mean_rr, mean_ndcg = _mean_metrics(ret_results[config])
+            print(f"{config:<14}{mean_recall:<11.3f}{mean_rr:<9.3f}{mean_ndcg:.3f}")
+
+        # Only meaningful when the loaded set is categorised - golden_set.yaml
+        # has no category field, so the default run prints just the table above.
+        categories = sorted(
+            {c for c, _ in ret_by_category if c != "uncategorised"},
+        )
+        if categories:
+            print("\n=== Retrieval by category (Recall@5 / MRR / nDCG@10) ===")
+            print(
+                f"{'category':<16}{'n':<5}{'config':<14}"
+                f"{'recall@5':<11}{'mrr':<9}ndcg@10"
+            )
+            for category in categories:
+                for config in ("vector_only", "hybrid"):
+                    rows = ret_by_category.get((category, config), [])
+                    mean_recall, mean_rr, mean_ndcg = _mean_metrics(rows)
+                    print(
+                        f"{category:<16}{len(rows):<5}{config:<14}"
+                        f"{mean_recall:<11.3f}{mean_rr:<9.3f}{mean_ndcg:.3f}"
+                    )
 
         print("\n--- per-question retrieval detail ---")
         for config, gid, passed, rank, expected in ret_detail:
             rank_str = str(rank) if rank else "-"
             status = "PASS" if passed else "FAIL"
             print(f"[{config}] {gid}  {status}  rank={rank_str}  expected={expected}")
+
+        if args.retrieval_only:
+            return
 
         # Generation needs a real chat_session_id - real FK chain, throwaway rows.
         user = AppUser(email=f"eval-run-{uuid4()}@example.com")

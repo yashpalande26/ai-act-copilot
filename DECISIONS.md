@@ -73,9 +73,65 @@ Status: unchanged - still Decided that lexical as built is inert; choice between
 (a) and (b) still deferred, now with a measuring instrument that can tell them
 apart per-category.
 Caveat on that instrument: the hard tier is selected adversarially against
-vector-only, so vector-only scoring ~0 on it is a property of the sampling, not a
-finding; the control tier is biased the opposite way (selected at vector rank 1).
-Report per-category, never pooled.
+vector-only, so vector-only's weak showing on it is a property of the sampling,
+not a finding; the control tier is biased the opposite way (selected at vector
+rank 1). Report per-category, never pooled.
+Correction (2026-09-20, same day): an earlier draft of this paragraph said
+vector-only scores "~0" on the hard tier. That is wrong as written and is
+corrected here. What is 0 by construction is vector-only's *rank-1 precision*
+(0 of 23 hard entries put gold first). Recall@5 is 0.870, because the hard tier
+admits gold at ranks 2-5 - it excludes rank 1, not the whole top-5. Measured
+baseline, hard tier, vector-only: Recall@5 0.870, MRR 0.335, nDCG@10 0.483.
+The practical consequence is that Recall@5 has almost no headroom on this tier,
+so a retrieval improvement shows up in MRR/nDCG rather than in Recall@5.
+
+Update (2026-09-20, Stage 1) — The (a)/(b) fork above is now resolved with
+measurements rather than argument: option (a) (fix query construction) was
+implemented, measured on golden_set_hard.yaml, and REVERTED. Option (b) (drop
+lexical) is not taken either. The lexical leg stays as-is on main, inert, until
+Stage 2 (bm25s).
+
+What was built: keyword_search's websearch_to_tsquery input was rewritten from
+the raw question to an OR-joined string of its content words (alphanumeric
+tokens, >=3 chars, minus the literal operator words or/and/not). The SQL,
+ts_rank_cd ranking, GIN index, threshold (0.1) and function signature were all
+unchanged - only the bound parameter differed. RRF weights were deliberately
+left at 0.7/0.3 so the A/B isolated one variable.
+
+Measured on the hard set (23 exact_term, 12 control), vector_only rows
+byte-identical before/after, confirming only the lexical leg moved:
+  hard tier  MRR        0.335 -> 0.590  (+76%)
+  hard tier  nDCG@10    0.483 -> 0.682  (+41%)
+  hard tier  gold at rank 1   0/23 -> 11/23
+  hard tier  Recall@5   0.870 -> 0.783  (regression)
+  control    Recall@5   1.000 -> 0.917  (regression)
+  control    MRR        0.958 -> 0.917  (regression)
+  default golden_set.yaml, hybrid MRR  0.896 -> 0.854  (regression)
+Note the control-tier hybrid baseline was already 0.958 MRR, not 1.000: even the
+inert lexical leg was perturbing one control question before any change.
+
+Root cause of the regressions, diagnosed on the worst case (gh_27, "What
+determines the duration of participation in the AI regulatory sandbox?"): the OR
+query is dominated by "sandbox"/"regulatory", which match dozens of Article 57
+chunks, so the lexical leg returns 10 topical-but-wrong rows and misses gold
+entirely. Five of those also appear in vector's top-10, and RRF's "present in
+both lists" bonus (>=0.01458) outranks gold's vector-only score (0.01148),
+pushing a correct rank-1 result down to rank 6. OR-joining trades precision for
+recall, and RRF amplifies lexical's false positives whenever it is confidently
+wrong.
+The deeper cause is that ts_rank_cd has no IDF term: it cannot know that
+"sandbox" is common in this corpus while "duration" is rare, so it cannot
+down-weight the words that make the OR query noisy.
+Decision: revert the OR-join on main (the easy-case regression is not worth the
+hard-case gain), keep the Stage 1 eval infrastructure (--hard, --retrieval-only,
+per-category table, nDCG@10), and treat this as measured motivation for Stage 2:
+BM25's IDF weighting is precisely the missing mechanism, and these numbers are
+the baseline it must beat. Not attempted here and still open: tuning the RRF
+lexical weight down from 0.3, which would blunt the false-positive amplification
+but is a second variable.
+Status: (a) implemented, measured, reverted. Lexical remains inert on main by
+choice, with the reason now quantified rather than assumed. Stage 2 (bm25s) is
+the next step.
 
 ## ADR-006: Exact article-reference lookup is deferred to a dedicated structured path (2026-09-18)
 Context: Integration testing showed "Article 6(2)" returns zero lexical results
