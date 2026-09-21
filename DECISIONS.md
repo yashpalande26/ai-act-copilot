@@ -1,6 +1,130 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-14: Export as a self-contained HTML record, rendered on the backend (2026-09-21)
+Context: The strategy doc sells the artifact, not the chat: a dated, cited record a customer
+can hand to a reviewer. Three ways to produce it were weighed. (A) Server-side PDF: the
+strongest single source of truth and the most reproducible bytes, but the usable
+HTML-to-PDF engines need native libraries on the Railway image (Pango, Cairo, GDK-PixBuf
+for WeasyPrint, or a ~300 MB headless Chromium), and the pure-Python alternatives mean
+hand-building the layout in code. (B) A print stylesheet over the on-screen React report:
+zero dependency, but the document is produced by whichever browser the user has, from a
+component that also serves the interactive view, so pagination and content drift with
+the UI and no server-side artifact exists to keep. (C) The backend emits a standalone HTML
+document, viewable and printable.
+Decision: C. app/assessment/export.py renders one deterministic document from the same
+AssessmentResult the JSON routes return: provision text goes database -> build_report ->
+this renderer and never through the frontend. Inline CSS with the light-theme design
+tokens copied in as literal values, local font stacks, no scripts, no external assets
+(the only absolute URLs are the EUR-Lex citation anchors), a print stylesheet, and the
+not-legal-advice notice. GET /assessments/{id}/export.html is owner-scoped through
+get_owned_assessment (foreign or unknown id -> 404), inline by default so it opens in a
+tab, attachment with a dated filename on ?download=1. The BFF relays the bytes and adds a
+Content-Security-Policy that forbids scripts anyway. Rendered with the standard library:
+Jinja2 was not installed, and a header plus nested lists does not justify a template
+engine; html.escape covers every string that came from the database or the user.
+Evidence: Tests render the HR-tech record end to end and assert the assessed-on date,
+engine_version, corpus consolidated date, every obligation citation id, the computed
+ceilings (EUR 60,000 and EUR 20,000 for an SME with EUR 2M turnover, with the Article
+99(6) basis quoted), "not legal advice", "appears to", no "you are compliant", no em
+dash, no script, and that every absolute URL is EUR-Lex with no link, img, @import or
+url() anywhere; a non-owner gets the same 404 as an unknown id and an anonymous caller
+401. The rendered document is 79,934 bytes for the HR-tech case, screenshotted at 1440,
+390 and in print media with no horizontal scroll.
+Consequences: C gives A's single source of truth at B's build cost and ships on the
+current Railway image; the same renderer's output is the input for a PDF engine if a
+customer ever needs a PDF we produce rather than one they print (A remains the end state
+for that). The PDF the user prints from the record inherits browser variance; the HTML
+file itself is the reproducible artifact. The record renders provision text from the
+current corpus at generation time, the same known limitation as ADR-13, stated in the
+document's footer; no snapshot hashing or immutability was added.
+Status: Accepted.
+
+## ADR-13: Saved assessments; the server re-derives the result from the answers (2026-09-21)
+Context: The wedge (ADR-12) was stateless: a report existed only on screen. The product
+needs a record the user can reopen and, later, export. The existing persistence pattern
+(chat_session with a user_id FK, get_owned_session's 404-not-403 rule, environment
+stamped from app_env(), flush-and-rollback tests) was reusable as is.
+Decision: A new `assessment` table (migration 6aa3cd421b84, additive): user_id,
+corpus_version_id, environment, engine_version, corpus_consolidated_date, answers (JSONB),
+headline, roles, obligation_citation_ids, penalties, created_at. **The trust boundary is
+that POST /assessments accepts ANSWERS ONLY**: the server re-runs the deterministic engine
+and build_report and stores what they produce, so a client can never save a headline,
+an obligation list or a penalty figure it did not earn from its own answers (a test posts
+a body carrying headline=MINIMAL and a fake report and asserts HIGH_RISK is what gets
+stored). Reads are owner-scoped: the list is WHERE user_id = the caller, the detail goes
+through deps.get_owned_assessment, and a foreign id and an unknown id return the same
+404. engine_version is "assess-1.<rules_hash>", where rules_hash is the SHA-256 of a
+canonical serialisation (sorted keys, sorted lists, fixed separators, ASCII) of the rule
+DATA in code: the Annex III point list, the authority gate, the Article 25 and scope
+tables, the obligation groups, the questionnaire ids and the penalty paragraph ids. Any
+rule change changes the version without anyone remembering to bump it. The corpus
+consolidated date is stored next to it, because the TEXT a report quotes depends on the
+corpus, not on the rules. The old ClassificationRun table (audit.py) is left untouched.
+Evidence: Migration up, down and up again clean on Supabase. Tests: owner saves (201,
+environment stamped "test", engine_version matching), lists exactly their rows, reopens
+with the answers round-tripped and the report re-rendered; a second user gets 404 on the
+first user's id and an empty list; anonymous 401 on every route; invalid answers 422 with
+nothing saved; the rules hash equals an independently computed SHA-256 of the canonical
+JSON. The DB-backed fixture points the session's commit at flush, so the endpoints' real
+commit path runs while nothing leaves the transaction; rollback at the end. Full suite at
+the time of shipping: 213 passed, 5 skipped (live-gated), zero paid calls.
+Consequences: Two honest gaps. (1) The hash covers rule data, not engine LOGIC; a change
+to engine.py's control flow that leaves the data untouched requires a hand bump of
+ENGINE_MAJOR, and nothing enforces that. (2) **Known limitation, recorded and not built:
+a reopened assessment re-renders provision text live from the current corpus; it is not
+an immutable snapshot of the quoted text.** engine_version and corpus_consolidated_date
+say which rules and which text produced the decision at save time, which is enough to
+notice a change, not to reproduce the old text. ClassificationRun is dead code to remove
+in a later cleanup. Migration 6aa3cd421b84 must run before the code that writes the table
+deploys (the ADR-11 rule).
+Status: Accepted.
+
+## ADR-12: The assessment wedge is deterministic end to end; no LLM, no eval gate (2026-09-21)
+Context: docs/PRODUCT_STRATEGY.md moved the product from "chat over the Act" to "produce
+the compliance record": describe the system, classify its risk tier, list the obligations
+that apply to that role, export a dated, cited report. The existing classifier covered
+only Annex III points 5(b) and 5(c) and never asked about role, Article 5, Article 6(1)
+or Article 50, so it was reusable as a shape (a deterministic, cited result) but not as
+the engine. Every branch the wedge needs is quotable from the corpus except Annex I
+(ADR-004) and the Regulation's general application sentence (ADR-002).
+Decision: A new package, app/assessment, with a structured questionnaire whose every
+question names the provision it rests on, a pure rules engine (assess: answers in,
+citation ids out), a reviewed obligation table keyed by tier and role, a penalty module
+that parses the Article 99 ceilings out of the LIVE paragraph text at request time and
+computes the higher / SME-lower / SMC-lower rules from the user's own turnover, and a
+report builder that assembles VERBATIM provision text by citation id. **No language model
+is anywhere in the path**, and a test greps the package for OpenAI, embedding and
+retrieval imports. Where the Act requires a legal characterisation the engine records
+the answer and flags it: an Article 5 match is a red flag, never a verdict; the Article
+6(3) derogation is quoted, never applied; "substantial modification" and "is it an AI
+system" are self-declared; the Annex I route is reported as possibly high-risk and
+honestly incomplete. Everything the tool says in its own words is labelled commentary;
+the report says "appears to" and never "compliant". The old classify() and /classify stay
+untouched.
+Why no eval gate applies: CLAUDE.md invariant 3 gates LLM-generated text on faithfulness
+and grounding evals. The wedge generates none. The verdict is deterministic and covered by
+table-driven tests (every Annex III point, every Article 5 key, the authority gate, the
+textual exclusions, Article 25, scope, open source), and every sentence of law in the
+report is the corpus text itself, fetched by id. There is no generated prose to judge.
+An LLM plain-language layer, when it comes, is a separate change that IS eval-gated and
+budget-gated.
+Evidence: 65 tests at the time of shipping, zero paid calls: a DB-backed test asserts
+every citation id the engine, map, questionnaire and penalties reference exists in the
+corpus; the live Article 99 text parses to (35M, 7%), (15M, 3%), (7.5M, 1%); the
+obligation table agrees with the ADR-10 actor map; the HR-tech case end to end yields
+Annex III 4(a) quoted, the Article 16 points in order, "2 December 2027" from Article
+113, and an SME par_4 ceiling of EUR 60,000 with Article 99(6) cited. Playwright on the
+harness at 390 and 1440, light and dark: no "you are compliant", "not legal advice"
+present, no horizontal scroll.
+Consequences: The front door is now the assessment (Phase 1: primary CTA, hero card
+rendered from a REAL report fixture, chat demoted to "Ask a question"). Boundary cases
+F1 to F7 and O1/O2 are recorded in the actor map and obligation table docstrings at their
+approved defaults. Out of scope and explicitly deferred: Annex I ingestion, public or
+anonymous access, free-text input, any LLM prose. A test literal such as 140_000 for an
+SME with EUR 2M turnover is a test oracle, not product code, and stays literal.
+Status: Accepted.
+
 ## ADR-11: Environment-tagged query_trace; the daily quota is per environment (2026-09-21)
 Context: Local dev, the two pytest live-stack tests, and any trace-writing eval all write
 query_trace rows to the same Supabase that production will read, and calls_today()
