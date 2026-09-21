@@ -87,6 +87,14 @@ export function SavedAssessmentView({ id }: { id: string }) {
             <dt className="inline">Corpus consolidated: </dt>
             <dd className="inline font-mono">{saved.corpus_consolidated_date}</dd>
           </div>
+          <div>
+            <dt className="inline">Answers: </dt>
+            <dd className="inline">
+              {saved.source === "extracted"
+                ? "pre-filled from a description, then reviewed and confirmed by you"
+                : "entered by hand"}
+            </dd>
+          </div>
         </dl>
         <Commentary>{saved.known_limitation}</Commentary>
       </div>

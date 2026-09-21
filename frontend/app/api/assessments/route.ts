@@ -46,7 +46,9 @@ export async function GET() {
   return relay(outcome, "Not found.");
 }
 
-/** BFF: save. Only the answers travel; the backend re-derives the result. */
+/** BFF: save. Only the answers travel; the backend re-derives the result.
+ *  `?extraction_id=` links the record to the description the answers started
+ *  from; the backend checks it belongs to this user (404 otherwise). */
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.email) return UNAUTHORIZED;
@@ -57,11 +59,13 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: "invalid", message: "Malformed request." }, { status: 400 });
   }
+  const extractionId = new URL(request.url).searchParams.get("extraction_id") ?? undefined;
 
   const outcome = await saveAssessment(
     { subject: session.user.id ?? session.user.email, email: session.user.email },
     answers,
+    extractionId,
   );
   if (outcome.kind === "ok") return NextResponse.json(outcome.data, { status: 201 });
-  return relay(outcome, "Not found.");
+  return relay(outcome, "That pre-filled description could not be found.");
 }

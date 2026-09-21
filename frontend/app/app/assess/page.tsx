@@ -25,9 +25,9 @@ export default async function AssessPage() {
         <p className="type-eyebrow text-ink-faint">Assessment</p>
         <h1 className="type-h2 mt-2 text-balance">Where does your AI system sit under the Act?</h1>
         <p className="type-lead text-muted-foreground mt-4 max-w-[42rem]">
-          Answer a short questionnaire. The result quotes the provisions it rests on, word for
-          word, and computes the fine ceilings from that text. It is informational, not legal
-          advice.
+          Describe the system for a head start, or answer the short questionnaire directly. The
+          result quotes the provisions it rests on, word for word, and computes the fine ceilings
+          from that text. It is informational, not legal advice.
         </p>
         <div className="mt-10">
           <AssessFlow />

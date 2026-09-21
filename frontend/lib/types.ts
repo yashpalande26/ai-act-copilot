@@ -187,6 +187,25 @@ export type AssessmentReport = {
   commentary: string[];
 };
 
+/** Where each answer came from after a free-text extraction. "unknown" blocks
+ *  the engine until the user has answered the question. */
+export type Provenance = Record<string, "inferred" | "unknown">;
+
+/** Mirrors POST /assess/extract. Answers and provenance only: no verdict. */
+export type Extracted = {
+  id: string;
+  created_at: string;
+  model: string;
+  prompt_version: string;
+  answers: Answers;
+  provenance: Provenance;
+  quotes: Record<string, string>;
+  to_confirm: string[];
+  note: string;
+};
+
+export type AnswerSource = "form" | "extracted";
+
 /** Mirrors GET /assessments and GET /assessments/{id}. */
 export type SavedAssessmentSummary = {
   id: string;
@@ -197,6 +216,7 @@ export type SavedAssessmentSummary = {
   corpus_consolidated_date: string;
   environment: string;
   high_risk_basis: string | null;
+  source: AnswerSource;
 };
 
 export type SavedAssessment = {
@@ -205,6 +225,8 @@ export type SavedAssessment = {
   engine_version: string;
   corpus_consolidated_date: string;
   environment: string;
+  source: AnswerSource;
+  extraction_id: string | null;
   answers: Answers;
   report: AssessmentReport;
   known_limitation: string;

@@ -10,7 +10,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import type { AnswerValue, Answers, Question, QuestionnaireDef } from "@/lib/types";
+import type {
+  AnswerValue,
+  Answers,
+  Extracted,
+  Provenance,
+  Question,
+  QuestionnaireDef,
+} from "@/lib/types";
 
 /** Defaults mirror app/assessment/schema.py: everything off except the two
  *  questions whose natural default is yes. */
@@ -22,6 +29,22 @@ export function defaultAnswers(def: QuestionnaireDef): Answers {
       else if (q.kind === "multiselect") a[q.id] = [];
       else if (q.kind === "select") a[q.id] = "";
       else a[q.id] = null;
+    }
+  }
+  return a;
+}
+
+/** Answers to start from after a free-text extraction. Inferred values are
+ *  kept; every unknown boolean becomes null so neither radio is selected and
+ *  the person has to answer it. The engine is never run on a null. */
+export function initialFromExtraction(def: QuestionnaireDef, extracted: Extracted): Answers {
+  const a: Answers = { ...defaultAnswers(def), ...extracted.answers };
+  for (const step of def.steps) {
+    for (const q of step.questions) {
+      if (extracted.provenance[q.id] !== "unknown") continue;
+      if (q.kind === "boolean") a[q.id] = null;
+      else if (q.kind === "select") a[q.id] = "";
+      else if (q.kind === "multiselect") a[q.id] = [];
     }
   }
   return a;
@@ -44,6 +67,22 @@ export function toPayload(a: Answers): Answers {
   return out;
 }
 
+/** A question still needs the person's answer: it was left unknown by the
+ *  extraction and has not been answered since. Turnover is optional either
+ *  way (the ceilings say "enter turnover" without it), so it never blocks. */
+function needsConfirmation(
+  q: Question,
+  a: Answers,
+  provenance: Provenance | undefined,
+  touched: Set<string>,
+): boolean {
+  if (!provenance || provenance[q.id] !== "unknown") return false;
+  if (q.id === "turnover_eur") return false;
+  if (touched.has(q.id)) return false;
+  if (q.kind === "boolean") return a[q.id] === null || a[q.id] === undefined;
+  return true;
+}
+
 function BasisDisclosure({ q }: { q: Question }) {
   if (q.basis.length === 0) return null;
   return (
@@ -63,14 +102,60 @@ function BasisDisclosure({ q }: { q: Question }) {
   );
 }
 
+/** Where a pre-filled answer came from. Green is the design system's
+ *  "verifiable" tone: an inferred value always carries the passage that
+ *  justified it. "To confirm" is neutral; nothing is wrong, it is unanswered. */
+function ProvenanceBadge({
+  status,
+  quote,
+  pending,
+}: {
+  status: "inferred" | "unknown";
+  quote?: string;
+  pending: boolean;
+}) {
+  if (status === "inferred") {
+    return (
+      <Collapsible className="min-w-0">
+        <CollapsibleTrigger className="type-micro border-grounded/40 bg-grounded/[0.08] text-grounded group inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-0.5 hover:underline">
+          Inferred from your description
+          <ChevronDownIcon className="size-3 transition-transform group-data-[state=open]:rotate-180" aria-hidden />
+        </CollapsibleTrigger>
+        {quote ? (
+          <CollapsibleContent className="disclosure-content overflow-hidden">
+            <blockquote className="type-micro text-ink-soft border-grounded/40 mt-2 border-l-2 pl-3">
+              &ldquo;{quote}&rdquo;
+            </blockquote>
+          </CollapsibleContent>
+        ) : null}
+      </Collapsible>
+    );
+  }
+  return (
+    <span
+      className={`type-micro inline-flex items-center rounded-full border px-2.5 py-0.5 ${
+        pending ? "border-ink/30 text-ink font-medium" : "border-hairline text-ink-soft"
+      }`}
+    >
+      {pending ? "To confirm: not in your description" : "Confirmed by you"}
+    </span>
+  );
+}
+
 function Field({
   q,
   value,
   onChange,
+  provenance,
+  quote,
+  pending,
 }: {
   q: Question;
   value: AnswerValue;
   onChange: (v: AnswerValue) => void;
+  provenance?: "inferred" | "unknown";
+  quote?: string;
+  pending: boolean;
 }) {
   const name = `q-${q.id}`;
   const labelId = `${name}-label`;
@@ -81,8 +166,14 @@ function Field({
     <div
       role="group"
       aria-labelledby={labelId}
-      className="border-hairline bg-card rounded-2xl border p-4 sm:p-5"
+      data-pending={pending || undefined}
+      className={`bg-card rounded-2xl border p-4 sm:p-5 ${pending ? "border-ink/30" : "border-hairline"}`}
     >
+      {provenance ? (
+        <div className="mb-2 flex flex-wrap items-start gap-2">
+          <ProvenanceBadge status={provenance} quote={quote} pending={pending} />
+        </div>
+      ) : null}
       <p id={labelId} className="type-body text-ink font-medium">
         {q.label}
       </p>
@@ -185,17 +276,45 @@ export function Questionnaire({
   onSubmit,
   submitting = false,
   initial,
+  provenance,
+  quotes,
+  intro,
 }: {
   def: QuestionnaireDef;
   onSubmit: (answers: Answers) => void;
   submitting?: boolean;
   initial?: Answers;
+  /** Present after a free-text extraction; turns on badges and the gate. */
+  provenance?: Provenance;
+  quotes?: Record<string, string>;
+  intro?: string;
 }) {
   const [answers, setAnswers] = useState<Answers>(() => initial ?? defaultAnswers(def));
+  const [touched, setTouched] = useState<Set<string>>(() => new Set());
   const [stepIndex, setStepIndex] = useState(0);
   const step = def.steps[stepIndex];
   const shown = useMemo(() => step.questions.filter((q) => visible(q, answers)), [step, answers]);
   const last = stepIndex === def.steps.length - 1;
+
+  // Every visible question, on any step, that still needs an answer. The
+  // engine is not run until this is empty: an unknown never becomes a
+  // silent default.
+  const pendingByStep = useMemo(
+    () =>
+      def.steps.map((s) =>
+        s.questions
+          .filter((q) => visible(q, answers) && needsConfirmation(q, answers, provenance, touched))
+          .map((q) => q.id),
+      ),
+    [def.steps, answers, provenance, touched],
+  );
+  const pendingTotal = pendingByStep.reduce((n, ids) => n + ids.length, 0);
+  const pendingHere = new Set(pendingByStep[stepIndex]);
+
+  function change(id: string, v: AnswerValue) {
+    setAnswers((a) => ({ ...a, [id]: v }));
+    setTouched((t) => (t.has(id) ? t : new Set(t).add(id)));
+  }
 
   return (
     <div>
@@ -207,9 +326,20 @@ export function Questionnaire({
             className={i === stepIndex ? "text-ink font-medium" : i < stepIndex ? "text-ink-soft" : ""}
           >
             {i + 1}. {s.title}
+            {pendingByStep[i].length ? (
+              <span className="text-ink ml-1 font-medium" aria-label={`${pendingByStep[i].length} to confirm`}>
+                ({pendingByStep[i].length})
+              </span>
+            ) : null}
           </li>
         ))}
       </ol>
+
+      {provenance && stepIndex === 0 && intro ? (
+        <div className="mb-6">
+          <Commentary>{intro}</Commentary>
+        </div>
+      ) : null}
 
       <h2 className="type-h2">{step.title}</h2>
       {step.intro ? <p className="type-meta text-ink-soft mt-2">{step.intro}</p> : null}
@@ -220,12 +350,15 @@ export function Questionnaire({
             key={q.id}
             q={q}
             value={answers[q.id]}
-            onChange={(v) => setAnswers((a) => ({ ...a, [q.id]: v }))}
+            onChange={(v) => change(q.id, v)}
+            provenance={provenance?.[q.id]}
+            quote={quotes?.[q.id]}
+            pending={pendingHere.has(q.id)}
           />
         ))}
       </div>
 
-      <div className="mt-8 flex items-center justify-between gap-3">
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
         <Button
           type="button"
           variant="outline"
@@ -235,9 +368,22 @@ export function Questionnaire({
           Back
         </Button>
         {last ? (
-          <Button type="button" onClick={() => onSubmit(toPayload(answers))} disabled={submitting}>
-            {submitting ? "Building the report" : "Build the report"}
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            {pendingTotal ? (
+              <p className="type-micro text-ink-soft" role="status">
+                {pendingTotal} {pendingTotal === 1 ? "answer" : "answers"} still to confirm before the report
+                can be built.
+              </p>
+            ) : null}
+            <Button
+              type="button"
+              onClick={() => onSubmit(toPayload(answers))}
+              disabled={submitting || pendingTotal > 0}
+              data-testid="build-report"
+            >
+              {submitting ? "Building the report" : "Build the report"}
+            </Button>
+          </div>
         ) : (
           <Button type="button" onClick={() => setStepIndex((i) => i + 1)}>
             Next

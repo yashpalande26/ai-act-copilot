@@ -3,6 +3,7 @@ import "server-only";
 import { SignJWT } from "jose";
 
 import type {
+  Extracted,
   Answers,
   AssessmentReport,
   QuestionnaireDef,
@@ -196,7 +197,10 @@ export function getTrace(identity: Identity, id: string) {
 
 // --- assessment wedge (deterministic; nothing here costs money) --------------
 
-export type AssessOutcome<T> = HistoryOutcome<T> | { kind: "invalid" };
+export type AssessOutcome<T> =
+  | HistoryOutcome<T>
+  | { kind: "invalid" }
+  | { kind: "rate_limited"; scope: "burst" | "daily" };
 
 async function postBackend<T>(
   path: string,
@@ -224,6 +228,17 @@ async function postBackend<T>(
   if (response.status === 404) return { kind: "not_found" };
   if (response.status === 401) return { kind: "unauthorized" };
   if (response.status === 503) return { kind: "unavailable" };
+  if (response.status === 429) {
+    // Same split as askBackend: the burst guard versus the daily money cap.
+    let scope: "burst" | "daily" = "burst";
+    try {
+      const body = await response.json();
+      if (String(body?.error?.code ?? "").includes("daily")) scope = "daily";
+    } catch {
+      /* fall back to burst */
+    }
+    return { kind: "rate_limited", scope };
+  }
   return { kind: "error" };
 }
 
@@ -235,10 +250,17 @@ export function postAssessment(identity: Identity, answers: Answers) {
   return postBackend<AssessmentReport>("/assess", identity, answers);
 }
 
+/** The one paid call in the assessment path: prose in, answers + provenance
+ *  out, never a verdict. Quota-gated on the backend like a chat turn. */
+export function extractAnswers(identity: Identity, description: string) {
+  return postBackend<Extracted>("/assess/extract", identity, { description });
+}
+
 // --- saved assessments (answers only go up; the server re-derives the result) --
 
-export function saveAssessment(identity: Identity, answers: Answers) {
-  return postBackend<SavedAssessment>("/assessments", identity, answers);
+export function saveAssessment(identity: Identity, answers: Answers, extractionId?: string) {
+  const qs = extractionId ? `?extraction_id=${encodeURIComponent(extractionId)}` : "";
+  return postBackend<SavedAssessment>(`/assessments${qs}`, identity, answers);
 }
 
 export function listAssessments(identity: Identity) {

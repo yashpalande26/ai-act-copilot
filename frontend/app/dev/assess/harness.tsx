@@ -1,21 +1,36 @@
 "use client";
 
-import { Questionnaire } from "@/components/assess/questionnaire";
+import { DescribeScreen } from "@/components/assess/assess-flow";
+import { Questionnaire, initialFromExtraction } from "@/components/assess/questionnaire";
 import { AssessmentReport } from "@/components/assess/report";
-import type { AssessmentReport as Report, QuestionnaireDef } from "@/lib/types";
+import type { AssessmentReport as Report, Extracted, QuestionnaireDef } from "@/lib/types";
 
 export function AssessHarness({
   view,
   report,
   def,
+  extracted,
 }: {
-  view: "report" | "form";
+  view: "report" | "form" | "describe" | "extracted";
   report: Report;
   def: QuestionnaireDef;
+  extracted: Extracted;
 }) {
-  return view === "form" ? (
-    <Questionnaire def={def} onSubmit={() => undefined} />
-  ) : (
-    <AssessmentReport report={report} />
-  );
+  if (view === "form") return <Questionnaire def={def} onSubmit={() => undefined} />;
+  if (view === "describe") {
+    return <DescribeScreen busy={false} onExtract={() => undefined} onSkip={() => undefined} />;
+  }
+  if (view === "extracted") {
+    return (
+      <Questionnaire
+        def={def}
+        initial={initialFromExtraction(def, extracted)}
+        provenance={extracted.provenance}
+        quotes={extracted.quotes}
+        intro={extracted.note}
+        onSubmit={() => undefined}
+      />
+    );
+  }
+  return <AssessmentReport report={report} />;
 }
