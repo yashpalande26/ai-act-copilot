@@ -1,0 +1,38 @@
+# golden_set_enumeration.yaml
+# "List" queries: the correct answer is a SET of citations.
+# gold = must appear;  forbidden = wrong-actor distractors that must NOT be cited.
+# citation_ids taken from the live corpus enumeration (read-only, 2026-09-21).
+
+- id: enum_provider_obligations
+  question: "What obligations apply to providers of high-risk AI systems?"
+  actor: provider
+  gold: [art_16.pt_a, art_16.pt_b, art_16.pt_c, art_16.pt_d, art_16.pt_e, art_16.pt_f,
+         art_16.pt_g, art_16.pt_h, art_16.pt_i, art_16.pt_j, art_16.pt_k, art_16.pt_l]
+  forbidden: [art_26.par_5, art_27.par_2]
+
+- id: enum_deployer_obligations
+  question: "What must a deployer of a high-risk AI system do?"
+  actor: deployer
+  gold: [art_26.par_1, art_26.par_2, art_26.par_4, art_26.par_5, art_26.par_6,
+         art_26.par_7, art_26.par_8, art_26.par_9, art_26.par_11, art_26.par_12]
+  forbidden: [art_16.pt_a, art_16.pt_i]
+
+- id: enum_prohibited_practices
+  question: "Which AI practices are prohibited under the EU AI Act?"
+  actor: n/a
+  gold: [art_5.par_1.pt_a, art_5.par_1.pt_b, art_5.par_1.pt_ba, art_5.par_1.pt_bb,
+         art_5.par_1.pt_c, art_5.par_1.pt_d, art_5.par_1.pt_e, art_5.par_1.pt_f,
+         art_5.par_1.pt_g, art_5.par_1.pt_h]
+  forbidden: []
+
+- id: enum_deployer_transparency
+  question: "What transparency obligations apply to deployers of AI systems?"
+  actor: deployer
+  gold: [art_50.par_3, art_50.par_4]
+  forbidden: [art_50.par_1, art_50.par_2]
+
+- id: enum_provider_transparency
+  question: "What transparency obligations apply to providers of AI systems?"
+  actor: provider
+  gold: [art_50.par_1, art_50.par_2]
+  forbidden: [art_50.par_3, art_50.par_4]

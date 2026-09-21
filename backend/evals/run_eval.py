@@ -34,6 +34,15 @@ from evals.judge import (
 
 GOLDEN_SET_PATH = Path(__file__).resolve().parent / "golden_set.yaml"
 GOLDEN_SET_HARD_PATH = Path(__file__).resolve().parent / "golden_set_hard.yaml"
+GOLDEN_SET_REALISTIC_PATH = (
+    Path(__file__).resolve().parent / "golden_set_realistic.yaml"
+)
+
+GOLDEN_SET_PATHS = {
+    "easy": GOLDEN_SET_PATH,
+    "hard": GOLDEN_SET_HARD_PATH,
+    "realistic": GOLDEN_SET_REALISTIC_PATH,
+}
 
 # Retrieval depth. Recall@5/MRR slice [:RANK_CUTOFF] from this; nDCG uses the
 # full depth. Fetching 10 and slicing is equivalent to fetching 5 - vector
@@ -243,13 +252,29 @@ def main() -> None:
         help="Load golden_set_hard.yaml instead of golden_set.yaml.",
     )
     parser.add_argument(
+        "--set",
+        dest="set_name",
+        choices=sorted(GOLDEN_SET_PATHS),
+        help=(
+            "Which golden set to load. Superset of --hard, and the only way to "
+            "reach the realistic set. Defaults to easy."
+        ),
+    )
+    parser.add_argument(
         "--retrieval-only",
         action="store_true",
         help="Skip the generation and LLM-judge passes; retrieval metrics only.",
     )
     args = parser.parse_args()
 
-    golden_set = load_golden_set(GOLDEN_SET_HARD_PATH if args.hard else GOLDEN_SET_PATH)
+    # --set wins when given; --hard is kept so existing invocations and the
+    # committed baselines they produced stay reproducible verbatim.
+    if args.set_name:
+        set_name = args.set_name
+    else:
+        set_name = "hard" if args.hard else "easy"
+    golden_set = load_golden_set(GOLDEN_SET_PATHS[set_name])
+    print(f"golden set: {set_name} ({len(golden_set)} entries)", file=sys.stderr)
 
     session = SessionLocal()
     try:
