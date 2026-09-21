@@ -1,0 +1,1000 @@
+{
+  "corpus_version_id": 1,
+  "corpus_consolidated_date": "2026-07-27",
+  "steps": [
+    {
+      "key": "scope",
+      "title": "Scope",
+      "intro": null,
+      "questions": [
+        {
+          "id": "is_ai_system",
+          "kind": "boolean",
+          "label": "Is this an AI system as the Regulation defines it?",
+          "help": "Self-declared. The definition is quoted; this tool does not decide it.",
+          "basis": [
+            {
+              "citation_id": "art_3.pt_1",
+              "citation_label": "Article 3, point (1)",
+              "text": "‘AI system’ means a machine-based system that is designed to operate with varying levels of autonomy and that may exhibit adaptiveness after deployment, and that, for explicit or implicit objectives, infers, from the input it receives, how to generate outputs such as predictions, content, recommendations, or decisions that can influence physical or virtual environments;",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        },
+        {
+          "id": "personal_non_professional",
+          "kind": "boolean",
+          "label": "Is it used only in a personal, non-professional capacity?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_2.par_10",
+              "citation_label": "Article 2, paragraph 10",
+              "text": "This Regulation does not apply to obligations of deployers who are natural persons using AI systems in the course of a purely personal non-professional activity.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        },
+        {
+          "id": "research_only",
+          "kind": "boolean",
+          "label": "Was it developed and put into service solely for scientific research and development?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_2.par_6",
+              "citation_label": "Article 2, paragraph 6",
+              "text": "This Regulation does not apply to AI systems or AI models, including their output, specifically developed and put into service for the sole purpose of scientific research and development.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        },
+        {
+          "id": "pre_market_only",
+          "kind": "boolean",
+          "label": "Is it still only in research, testing or development, before being placed on the market or put into service?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_2.par_8",
+              "citation_label": "Article 2, paragraph 8",
+              "text": "This Regulation does not apply to any research, testing or development activity regarding AI systems or AI models prior to their being placed on the market or put into service. Such activities shall be conducted in accordance with applicable Union law. Testing in real world conditions shall not be covered by that exclusion.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        },
+        {
+          "id": "national_security_only",
+          "kind": "boolean",
+          "label": "Is it used exclusively for military, defence or national security purposes?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_2.par_3",
+              "citation_label": "Article 2, paragraph 3",
+              "text": "This Regulation does not apply to areas outside the scope of Union law, and shall not, in any event, affect the competences of the Member States concerning national security, regardless of the type of entity entrusted by the Member States with carrying out tasks in relation to those competences.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        },
+        {
+          "id": "open_source",
+          "kind": "boolean",
+          "label": "Is it released under a free and open-source licence?",
+          "help": "The exemption falls away for prohibited, high-risk and Article 50 systems, so the rest of the questions still apply.",
+          "basis": [
+            {
+              "citation_id": "art_2.par_12",
+              "citation_label": "Article 2, paragraph 12",
+              "text": "This Regulation does not apply to AI systems released under free and open-source licences, unless they are placed on the market or put into service as high-risk AI systems or as an AI system that falls under Article 5 or 50.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        }
+      ]
+    },
+    {
+      "key": "role",
+      "title": "Your role",
+      "intro": null,
+      "questions": [
+        {
+          "id": "roles",
+          "kind": "multiselect",
+          "label": "Which of these describes you? Select all that apply.",
+          "help": null,
+          "basis": [],
+          "options": [
+            {
+              "value": "provider",
+              "label": "Provider: I develop it, or have it developed, and place it on the market or put it into service under my own name or trademark",
+              "basis": {
+                "citation_id": "art_3.pt_3",
+                "citation_label": "Article 3, point (3)",
+                "text": "‘provider’ means a natural or legal person, public authority, agency or other body that develops an AI system or a general-purpose AI model or that has an AI system or a general-purpose AI model developed and places it on the market or puts the AI system into service under its own name or trademark, whether for payment or free of charge;",
+                "children": []
+              }
+            },
+            {
+              "value": "deployer",
+              "label": "Deployer: I use it under my authority in a professional context",
+              "basis": {
+                "citation_id": "art_3.pt_4",
+                "citation_label": "Article 3, point (4)",
+                "text": "‘deployer’ means a natural or legal person, public authority, agency or other body using an AI system under its authority except where the AI system is used in the course of a personal non-professional activity;",
+                "children": []
+              }
+            },
+            {
+              "value": "importer",
+              "label": "Importer: I am established in the EU and place on the market a system bearing a non-EU party's name",
+              "basis": {
+                "citation_id": "art_3.pt_6",
+                "citation_label": "Article 3, point (6)",
+                "text": "‘importer’ means a natural or legal person located or established in the Union that places on the market an AI system that bears the name or trademark of a natural or legal person established in a third country;",
+                "children": []
+              }
+            },
+            {
+              "value": "distributor",
+              "label": "Distributor: I make it available in the supply chain and am neither provider nor importer",
+              "basis": {
+                "citation_id": "art_3.pt_7",
+                "citation_label": "Article 3, point (7)",
+                "text": "‘distributor’ means a natural or legal person in the supply chain, other than the provider or the importer, that makes an AI system available on the Union market;",
+                "children": []
+              }
+            },
+            {
+              "value": "authorised_representative",
+              "label": "Authorised representative: I hold a written mandate from a non-EU provider",
+              "basis": {
+                "citation_id": "art_3.pt_5",
+                "citation_label": "Article 3, point (5)",
+                "text": "‘authorised representative’ means a natural or legal person located or established in the Union who has received and accepted a written mandate from a provider of an AI system or a general-purpose AI model to, respectively, perform and carry out on its behalf the obligations and procedures established by this Regulation;",
+                "children": []
+              }
+            }
+          ],
+          "show_if": null
+        },
+        {
+          "id": "puts_own_name",
+          "kind": "boolean",
+          "label": "Do you put your own name or trademark on a high-risk system someone else built?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_25.par_1.pt_a",
+              "citation_label": "Article 25, paragraph 1, point (a)",
+              "text": "they put their name or trademark on a high-risk AI system already placed on the market or put into service, without prejudice to contractual arrangements stipulating that the obligations are otherwise allocated;",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": {
+            "field": "roles",
+            "equals": null,
+            "any_of": [
+              "deployer",
+              "importer",
+              "distributor"
+            ]
+          }
+        },
+        {
+          "id": "substantial_modification",
+          "kind": "boolean",
+          "label": "Have you made a substantial modification to a high-risk system already on the market?",
+          "help": "Whether a change is 'substantial' is a legal characterisation; the definition is quoted and your answer is recorded, not decided.",
+          "basis": [
+            {
+              "citation_id": "art_25.par_1.pt_b",
+              "citation_label": "Article 25, paragraph 1, point (b)",
+              "text": "they make a substantial modification to a high-risk AI system that has already been placed on the market or has already been put into service in such a way that it remains a high-risk AI system pursuant to Article 6;",
+              "children": []
+            },
+            {
+              "citation_id": "art_3.pt_23",
+              "citation_label": "Article 3, point (23)",
+              "text": "‘substantial modification’ means a change to an AI system after its placing on the market or putting into service which is not foreseen or planned in the initial conformity assessment carried out by the provider and as a result of which the compliance of the AI system with the requirements set out in Chapter III, Section 2 is affected or results in a modification to the intended purpose for which the AI system has been assessed;",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": {
+            "field": "roles",
+            "equals": null,
+            "any_of": [
+              "deployer",
+              "importer",
+              "distributor"
+            ]
+          }
+        },
+        {
+          "id": "changed_intended_purpose",
+          "kind": "boolean",
+          "label": "Have you changed the intended purpose of a system so that it becomes high-risk?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_25.par_1.pt_c",
+              "citation_label": "Article 25, paragraph 1, point (c)",
+              "text": "they modify the intended purpose of an AI system, including a general-purpose AI system, which has not been classified as high-risk and has already been placed on the market or put into service in such a way that the AI system concerned becomes a high-risk AI system in accordance with Article 6.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": {
+            "field": "roles",
+            "equals": null,
+            "any_of": [
+              "deployer",
+              "importer",
+              "distributor"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "prohibited",
+      "title": "Prohibited practices screen",
+      "intro": null,
+      "questions": [
+        {
+          "id": "prohibited_patterns",
+          "kind": "multiselect",
+          "label": "Does the system do any of the following? Select every pattern that matches.",
+          "help": "A match is a red flag to take to counsel, not a determination. Each point carries conditions and exceptions; read the quoted text.",
+          "basis": [
+            {
+              "citation_id": "art_5.par_1",
+              "citation_label": "Article 5, paragraph 1",
+              "text": "The following AI practices shall be prohibited:",
+              "children": []
+            }
+          ],
+          "options": [
+            {
+              "value": "a",
+              "label": "Article 5(1)(a)",
+              "basis": {
+                "citation_id": "art_5.par_1.pt_a",
+                "citation_label": "Article 5, paragraph 1, point (a)",
+                "text": "the placing on the market, the putting into service or the use of an AI system that deploys subliminal techniques beyond a person’s consciousness or purposefully manipulative or deceptive techniques, with the objective, or the effect of materially distorting the behaviour of a person or a group of persons by appreciably impairing their ability to make an informed decision, thereby causing them to take a decision that they would not have otherwise taken in a manner that causes or is reasonably likely to cause that person, another person or group of persons significant harm;",
+                "children": []
+              }
+            },
+            {
+              "value": "b",
+              "label": "Article 5(1)(b)",
+              "basis": {
+                "citation_id": "art_5.par_1.pt_b",
+                "citation_label": "Article 5, paragraph 1, point (b)",
+                "text": "the placing on the market, the putting into service or the use of an AI system that exploits any of the vulnerabilities of a natural person or a specific group of persons due to their age, disability or a specific social or economic situation, with the objective, or the effect, of materially distorting the behaviour of that person or a person belonging to that group in a manner that causes or is reasonably likely to cause that person or another person significant harm;",
+                "children": []
+              }
+            },
+            {
+              "value": "ba",
+              "label": "Article 5(1)(ba)",
+              "basis": {
+                "citation_id": "art_5.par_1.pt_ba",
+                "citation_label": "Article 5, paragraph 1, point (ba)",
+                "text": "the placing on the market, the putting into service or the use of an AI system that generates or manipulates realistic images, videos, audio or similar material of an identifiable natural person’s intimate parts, or of an identifiable natural person engaged in sexually explicit activities, without that person’s freely-given, specific, informed, unambiguous and explicit consent for that generation or manipulation;",
+                "children": []
+              }
+            },
+            {
+              "value": "bb",
+              "label": "Article 5(1)(bb)",
+              "basis": {
+                "citation_id": "art_5.par_1.pt_bb",
+                "citation_label": "Article 5, paragraph 1, point (bb)",
+                "text": "the placing on the market, the putting into service or the use of an AI system that generates or manipulates material or performance within the meaning of Article 2, points (c) and (e), of Directive 2011/93/EU, except where a ‘without right’ defence applies under national law;",
+                "children": []
+              }
+            },
+            {
+              "value": "c",
+              "label": "Article 5(1)(c)",
+              "basis": {
+                "citation_id": "art_5.par_1.pt_c",
+                "citation_label": "Article 5, paragraph 1, point (c)",
+                "text": "the placing on the market, the putting into service or the use of AI systems for the evaluation or classification of natural persons or groups of persons over a certain period of time based on their social behaviour or known, inferred or predicted personal or personality characteristics, with the social score leading to either or both of the following: (i) detrimental or unfavourable treatment of certain natural persons or groups of persons in social contexts that are unrelated to the contexts in which the data was originally generated or collected; (ii) detrimental or unfavourable treatment of certain natural persons or groups of persons that is unjustified or disproportionate to their social behaviour or its gravity;",
+                "children": []
+              }
+            },
+            {
+              "value": "d",
+              "label": "Article 5(1)(d)",
+              "basis": {
+                "citation_id": "art_5.par_1.pt_d",
+                "citation_label": "Article 5, paragraph 1, point (d)",
+                "text": "the placing on the market, the putting into service for this specific purpose, or the use of an AI system for making risk assessments of natural persons in order to assess or predict the risk of a natural person committing a criminal offence, based solely on the profiling of a natural person or on assessing their personality traits and characteristics; this prohibition shall not apply to AI systems used to support the human assessment of the involvement of a person in a criminal activity, which is already based on objective and verifiable facts directly linked to a criminal activity;",
+                "children": []
+              }
+            },
+            {
+              "value": "e",
+              "label": "Article 5(1)(e)",
+              "basis": {
+                "citation_id": "art_5.par_1.pt_e",
+                "citation_label": "Article 5, paragraph 1, point (e)",
+                "text": "the placing on the market, the putting into service for this specific purpose, or the use of AI systems that create or expand facial recognition databases through the untargeted scraping of facial images from the internet or CCTV footage;",
+                "children": []
+              }
+            },
+            {
+              "value": "f",
+              "label": "Article 5(1)(f)",
+              "basis": {
+                "citation_id": "art_5.par_1.pt_f",
+                "citation_label": "Article 5, paragraph 1, point (f)",
+                "text": "the placing on the market, the putting into service for this specific purpose, or the use of AI systems to infer emotions of a natural person in the areas of workplace and education institutions, except where the use of the AI system is intended to be put in place or into the market for medical or safety reasons;",
+                "children": []
+              }
+            },
+            {
+              "value": "g",
+              "label": "Article 5(1)(g)",
+              "basis": {
+                "citation_id": "art_5.par_1.pt_g",
+                "citation_label": "Article 5, paragraph 1, point (g)",
+                "text": "the placing on the market, the putting into service for this specific purpose, or the use of biometric categorisation systems that categorise individually natural persons based on their biometric data to deduce or infer their race, political opinions, trade union membership, religious or philosophical beliefs, sex life or sexual orientation; this prohibition does not cover any labelling or filtering of lawfully acquired biometric datasets, such as images, based on biometric data or categorizing of biometric data in the area of law enforcement;",
+                "children": []
+              }
+            },
+            {
+              "value": "h",
+              "label": "Article 5(1)(h)",
+              "basis": {
+                "citation_id": "art_5.par_1.pt_h",
+                "citation_label": "Article 5, paragraph 1, point (h)",
+                "text": "the use of ‘real-time’ remote biometric identification systems in publicly accessible spaces for the purposes of law enforcement, unless and in so far as such use is strictly necessary for one of the following objectives: (i) the targeted search for specific victims of abduction, trafficking in human beings or sexual exploitation of human beings, as well as the search for missing persons; (ii) the prevention of a specific, substantial and imminent threat to the life or physical safety of natural persons or a genuine and present or genuine and foreseeable threat of a terrorist attack; (iii) the localisation or identification of a person suspected of having committed a criminal offence, for the purpose of conducting a criminal investigation or prosecution or executing a criminal penalty for offences referred to in Annex II and punishable in the Member State concerned by a custodial sentence or a detention order for a maximum period of at least four years.",
+                "children": []
+              }
+            }
+          ],
+          "show_if": null
+        }
+      ]
+    },
+    {
+      "key": "high_risk",
+      "title": "High-risk classification",
+      "intro": null,
+      "questions": [
+        {
+          "id": "product_safety_component",
+          "kind": "boolean",
+          "label": "Is the system a safety component of a product, or itself a product, covered by EU product legislation that requires third-party conformity assessment?",
+          "help": "Annex I is not in this tool's corpus, so a 'yes' can only be reported as possibly high-risk.",
+          "basis": [
+            {
+              "citation_id": "art_6.par_1",
+              "citation_label": "Article 6, paragraph 1",
+              "text": "Irrespective of whether an AI system is placed on the market or put into service independently of the products referred to in points (a) and (b), that AI system shall be considered to be high-risk where both of the following conditions are fulfilled:",
+              "children": []
+            },
+            {
+              "citation_id": "art_6.par_1a",
+              "citation_label": "Article 6, paragraph 1a",
+              "text": "For the purposes of this Regulation, including paragraph 1 of this Article, AI systems that are solely used for non-safety related aspects of user assistance, performance optimisation, service efficiency, automation or convenience or quality control shall not qualify as safety components.",
+              "children": []
+            },
+            {
+              "citation_id": "art_6.par_1b",
+              "citation_label": "Article 6, paragraph 1b",
+              "text": "Notwithstanding paragraph 1a, AI systems the failure or malfunctioning of which would endanger health and safety shall qualify as safety components.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        },
+        {
+          "id": "annex_iii_point",
+          "kind": "select",
+          "label": "Does the system fall under one of the Annex III use cases? Pick the closest, or none.",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_6.par_2",
+              "citation_label": "Article 6, paragraph 2",
+              "text": "In addition to the high-risk AI systems referred to in paragraph 1, AI systems referred to in Annex III shall be considered to be high-risk.",
+              "children": []
+            }
+          ],
+          "options": [
+            {
+              "value": "",
+              "label": "None of these",
+              "basis": null
+            },
+            {
+              "value": "anx_III.pt_1.sub_a",
+              "label": "Annex III, point 1(a)",
+              "basis": {
+                "citation_id": "anx_III.pt_1.sub_a",
+                "citation_label": "Annex III, point 1(a)",
+                "text": "remote biometric identification systems. This shall not include AI systems intended to be used for biometric verification the sole purpose of which is to confirm that a specific natural person is the person he or she claims to be;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_1.sub_b",
+              "label": "Annex III, point 1(b)",
+              "basis": {
+                "citation_id": "anx_III.pt_1.sub_b",
+                "citation_label": "Annex III, point 1(b)",
+                "text": "AI systems intended to be used for biometric categorisation, according to sensitive or protected attributes or characteristics based on the inference of those attributes or characteristics;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_1.sub_c",
+              "label": "Annex III, point 1(c)",
+              "basis": {
+                "citation_id": "anx_III.pt_1.sub_c",
+                "citation_label": "Annex III, point 1(c)",
+                "text": "AI systems intended to be used for emotion recognition.",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_2",
+              "label": "Annex III, point 2",
+              "basis": {
+                "citation_id": "anx_III.pt_2",
+                "citation_label": "Annex III, point 2",
+                "text": "Critical infrastructure: AI systems intended to be used as safety components in the management and operation of critical digital infrastructure, road traffic, or in the supply of water, gas, heating or electricity.",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_3.sub_a",
+              "label": "Annex III, point 3(a)",
+              "basis": {
+                "citation_id": "anx_III.pt_3.sub_a",
+                "citation_label": "Annex III, point 3(a)",
+                "text": "AI systems intended to be used to determine access or admission or to assign natural persons to educational and vocational training institutions at all levels;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_3.sub_b",
+              "label": "Annex III, point 3(b)",
+              "basis": {
+                "citation_id": "anx_III.pt_3.sub_b",
+                "citation_label": "Annex III, point 3(b)",
+                "text": "AI systems intended to be used to evaluate learning outcomes, including when those outcomes are used to steer the learning process of natural persons in educational and vocational training institutions at all levels;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_3.sub_c",
+              "label": "Annex III, point 3(c)",
+              "basis": {
+                "citation_id": "anx_III.pt_3.sub_c",
+                "citation_label": "Annex III, point 3(c)",
+                "text": "AI systems intended to be used for the purpose of assessing the appropriate level of education that an individual will receive or will be able to access, in the context of or within educational and vocational training institutions at all levels;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_3.sub_d",
+              "label": "Annex III, point 3(d)",
+              "basis": {
+                "citation_id": "anx_III.pt_3.sub_d",
+                "citation_label": "Annex III, point 3(d)",
+                "text": "AI systems intended to be used for monitoring and detecting prohibited behaviour of students during tests in the context of or within educational and vocational training institutions at all levels.",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_4.sub_a",
+              "label": "Annex III, point 4(a)",
+              "basis": {
+                "citation_id": "anx_III.pt_4.sub_a",
+                "citation_label": "Annex III, point 4(a)",
+                "text": "AI systems intended to be used for the recruitment or selection of natural persons, in particular to place targeted job advertisements, to analyse and filter job applications, and to evaluate candidates;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_4.sub_b",
+              "label": "Annex III, point 4(b)",
+              "basis": {
+                "citation_id": "anx_III.pt_4.sub_b",
+                "citation_label": "Annex III, point 4(b)",
+                "text": "AI systems intended to be used to make decisions affecting terms of work-related relationships, the promotion or termination of work-related contractual relationships, to allocate tasks based on individual behaviour or personal traits or characteristics or to monitor and evaluate the performance and behaviour of persons in such relationships.",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_5.sub_a",
+              "label": "Annex III, point 5(a)",
+              "basis": {
+                "citation_id": "anx_III.pt_5.sub_a",
+                "citation_label": "Annex III, point 5(a)",
+                "text": "AI systems intended to be used by public authorities or on behalf of public authorities to evaluate the eligibility of natural persons for essential public assistance benefits and services, including healthcare services, as well as to grant, reduce, revoke, or reclaim such benefits and services;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_5.sub_b",
+              "label": "Annex III, point 5(b)",
+              "basis": {
+                "citation_id": "anx_III.pt_5.sub_b",
+                "citation_label": "Annex III, point 5(b)",
+                "text": "AI systems intended to be used to evaluate the creditworthiness of natural persons or establish their credit score, with the exception of AI systems used for the purpose of detecting financial fraud;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_5.sub_c",
+              "label": "Annex III, point 5(c)",
+              "basis": {
+                "citation_id": "anx_III.pt_5.sub_c",
+                "citation_label": "Annex III, point 5(c)",
+                "text": "AI systems intended to be used for risk assessment and pricing in relation to natural persons in the case of life and health insurance;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_5.sub_d",
+              "label": "Annex III, point 5(d)",
+              "basis": {
+                "citation_id": "anx_III.pt_5.sub_d",
+                "citation_label": "Annex III, point 5(d)",
+                "text": "AI systems intended to evaluate and classify emergency calls by natural persons or to be used to dispatch, or to establish priority in the dispatching of, emergency first response services, including by police, firefighters and medical aid, as well as of emergency healthcare patient triage systems.",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_6.sub_a",
+              "label": "Annex III, point 6(a)",
+              "basis": {
+                "citation_id": "anx_III.pt_6.sub_a",
+                "citation_label": "Annex III, point 6(a)",
+                "text": "AI systems intended to be used by or on behalf of law enforcement authorities, or by Union institutions, bodies, offices or agencies in support of law enforcement authorities or on their behalf to assess the risk of a natural person becoming the victim of criminal offences;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_6.sub_b",
+              "label": "Annex III, point 6(b)",
+              "basis": {
+                "citation_id": "anx_III.pt_6.sub_b",
+                "citation_label": "Annex III, point 6(b)",
+                "text": "AI systems intended to be used by or on behalf of law enforcement authorities or by Union institutions, bodies, offices or agencies in support of law enforcement authorities as polygraphs or similar tools;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_6.sub_c",
+              "label": "Annex III, point 6(c)",
+              "basis": {
+                "citation_id": "anx_III.pt_6.sub_c",
+                "citation_label": "Annex III, point 6(c)",
+                "text": "AI systems intended to be used by or on behalf of law enforcement authorities, or by Union institutions, bodies, offices or agencies, in support of law enforcement authorities to evaluate the reliability of evidence in the course of the investigation or prosecution of criminal offences;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_6.sub_d",
+              "label": "Annex III, point 6(d)",
+              "basis": {
+                "citation_id": "anx_III.pt_6.sub_d",
+                "citation_label": "Annex III, point 6(d)",
+                "text": "AI systems intended to be used by law enforcement authorities or on their behalf or by Union institutions, bodies, offices or agencies in support of law enforcement authorities for assessing the risk of a natural person offending or re-offending not solely on the basis of the profiling of natural persons as referred to in Article 3(4) of Directive (EU) 2016/680, or to assess personality traits and characteristics or past criminal behaviour of natural persons or groups;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_6.sub_e",
+              "label": "Annex III, point 6(e)",
+              "basis": {
+                "citation_id": "anx_III.pt_6.sub_e",
+                "citation_label": "Annex III, point 6(e)",
+                "text": "AI systems intended to be used by or on behalf of law enforcement authorities or by Union institutions, bodies, offices or agencies in support of law enforcement authorities for the profiling of natural persons as referred to in Article 3(4) of Directive (EU) 2016/680 in the course of the detection, investigation or prosecution of criminal offences.",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_7.sub_a",
+              "label": "Annex III, point 7(a)",
+              "basis": {
+                "citation_id": "anx_III.pt_7.sub_a",
+                "citation_label": "Annex III, point 7(a)",
+                "text": "AI systems intended to be used by or on behalf of competent public authorities or by Union institutions, bodies, offices or agencies as polygraphs or similar tools;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_7.sub_b",
+              "label": "Annex III, point 7(b)",
+              "basis": {
+                "citation_id": "anx_III.pt_7.sub_b",
+                "citation_label": "Annex III, point 7(b)",
+                "text": "AI systems intended to be used by or on behalf of competent public authorities or by Union institutions, bodies, offices or agencies to assess a risk, including a security risk, a risk of irregular migration, or a health risk, posed by a natural person who intends to enter or who has entered into the territory of a Member State;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_7.sub_c",
+              "label": "Annex III, point 7(c)",
+              "basis": {
+                "citation_id": "anx_III.pt_7.sub_c",
+                "citation_label": "Annex III, point 7(c)",
+                "text": "AI systems intended to be used by or on behalf of competent public authorities or by Union institutions, bodies, offices or agencies to assist competent public authorities for the examination of applications for asylum, visa or residence permits and for associated complaints with regard to the eligibility of the natural persons applying for a status, including related assessments of the reliability of evidence;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_7.sub_d",
+              "label": "Annex III, point 7(d)",
+              "basis": {
+                "citation_id": "anx_III.pt_7.sub_d",
+                "citation_label": "Annex III, point 7(d)",
+                "text": "AI systems intended to be used by or on behalf of competent public authorities, or by Union institutions, bodies, offices or agencies, in the context of migration, asylum or border control management, for the purpose of detecting, recognising or identifying natural persons, with the exception of the verification of travel documents.",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_8.sub_a",
+              "label": "Annex III, point 8(a)",
+              "basis": {
+                "citation_id": "anx_III.pt_8.sub_a",
+                "citation_label": "Annex III, point 8(a)",
+                "text": "AI systems intended to be used by a judicial authority or on their behalf to assist a judicial authority in researching and interpreting facts and the law and in applying the law to a concrete set of facts, or to be used in a similar way in alternative dispute resolution;",
+                "children": []
+              }
+            },
+            {
+              "value": "anx_III.pt_8.sub_b",
+              "label": "Annex III, point 8(b)",
+              "basis": {
+                "citation_id": "anx_III.pt_8.sub_b",
+                "citation_label": "Annex III, point 8(b)",
+                "text": "AI systems intended to be used for influencing the outcome of an election or referendum or the voting behaviour of natural persons in the exercise of their vote in elections or referenda. This does not include AI systems to the output of which natural persons are not directly exposed, such as tools used to organise, optimise or structure political campaigns from an administrative or logistical point of view.",
+                "children": []
+              }
+            }
+          ],
+          "show_if": null
+        },
+        {
+          "id": "acts_for_public_authority",
+          "kind": "boolean",
+          "label": "Are you a public authority, law-enforcement, competent or judicial authority, or acting on one's behalf?",
+          "help": "Some Annex III points apply only in that capacity.",
+          "basis": [],
+          "options": [],
+          "show_if": {
+            "field": "annex_iii_point",
+            "equals": "__any__",
+            "any_of": null
+          }
+        },
+        {
+          "id": "biometric_verification_only",
+          "kind": "boolean",
+          "label": "Is the sole purpose biometric verification (confirming a person is who they claim to be)?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "anx_III.pt_1.sub_a",
+              "citation_label": "Annex III, point 1(a)",
+              "text": "remote biometric identification systems. This shall not include AI systems intended to be used for biometric verification the sole purpose of which is to confirm that a specific natural person is the person he or she claims to be;",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": {
+            "field": "annex_iii_point",
+            "equals": "anx_III.pt_1.sub_a",
+            "any_of": null
+          }
+        },
+        {
+          "id": "fraud_detection_only",
+          "kind": "boolean",
+          "label": "Is the system used for detecting financial fraud?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "anx_III.pt_5.sub_b",
+              "citation_label": "Annex III, point 5(b)",
+              "text": "AI systems intended to be used to evaluate the creditworthiness of natural persons or establish their credit score, with the exception of AI systems used for the purpose of detecting financial fraud;",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": {
+            "field": "annex_iii_point",
+            "equals": "anx_III.pt_5.sub_b",
+            "any_of": null
+          }
+        },
+        {
+          "id": "relies_on_6_3",
+          "kind": "boolean",
+          "label": "Do you intend to rely on the Article 6(3) derogation?",
+          "help": "This tool never applies the derogation itself. Saying yes adds the documentation and registration duties to the report.",
+          "basis": [
+            {
+              "citation_id": "art_6.par_3",
+              "citation_label": "Article 6, paragraph 3",
+              "text": "By derogation from paragraph 2, an AI system referred to in Annex III shall not be considered to be high-risk where it does not pose a significant risk of harm to the health, safety or fundamental rights of natural persons, including by not materially influencing the outcome of decision making.",
+              "children": []
+            },
+            {
+              "citation_id": "art_6.par_4",
+              "citation_label": "Article 6, paragraph 4",
+              "text": "A provider who considers that an AI system referred to in Annex III is not high-risk shall document its assessment before that system is placed on the market or put into service. Such provider shall be subject to the registration obligation set out in Article 49(2). Upon request of national competent authorities, the provider shall provide the documentation of the assessment.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": {
+            "field": "annex_iii_point",
+            "equals": "__any__",
+            "any_of": null
+          }
+        },
+        {
+          "id": "fria_body",
+          "kind": "boolean",
+          "label": "Are you a body governed by public law, a private entity providing public services, or a deployer of an Annex III point 5(b) or 5(c) system?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_27.par_1",
+              "citation_label": "Article 27, paragraph 1",
+              "text": "Prior to deploying a high-risk AI system referred to in Article 6(2), with the exception of high-risk AI systems intended to be used in the area listed in point 2 of Annex III, deployers that are bodies governed by public law, or are private entities providing public services, and deployers of high-risk AI systems referred to in points 5 (b) and (c) of Annex III, shall perform an assessment of the impact on fundamental rights that the use of such system may produce. For that purpose, deployers shall perform an assessment consisting of:",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": {
+            "field": "annex_iii_point",
+            "equals": "__any__",
+            "any_of": null
+          }
+        }
+      ]
+    },
+    {
+      "key": "transparency",
+      "title": "Transparency",
+      "intro": null,
+      "questions": [
+        {
+          "id": "interacts_with_persons",
+          "kind": "boolean",
+          "label": "Does the system interact directly with natural persons?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_50.par_1",
+              "citation_label": "Article 50, paragraph 1",
+              "text": "Providers shall ensure that AI systems intended to interact directly with natural persons are designed and developed in such a way that the natural persons concerned are informed that they are interacting with an AI system, unless this is obvious from the point of view of a natural person who is reasonably well-informed, observant and circumspect, taking into account the circumstances and the context of use. This obligation shall not apply to AI systems authorised by law to detect, prevent, investigate or prosecute criminal offences, subject to appropriate safeguards for the rights and freedoms of third parties, unless those systems are available for the public to report a criminal offence.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        },
+        {
+          "id": "generates_synthetic_content",
+          "kind": "boolean",
+          "label": "Does it generate synthetic audio, image, video or text content?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_50.par_2",
+              "citation_label": "Article 50, paragraph 2",
+              "text": "Providers of AI systems, including general-purpose AI systems, generating synthetic audio, image, video or text content, shall ensure that the outputs of the AI system are marked in a machine-readable format and detectable as artificially generated or manipulated. Providers shall ensure their technical solutions are effective, interoperable, robust and reliable as far as this is technically feasible, taking into account the specificities and limitations of various types of content, the costs of implementation and the generally acknowledged state of the art, as may be reflected in relevant technical standards. This obligation shall not apply to the extent the AI systems perform an assistive function for standard editing or do not substantially alter the input data provided by the deployer or the semantics thereof, or where authorised by law to detect, prevent, investigate or prosecute criminal offences.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        },
+        {
+          "id": "deploys_emotion_or_biometric_categorisation",
+          "kind": "boolean",
+          "label": "Do you deploy it for emotion recognition or biometric categorisation?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_50.par_3",
+              "citation_label": "Article 50, paragraph 3",
+              "text": "Deployers of an emotion recognition system or a biometric categorisation system shall inform the natural persons exposed thereto of the operation of the system, and shall process the personal data in accordance with Regulations (EU) 2016/679 and (EU) 2018/1725 and Directive (EU) 2016/680, as applicable. This obligation shall not apply to AI systems used for biometric categorisation and emotion recognition, which are permitted by law to detect, prevent or investigate criminal offences, subject to appropriate safeguards for the rights and freedoms of third parties, and in accordance with Union law.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        },
+        {
+          "id": "deploys_deep_fakes",
+          "kind": "boolean",
+          "label": "Do you deploy it to generate or manipulate content that constitutes a deep fake?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_50.par_4",
+              "citation_label": "Article 50, paragraph 4",
+              "text": "Deployers of an AI system that generates or manipulates image, audio or video content constituting a deep fake, shall disclose that the content has been artificially generated or manipulated. This obligation shall not apply where the use is authorised by law to detect, prevent, investigate or prosecute criminal offence. Where the content forms part of an evidently artistic, creative, satirical, fictional or analogous work or programme, the transparency obligations set out in this paragraph are limited to disclosure of the existence of such generated or manipulated content in an appropriate manner that does not hamper the display or enjoyment of the work.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        }
+      ]
+    },
+    {
+      "key": "gpai",
+      "title": "General-purpose AI models",
+      "intro": null,
+      "questions": [
+        {
+          "id": "gpai_provider",
+          "kind": "boolean",
+          "label": "Do you place a general-purpose AI model on the market?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_3.pt_63",
+              "citation_label": "Article 3, point (63)",
+              "text": "‘general-purpose AI model’ means an AI model, including where such an AI model is trained with a large amount of data using self-supervision at scale, that displays significant generality and is capable of competently performing a wide range of distinct tasks regardless of the way the model is placed on the market and that can be integrated into a variety of downstream systems or applications, except AI models that are used for research, development or prototyping activities before they are placed on the market;",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        },
+        {
+          "id": "gpai_non_eu",
+          "kind": "boolean",
+          "label": "Are you established outside the Union?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_54.par_1",
+              "citation_label": "Article 54, paragraph 1",
+              "text": "Prior to placing a general-purpose AI model on the Union market, providers established in third countries shall, by written mandate, appoint an authorised representative which is established in the Union.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": {
+            "field": "gpai_provider",
+            "equals": true,
+            "any_of": null
+          }
+        },
+        {
+          "id": "gpai_systemic",
+          "kind": "boolean",
+          "label": "Does the model meet the systemic-risk conditions?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_51.par_1",
+              "citation_label": "Article 51, paragraph 1",
+              "text": "A general-purpose AI model shall be classified as a general-purpose AI model with systemic risk if it meets any of the following conditions:",
+              "children": []
+            },
+            {
+              "citation_id": "art_51.par_2",
+              "citation_label": "Article 51, paragraph 2",
+              "text": "A general-purpose AI model shall be presumed to have high impact capabilities pursuant to paragraph 1, point (a), when the cumulative amount of computation used for its training measured in floating point operations is greater than 1025.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": {
+            "field": "gpai_provider",
+            "equals": true,
+            "any_of": null
+          }
+        }
+      ]
+    },
+    {
+      "key": "penalties",
+      "title": "Exposure inputs",
+      "intro": null,
+      "questions": [
+        {
+          "id": "undertaking",
+          "kind": "boolean",
+          "label": "Are you an undertaking (a business)?",
+          "help": null,
+          "basis": [
+            {
+              "citation_id": "art_99.par_3",
+              "citation_label": "Article 99, paragraph 3",
+              "text": "Non-compliance with the prohibition of the AI practices referred to in Article 5 shall be subject to administrative fines of up to EUR 35 000 000 or, if the offender is an undertaking, up to 7 % of its total worldwide annual turnover for the preceding financial year, whichever is higher.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": null
+        },
+        {
+          "id": "turnover_eur",
+          "kind": "number",
+          "label": "Total worldwide annual turnover for the preceding financial year, in EUR",
+          "help": "Used only to compute the ceilings; not stored.",
+          "basis": [],
+          "options": [],
+          "show_if": {
+            "field": "undertaking",
+            "equals": true,
+            "any_of": null
+          }
+        },
+        {
+          "id": "sme_or_startup",
+          "kind": "boolean",
+          "label": "Are you an SME or a start-up?",
+          "help": "Self-declared. The SME definition comes from Recommendation 2003/361, which is not in this corpus.",
+          "basis": [
+            {
+              "citation_id": "art_99.par_6",
+              "citation_label": "Article 99, paragraph 6",
+              "text": "In the case of SMEs, including start-ups, each fine referred to in this Article shall be up to the percentages or amount referred to in paragraphs 3, 4 and 5, whichever thereof is lower.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": {
+            "field": "undertaking",
+            "equals": true,
+            "any_of": null
+          }
+        },
+        {
+          "id": "smc",
+          "kind": "boolean",
+          "label": "Are you a small mid-cap (SMC)?",
+          "help": "Self-declared.",
+          "basis": [
+            {
+              "citation_id": "art_99.par_6a",
+              "citation_label": "Article 99, paragraph 6a",
+              "text": "In the case of SMCs, each fine referred to in paragraphs 4 and 5 shall be up to the percentages or amount referred therein, whichever is lower.",
+              "children": []
+            }
+          ],
+          "options": [],
+          "show_if": {
+            "field": "undertaking",
+            "equals": true,
+            "any_of": null
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -84,6 +84,103 @@ export type TraceDetail = TraceSummary & {
   candidates: TraceCandidate[];
 };
 
+// --- assessment wedge (mirrors app/assessment/schema.py) ------------------
+
+export type ProvisionText = {
+  citation_id: string;
+  citation_label: string;
+  text: string;
+  children: ProvisionText[];
+};
+
+export type QuestionKind = "boolean" | "select" | "multiselect" | "number";
+
+export type QuestionOption = {
+  value: string;
+  label: string;
+  basis: ProvisionText | null;
+};
+
+export type Question = {
+  id: string;
+  kind: QuestionKind;
+  label: string;
+  help: string | null;
+  basis: ProvisionText[];
+  options: QuestionOption[];
+  show_if: { field: string; equals: unknown; any_of: string[] | null } | null;
+};
+
+export type QuestionnaireDef = {
+  corpus_version_id: number;
+  corpus_consolidated_date: string;
+  steps: { key: string; title: string; intro: string | null; questions: Question[] }[];
+};
+
+export type AnswerValue = boolean | string | string[] | number | null;
+export type Answers = Record<string, AnswerValue>;
+
+export type Headline =
+  | "OUT_OF_SCOPE"
+  | "PROHIBITED_FLAG"
+  | "HIGH_RISK"
+  | "HIGH_RISK_POSSIBLE"
+  | "TRANSPARENCY"
+  | "MINIMAL";
+
+export type ObligationGroup = {
+  key: string;
+  title: string;
+  role: string;
+  provisions: ProvisionText[];
+  applies_from: ProvisionText | null;
+  commentary: string | null;
+};
+
+export type PenaltyLine = {
+  paragraph: ProvisionText;
+  applicable: boolean;
+  eur_cap: number;
+  pct_cap: number;
+  rule: "higher" | "lower" | "eur_only";
+  rule_basis: ProvisionText[];
+  ceiling_eur: number | null;
+  why: string;
+};
+
+export type AssessmentReport = {
+  generated_at: string;
+  corpus_version_id: number;
+  corpus_consolidated_date: string;
+  decision: {
+    headline: Headline;
+    in_scope: boolean;
+    scope_exclusions: string[];
+    open_source_exempt: boolean;
+    roles: string[];
+    treated_as_provider_basis: string[];
+    prohibited_flags: string[];
+    high_risk_basis: string | null;
+    annex_iii_note: string | null;
+    product_route: boolean;
+    derogation_claimed: boolean;
+    transparency: string[];
+    gpai: string[];
+  };
+  headline_text: string;
+  scope: ProvisionText[];
+  role_definitions: ProvisionText[];
+  treated_as_provider: ProvisionText[];
+  prohibited_flags: { key: string; provision: ProvisionText }[];
+  high_risk_basis: ProvisionText | null;
+  derogation: ProvisionText[];
+  product_route: ProvisionText[];
+  obligations: ObligationGroup[];
+  dates: ProvisionText[];
+  penalties: { lines: PenaltyLine[]; factors: ProvisionText; commentary: string };
+  commentary: string[];
+};
+
 export type ChatTurn =
   | { role: "user"; id: string; question: string }
   | { role: "assistant"; id: string; result: AskResult }

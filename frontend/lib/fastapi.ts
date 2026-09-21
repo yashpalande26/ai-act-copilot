@@ -3,6 +3,9 @@ import "server-only";
 import { SignJWT } from "jose";
 
 import type {
+  Answers,
+  AssessmentReport,
+  QuestionnaireDef,
   SessionDetail,
   SessionSummary,
   TraceDetail,
@@ -187,4 +190,45 @@ export function listTraces(
 
 export function getTrace(identity: Identity, id: string) {
   return getBackend<TraceDetail>(`/admin/traces/${encodeURIComponent(id)}`, identity);
+}
+
+// --- assessment wedge (deterministic; nothing here costs money) --------------
+
+export type AssessOutcome<T> = HistoryOutcome<T> | { kind: "invalid" };
+
+async function postBackend<T>(
+  path: string,
+  identity: Identity,
+  body: unknown,
+): Promise<AssessOutcome<T>> {
+  const base = requireEnv("FASTAPI_URL").replace(/\/$/, "");
+  const token = await mintServiceToken(identity.subject, identity.email);
+
+  let response: Response;
+  try {
+    response = await fetch(`${base}${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+      body: JSON.stringify(body),
+      cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch {
+    return { kind: "unavailable" };
+  }
+
+  if (response.ok) return { kind: "ok", data: (await response.json()) as T };
+  if (response.status === 422) return { kind: "invalid" };
+  if (response.status === 404) return { kind: "not_found" };
+  if (response.status === 401) return { kind: "unauthorized" };
+  if (response.status === 503) return { kind: "unavailable" };
+  return { kind: "error" };
+}
+
+export function getQuestionnaire(identity: Identity) {
+  return getBackend<QuestionnaireDef>("/assess/questionnaire", identity);
+}
+
+export function postAssessment(identity: Identity, answers: Answers) {
+  return postBackend<AssessmentReport>("/assess", identity, answers);
 }

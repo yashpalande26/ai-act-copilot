@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { HistoryIcon, PlusIcon, XIcon } from "lucide-react";
+import Link from "next/link";
+import { ClipboardCheckIcon, HistoryIcon, PlusIcon, XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -49,7 +50,7 @@ export function HistoryList({
 }: HistoryProps) {
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="px-3 pt-3 pb-2">
+      <div className="space-y-2 px-3 pt-3 pb-2">
         <Button
           type="button"
           variant="outline"
@@ -58,6 +59,16 @@ export function HistoryList({
         >
           <PlusIcon className="size-4" aria-hidden />
           New chat
+        </Button>
+        <Button
+          asChild
+          variant="ghost"
+          className="text-ink-soft hover:text-ink w-full justify-start gap-2 rounded-xl"
+        >
+          <Link href="/app/assess">
+            <ClipboardCheckIcon className="size-4" aria-hidden />
+            Start an assessment
+          </Link>
         </Button>
       </div>
 
