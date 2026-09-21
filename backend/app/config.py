@@ -61,6 +61,18 @@ def app_env() -> str:
     return value
 
 
+# --- free-text extraction (prose -> questionnaire Answers) -------------------
+# The one paid call in the assessment path. It fills the form; it never runs
+# the engine. Registry key "<provider>:<model>", resolved by extraction.llm.
+# gpt-4o-mini by default: the extraction is a bounded mapping task and the
+# only key configured today is OpenAI's. CHAT_MODEL (gpt-4o) is unrelated.
+MAX_DESCRIPTION_CHARS = 4000  # ~1k tokens; rejected by Pydantic before any spend
+
+
+def extraction_model() -> str:
+    return os.environ.get("EXTRACTION_MODEL", "openai:gpt-4o-mini")
+
+
 # --- admin allowlist --------------------------------------------------------
 # Comma-separated e-mail addresses allowed to read the admin trace viewer
 # (/admin/*). Compared, lower-cased, against the e-mail asserted in the
