@@ -6,6 +6,8 @@ import type {
   Answers,
   AssessmentReport,
   QuestionnaireDef,
+  SavedAssessment,
+  SavedAssessmentSummary,
   SessionDetail,
   SessionSummary,
   TraceDetail,
@@ -231,4 +233,18 @@ export function getQuestionnaire(identity: Identity) {
 
 export function postAssessment(identity: Identity, answers: Answers) {
   return postBackend<AssessmentReport>("/assess", identity, answers);
+}
+
+// --- saved assessments (answers only go up; the server re-derives the result) --
+
+export function saveAssessment(identity: Identity, answers: Answers) {
+  return postBackend<SavedAssessment>("/assessments", identity, answers);
+}
+
+export function listAssessments(identity: Identity) {
+  return getBackend<{ assessments: SavedAssessmentSummary[] }>("/assessments", identity);
+}
+
+export function getAssessment(identity: Identity, id: string) {
+  return getBackend<SavedAssessment>(`/assessments/${encodeURIComponent(id)}`, identity);
 }

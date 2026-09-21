@@ -181,6 +181,29 @@ export type AssessmentReport = {
   commentary: string[];
 };
 
+/** Mirrors GET /assessments and GET /assessments/{id}. */
+export type SavedAssessmentSummary = {
+  id: string;
+  created_at: string;
+  headline: Headline;
+  roles: string[];
+  engine_version: string;
+  corpus_consolidated_date: string;
+  environment: string;
+  high_risk_basis: string | null;
+};
+
+export type SavedAssessment = {
+  id: string;
+  created_at: string;
+  engine_version: string;
+  corpus_consolidated_date: string;
+  environment: string;
+  answers: Answers;
+  report: AssessmentReport;
+  known_limitation: string;
+};
+
 export type ChatTurn =
   | { role: "user"; id: string; question: string }
   | { role: "assistant"; id: string; result: AskResult }

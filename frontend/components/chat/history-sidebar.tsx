@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { ClipboardCheckIcon, HistoryIcon, PlusIcon, XIcon } from "lucide-react";
 
+import { AssessmentsRail } from "@/components/chat/assessments-rail";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SessionSummary } from "@/lib/types";
@@ -15,6 +16,8 @@ export type HistoryProps = {
   currentId?: string;
   onSelect: (id: string) => void;
   onNew: () => void;
+  /** Render the "Your assessments" block (off in the dev harness, which has no session). */
+  showAssessments?: boolean;
 };
 
 /** "Today", "Yesterday", "3 days ago", else a short date. */
@@ -47,6 +50,7 @@ export function HistoryList({
   currentId,
   onSelect,
   onNew,
+  showAssessments = true,
 }: HistoryProps) {
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -72,9 +76,10 @@ export function HistoryList({
         </Button>
       </div>
 
+      <div className="min-h-0 flex-1 overflow-y-auto">
       <p className="type-eyebrow text-ink-faint px-5 pt-3 pb-1.5">Past chats</p>
 
-      <nav aria-label="Past chats" className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
+      <nav aria-label="Past chats" className="px-2 pb-2">
         {loading ? (
           <ul className="space-y-1.5 px-1 pt-1" aria-hidden>
             {[0, 1, 2, 3].map((i) => (
@@ -120,6 +125,9 @@ export function HistoryList({
           </ul>
         )}
       </nav>
+
+      {showAssessments ? <AssessmentsRail /> : null}
+      </div>
     </div>
   );
 }

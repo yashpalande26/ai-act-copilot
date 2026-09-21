@@ -11,6 +11,7 @@ from slowapi.errors import RateLimitExceeded
 from app.api.admin import router as admin_router
 from app.api.ask import router as ask_router
 from app.api.assess import router as assess_router
+from app.api.assessments import router as assessments_router
 from app.api.classify import router as classify_router
 from app.api.history import router as history_router
 from app.config import app_env
@@ -49,6 +50,7 @@ app.include_router(ask_router)
 app.include_router(history_router)
 app.include_router(admin_router)
 app.include_router(assess_router)
+app.include_router(assessments_router)
 
 
 def _error(status_code: int, code: str, message: str, request_id: str) -> JSONResponse:

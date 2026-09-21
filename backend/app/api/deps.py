@@ -19,7 +19,7 @@ from app.config import (
     app_env,
     internal_api_secret,
 )
-from app.db.models import AppUser, ChatSession, QueryTrace
+from app.db.models import AppUser, Assessment, ChatSession, QueryTrace
 from app.db.session import SessionLocal
 
 
@@ -108,6 +108,19 @@ def get_owned_session(session: Session, user_id: UUID, session_id: UUID) -> Chat
             status_code=status.HTTP_404_NOT_FOUND, detail="session_not_found"
         )
     return chat
+
+
+def get_owned_assessment(
+    session: Session, user_id: UUID, assessment_id: UUID
+) -> Assessment:
+    """Load a saved assessment the caller owns, or 404. Same no-leak rule as
+    get_owned_session: an unknown id and someone else's id are the same 404."""
+    row = session.get(Assessment, assessment_id)
+    if row is None or row.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="assessment_not_found"
+        )
+    return row
 
 
 def _utc_day_start() -> datetime:

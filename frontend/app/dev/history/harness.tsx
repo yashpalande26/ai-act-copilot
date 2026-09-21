@@ -38,6 +38,7 @@ export function HistoryHarness() {
     currentId: current,
     onSelect: setCurrent,
     onNew: () => setCurrent(undefined),
+    showAssessments: false, // no session in the harness; the block would 401
   };
 
   return (
