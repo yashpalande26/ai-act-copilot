@@ -231,7 +231,44 @@ def test_index_present_uses_hybrid_bm25_and_records_it(monkeypatch):
 
     assert result.answer == "An answer."
     assert called.get("yes") is True
-    assert _captured_trace_config(session) == "hybrid_bm25"
+    assert _captured_trace_config(session) == "hybrid_bm25|actor=none"
+
+
+def test_actor_prior_reorders_context_and_is_recorded_in_trace(monkeypatch):
+    # A deployer question with a provider chunk fused ABOVE a deployer chunk.
+    provider_first = [
+        FusedResult(
+            result=_sr(1, citation_id="art_16.pt_a"),
+            rrf_score=0.012,
+            vector_rank=0,
+            lexical_rank=0,
+        ),
+        FusedResult(
+            result=_sr(2, citation_id="art_26.par_1"),
+            rrf_score=0.010,
+            vector_rank=1,
+            lexical_rank=1,
+        ),
+    ]
+    _patch_retrieval(monkeypatch, provider_first)
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = _make_llm_response("An answer.")
+    monkeypatch.setattr(answer_module, "_get_client", lambda: fake_client)
+    session = _make_session()
+
+    result = answer_module.generate_grounded_answer(
+        session,
+        "What must a deployer of a high-risk AI system do?",
+        corpus_version_id=1,
+        chat_session_id=uuid4(),
+        write_trace=True,
+    )
+
+    # 0.012 * 0.25 = 0.003 < 0.010, so the deployer chunk now leads.
+    assert [c.citation_id for c in result.citations] == ["art_26.par_1", "art_16.pt_a"]
+    assert _captured_trace_config(session) == (
+        f"hybrid_bm25|actor=deployer|factor={answer_module.ACTOR_MISMATCH_FACTOR}"
+    )
 
 
 def test_missing_index_degrades_without_calling_bm25(monkeypatch, capsys):
@@ -247,7 +284,7 @@ def test_missing_index_degrades_without_calling_bm25(monkeypatch, capsys):
     result = _run_one_turn(monkeypatch, session)
 
     assert result.answer == "An answer."
-    assert _captured_trace_config(session) == "vector_only_degraded"
+    assert _captured_trace_config(session) == "vector_only_degraded|actor=none"
     # A missing index means the deploy step never ran - it must be loud, not
     # only visible in the trace table.
     stderr = capsys.readouterr().err
@@ -269,7 +306,7 @@ def test_stale_index_degrades_loudly_instead_of_raising(monkeypatch, capsys):
     # The whole point: a stale index must not take the copilot down, and must
     # not serve BM25 results resolved against the wrong chunk_id mapping.
     assert result.answer == "An answer."
-    assert _captured_trace_config(session) == "vector_only_degraded"
+    assert _captured_trace_config(session) == "vector_only_degraded|actor=none"
     stderr = capsys.readouterr().err
     assert "ACTION REQUIRED" in stderr
     assert "build_bm25_index.py" in stderr
@@ -287,7 +324,7 @@ def test_unexpected_bm25_failure_degrades_under_a_distinct_banner(monkeypatch, c
     result = _run_one_turn(monkeypatch, session)
 
     assert result.answer == "An answer."
-    assert _captured_trace_config(session) == "vector_only_degraded"
+    assert _captured_trace_config(session) == "vector_only_degraded|actor=none"
     stderr = capsys.readouterr().err
     # Distinct from the stale banner, so a real bug never hides behind the
     # expected operational case.

@@ -7,6 +7,11 @@ from sqlalchemy.orm import Session
 
 from app.db.models import Citation, Message, QueryTrace, RetrievalTrace
 from app.ingestion.embedder import _get_client
+from app.retrieval.actor import (
+    ACTOR_MISMATCH_FACTOR,
+    apply_actor_prior,
+    detect_query_actor,
+)
 from app.retrieval.bm25_index import StaleIndexError, load_index
 from app.retrieval.search import (
     FusedResult,
@@ -244,13 +249,25 @@ def generate_grounded_answer(
         lexical_weight=RETRIEVAL_LEXICAL_WEIGHT,
         top_k=RETRIEVAL_CANDIDATE_BREADTH,
     )
+    # Advisory actor prior, applied over the FULL candidate list before the
+    # slice: when the question names exactly one actor, chunks labelled with
+    # a different actor sink. Recorded in retrieval_config either way, so a
+    # trace row always says whether the prior fired ("actor=none" means it
+    # ran and declined, not that it was absent).
+    query_actor = detect_query_actor(query)
+    all_fused = apply_actor_prior(all_fused, query_actor, ACTOR_MISMATCH_FACTOR)
+    retrieval_config += f"|actor={query_actor or 'none'}"
+    if query_actor is not None:
+        retrieval_config += f"|factor={ACTOR_MISMATCH_FACTOR}"
     retrieval_latency_ms = int((time.monotonic() - retrieval_start) * 1000)
 
     # Equivalent to the old rrf_rank_and_fuse(..., top_k=final_context_size):
     # rrf_rank_and_fuse sorts the full candidate set by rrf_score BEFORE
     # trimming to top_k, and rrf_score doesn't depend on top_k at all - so
     # widening to RETRIEVAL_CANDIDATE_BREADTH and slicing locally yields the
-    # identical top final_context_size, in the same order, every time.
+    # identical top final_context_size, in the same order, every time. The
+    # actor prior re-sorts that same full list, so the slice still takes the
+    # true top final_context_size of the final ordering.
     fused = all_fused[:final_context_size]
 
     if not fused:

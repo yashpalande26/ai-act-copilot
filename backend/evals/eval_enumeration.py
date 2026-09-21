@@ -26,9 +26,17 @@ Runs the SAME path /ask uses, at current production defaults. It reads those
 constants rather than restating them, so it cannot silently drift from
 production. It tunes nothing.
 
-    python -m evals.eval_enumeration
+    python -m evals.eval_enumeration                   # full: context + generation
+    python -m evals.eval_enumeration --retrieval-only  # context columns only
+
+--retrieval-only skips generate_grounded_answer entirely: no LLM call, no
+throwaway app_user/chat_session rows, no message/citation rows. Only the
+context_recall / ctx_contamination columns are produced (used_* show "-").
+Because the model cannot cite what it was not given, used_contamination is
+bounded above by ctx_contamination, so a zero here is a real guarantee.
 """
 
+import argparse
 import inspect
 import sys
 from pathlib import Path
@@ -46,6 +54,11 @@ from app.generation.answer import (
     RETRIEVAL_LEXICAL_WEIGHT,
     RETRIEVAL_VECTOR_WEIGHT,
     generate_grounded_answer,
+)
+from app.retrieval.actor import (
+    ACTOR_MISMATCH_FACTOR,
+    apply_actor_prior,
+    detect_query_actor,
 )
 from app.retrieval.search import bm25_search, rrf_rank_and_fuse, vector_search
 
@@ -104,10 +117,22 @@ def context_slice(session, question: str, corpus_version_id: int) -> list[str]:
         lexical_weight=RETRIEVAL_LEXICAL_WEIGHT,
         top_k=RETRIEVAL_CANDIDATE_BREADTH,
     )
+    # Same advisory prior production applies, over the same full list.
+    fused = apply_actor_prior(
+        fused, detect_query_actor(question), ACTOR_MISMATCH_FACTOR
+    )
     return [f.result.citation_id for f in fused[:FINAL_CONTEXT_SIZE]]
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Enumeration-tier eval.")
+    parser.add_argument(
+        "--retrieval-only",
+        action="store_true",
+        help="Context columns only: no generation, no LLM, no DB writes.",
+    )
+    args = parser.parse_args()
+
     entries = yaml.safe_load(SET_PATH.read_text())
     session = SessionLocal()
     try:
@@ -120,30 +145,36 @@ def main() -> None:
             print("No corpus_version found.", file=sys.stderr)
             sys.exit(1)
 
-        # Real FK chain, as the eval harness already does. Throwaway rows.
-        user = AppUser(email="enum-eval@example.com")
-        existing = (
-            session.execute(select(AppUser).where(AppUser.email == user.email))
-            .scalars()
-            .first()
-        )
-        if existing is None:
-            session.add(user)
+        chat = None
+        if not args.retrieval_only:
+            # Real FK chain, as the eval harness already does. Throwaway rows.
+            user = AppUser(email="enum-eval@example.com")
+            existing = (
+                session.execute(select(AppUser).where(AppUser.email == user.email))
+                .scalars()
+                .first()
+            )
+            if existing is None:
+                session.add(user)
+                session.flush()
+            else:
+                user = existing
+            chat = ChatSession(user_id=user.id, corpus_version_id=latest.id)
+            session.add(chat)
             session.flush()
-        else:
-            user = existing
-        chat = ChatSession(user_id=user.id, corpus_version_id=latest.id)
-        session.add(chat)
-        session.flush()
-        session.commit()
+            session.commit()
 
         print(
             f"production config: breadth={RETRIEVAL_CANDIDATE_BREADTH}  "
             f"context_slice={FINAL_CONTEXT_SIZE}  "
             f"weights v={RETRIEVAL_VECTOR_WEIGHT}/l={RETRIEVAL_LEXICAL_WEIGHT}  "
-            f"min_similarity={MIN_SIMILARITY}"
+            f"min_similarity={MIN_SIMILARITY}  "
+            f"actor_mismatch_factor={ACTOR_MISMATCH_FACTOR}"
         )
-        print(f"probe depth (diagnostic only): {PROBE_DEPTH}\n")
+        print(f"probe depth (diagnostic only): {PROBE_DEPTH}")
+        if args.retrieval_only:
+            print("mode: RETRIEVAL ONLY (no generation, no LLM, no DB writes)")
+        print()
 
         rows = []
         details = []
@@ -153,24 +184,37 @@ def main() -> None:
             question = e["question"]
 
             ctx = context_slice(session, question, latest.id)
-            result = generate_grounded_answer(
-                session, question, latest.id, chat.id, write_trace=False
-            )
-            cited = [c.citation_id for c in result.citations]
-
             in_ctx = [g for g in gold if g in ctx]
-            in_cited = [g for g in gold if g in cited]
-            contamination = [f for f in forbidden if f in cited]
+            ctx_contamination = [f for f in forbidden if f in ctx]
+
+            if args.retrieval_only:
+                cited, in_cited, contamination, abstained = None, None, None, None
+            else:
+                result = generate_grounded_answer(
+                    session, question, latest.id, chat.id, write_trace=False
+                )
+                cited = [c.citation_id for c in result.citations]
+                in_cited = [g for g in gold if g in cited]
+                contamination = [f for f in forbidden if f in cited]
+                abstained = result.answer.startswith("I don't have enough")
 
             rows.append(
                 {
                     "id": e["id"],
                     "actor": e.get("actor", ""),
+                    "query_actor": detect_query_actor(question) or "-",
                     "n_gold": len(gold),
                     "context_recall": len(in_ctx) / len(gold) if gold else 0.0,
-                    "used_recall": len(in_cited) / len(gold) if gold else 0.0,
-                    "contamination": len(contamination),
-                    "abstained": result.answer.startswith("I don't have enough"),
+                    "ctx_contamination": len(ctx_contamination),
+                    "used_recall": (
+                        len(in_cited) / len(gold)
+                        if (gold and in_cited is not None)
+                        else None
+                    ),
+                    "contamination": (
+                        len(contamination) if contamination is not None else None
+                    ),
+                    "abstained": abstained,
                 }
             )
 
@@ -181,41 +225,54 @@ def main() -> None:
                     "id": e["id"],
                     "question": question,
                     "cited": cited,
-                    "contamination": contamination,
+                    "contamination": contamination or [],
+                    "ctx_contamination": ctx_contamination,
                     "missing": [(g, ranks.get(g)) for g in missing],
                 }
             )
 
-        print("=" * 104)
+        def fmt(v, width, spec=".3f"):
+            return f"{'-':<{width}}" if v is None else f"{v:<{width}{spec}}"
+
+        print("=" * 118)
         print(
-            f"{'id':<28}{'actor':<10}{'gold':<6}{'ctx_recall':<12}"
-            f"{'used_recall':<13}{'contam':<8}abstained"
+            f"{'id':<28}{'actor':<10}{'q_actor':<10}{'gold':<6}{'ctx_recall':<12}"
+            f"{'ctx_contam':<12}{'used_recall':<13}{'used_contam':<13}abstained"
         )
-        print("=" * 104)
+        print("=" * 118)
         for r in rows:
             print(
-                f"{r['id']:<28}{r['actor']:<10}{r['n_gold']:<6}"
-                f"{r['context_recall']:<12.3f}{r['used_recall']:<13.3f}"
-                f"{r['contamination']:<8}{r['abstained']}"
+                f"{r['id']:<28}{r['actor']:<10}{r['query_actor']:<10}{r['n_gold']:<6}"
+                f"{r['context_recall']:<12.3f}{r['ctx_contamination']:<12}"
+                f"{fmt(r['used_recall'], 13)}{fmt(r['contamination'], 13, '')}"
+                f"{'-' if r['abstained'] is None else r['abstained']}"
             )
         n = len(rows)
-        print("-" * 104)
+        used = [r["used_recall"] for r in rows if r["used_recall"] is not None]
+        used_contam = [
+            r["contamination"] for r in rows if r["contamination"] is not None
+        ]
+        print("-" * 118)
         print(
-            f"{'MEAN':<28}{'':<10}{'':<6}"
+            f"{'MEAN / TOTAL':<28}{'':<10}{'':<10}{'':<6}"
             f"{sum(r['context_recall'] for r in rows) / n:<12.3f}"
-            f"{sum(r['used_recall'] for r in rows) / n:<13.3f}"
-            f"{sum(r['contamination'] for r in rows):<8}"
+            f"{sum(r['ctx_contamination'] for r in rows):<12}"
+            f"{fmt(sum(used) / len(used) if used else None, 13)}"
+            f"{fmt(sum(used_contam) if used_contam else None, 13, '')}"
         )
 
-        print("\n" + "=" * 104)
+        print("\n" + "=" * 118)
         print("PER-QUERY DETAIL")
-        print("=" * 104)
+        print("=" * 118)
         for d in details:
             print(f"\n{d['id']}")
             print(f"  question: {d['question']}")
-            print(f"  cited   : {d['cited'] or '(none)'}")
+            if d["cited"] is not None:
+                print(f"  cited   : {d['cited'] or '(none)'}")
+            if d["ctx_contamination"]:
+                print(f"  CTX CONTAMINATION : {d['ctx_contamination']}")
             if d["contamination"]:
-                print(f"  CONTAMINATION: {d['contamination']}")
+                print(f"  USED CONTAMINATION: {d['contamination']}")
             if not d["missing"]:
                 print("  missing : none, full gold set reached the context")
                 continue
