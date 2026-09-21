@@ -35,7 +35,7 @@ RETRIEVAL_LEXICAL_WEIGHT = 0.6
 # meaningful (there are candidates that didn't make the final cut to trace
 # against). The actual prompt/citations still only use the top
 # final_context_size of this - see the equivalence note in generate_grounded_answer.
-RETRIEVAL_CANDIDATE_BREADTH = 10
+RETRIEVAL_CANDIDATE_BREADTH = 25
 
 ABSTENTION_TEXT = (
     "I don't have enough information in the retrieved EU AI Act provisions "
@@ -215,7 +215,7 @@ def generate_grounded_answer(
     query: str,
     corpus_version_id: int,
     chat_session_id: UUID,
-    final_context_size: int = 5,
+    final_context_size: int = 15,
     min_similarity: float = 0.3,
     write_trace: bool = True,
     max_output_tokens: int | None = None,
