@@ -8,11 +8,19 @@ import { SiteHeader } from "@/components/site-header";
 /**
  * The assessment wedge: describe the system -> deterministic classification ->
  * obligations quoted verbatim -> fine ceilings computed from the quoted text.
- * Nothing is stored; nothing paid is called.
+ * Nothing is stored until the user saves. `?describe=` carries the user's own
+ * words from a chat turn into the describe box (the funnel): text only,
+ * nothing is called by arriving here.
  */
-export default async function AssessPage() {
+export default async function AssessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ describe?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.email) redirect("/signin");
+  const { describe } = await searchParams;
+  const initialDescription = typeof describe === "string" ? describe.slice(0, 4000) : undefined;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -30,7 +38,7 @@ export default async function AssessPage() {
           from that text. It is informational, not legal advice.
         </p>
         <div className="mt-10">
-          <AssessFlow />
+          <AssessFlow initialDescription={initialDescription} />
         </div>
       </main>
     </div>

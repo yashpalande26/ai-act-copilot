@@ -10,6 +10,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import type { ChatTurn } from "@/lib/types";
 
+/** The most recent user message before index `i` (undefined for none). */
+function lastUserQuestion(turns: ChatTurn[], i: number): string | undefined {
+  for (let j = i - 1; j >= 0; j--) {
+    const t = turns[j];
+    if (t.role === "user") return t.question;
+  }
+  return undefined;
+}
+
 const MAX_CHARS = 2000;
 
 const STARTERS = [
@@ -114,11 +123,16 @@ export function ChatPanel({
             </div>
           ) : (
             <div className="space-y-8">
-              {turns.map((turn) =>
+              {turns.map((turn, i) =>
                 turn.role === "user" ? (
                   <UserTurn key={turn.id} question={turn.question} />
                 ) : (
-                  <AssistantTurn key={turn.id} turn={turn} />
+                  <AssistantTurn
+                    key={turn.id}
+                    turn={turn}
+                    // The message this turn answers, carried into the assessment CTA.
+                    question={lastUserQuestion(turns, i)}
+                  />
                 ),
               )}
               {pending ? <PendingTurn /> : null}

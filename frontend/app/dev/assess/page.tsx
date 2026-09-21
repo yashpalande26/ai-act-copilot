@@ -17,16 +17,16 @@ import questionnaire from "./questionnaire.json";
  *
  *   /dev/assess                 the report
  *   /dev/assess?view=form       the questionnaire, blank
- *   /dev/assess?view=describe   the free-text entry screen
+ *   /dev/assess?view=describe   the free-text entry screen (?describe= pre-fills it)
  *   /dev/assess?view=extracted  the questionnaire pre-filled from a description
  */
 export default async function AssessPreview({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string }>;
+  searchParams: Promise<{ view?: string; describe?: string }>;
 }) {
   if (process.env.NODE_ENV === "production") notFound();
-  const { view } = await searchParams;
+  const { view, describe } = await searchParams;
   const v =
     view === "form" || view === "describe" || view === "extracted" ? view : ("report" as const);
   return (
@@ -37,6 +37,7 @@ export default async function AssessPreview({
         report={report as unknown as Report}
         def={questionnaire as unknown as QuestionnaireDef}
         extracted={extracted as unknown as Extracted}
+        initialDescription={typeof describe === "string" ? describe : undefined}
       />
     </main>
   );

@@ -10,15 +10,24 @@ export function AssessHarness({
   report,
   def,
   extracted,
+  initialDescription,
 }: {
   view: "report" | "form" | "describe" | "extracted";
   report: Report;
   def: QuestionnaireDef;
   extracted: Extracted;
+  initialDescription?: string;
 }) {
   if (view === "form") return <Questionnaire def={def} onSubmit={() => undefined} />;
   if (view === "describe") {
-    return <DescribeScreen busy={false} onExtract={() => undefined} onSkip={() => undefined} />;
+    return (
+      <DescribeScreen
+        busy={false}
+        initialText={initialDescription}
+        onExtract={() => undefined}
+        onSkip={() => undefined}
+      />
+    );
   }
   if (view === "extracted") {
     return (

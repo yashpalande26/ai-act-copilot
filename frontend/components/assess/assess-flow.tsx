@@ -53,15 +53,18 @@ type State =
 export function DescribeScreen({
   busy,
   error,
+  initialText,
   onExtract,
   onSkip,
 }: {
   busy: boolean;
   error?: string;
+  /** Carried in from a chat turn (the funnel); editable before anything is sent. */
+  initialText?: string;
   onExtract: (description: string) => void;
   onSkip: () => void;
 }) {
-  const [text, setText] = useState("");
+  const [text, setText] = useState(() => (initialText ?? "").slice(0, MAX_DESCRIPTION_CHARS));
   const trimmed = text.trim();
   const tooShort = trimmed.length < 20;
   return (
@@ -113,8 +116,9 @@ export function DescribeScreen({
   );
 }
 
-/** Describe (optional) -> questionnaire -> report, on screen, nothing stored. */
-export function AssessFlow() {
+/** Describe (optional) -> questionnaire -> report, on screen, nothing stored.
+ *  `initialDescription` pre-fills the describe box (arriving from chat). */
+export function AssessFlow({ initialDescription }: { initialDescription?: string } = {}) {
   const [state, setState] = useState<State>({ kind: "loading" });
 
   useEffect(() => {
@@ -228,6 +232,7 @@ export function AssessFlow() {
       <DescribeScreen
         busy={state.busy}
         error={state.error}
+        initialText={initialDescription}
         onExtract={(d) => void extract(def, d)}
         onSkip={() => setState({ kind: "form", def, submitting: false, origin: null })}
       />

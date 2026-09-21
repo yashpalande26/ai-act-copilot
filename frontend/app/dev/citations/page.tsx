@@ -46,9 +46,9 @@ export default function CitationsPreview() {
       <p className="type-eyebrow text-ink-faint mb-8">Preview harness, not a product page</p>
       <div className="space-y-8">
         <UserTurn question={question} />
-        <AssistantTurn turn={answer} />
-        <AssistantTurn turn={abstention} />
-        <AssistantTurn turn={error} />
+        <AssistantTurn turn={answer} question={question} />
+        <AssistantTurn turn={abstention} question={question} />
+        <AssistantTurn turn={error} question={question} />
       </div>
     </main>
   );

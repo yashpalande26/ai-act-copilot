@@ -6,6 +6,7 @@ import {
   WifiOffIcon,
 } from "lucide-react";
 
+import { AssessCta } from "@/components/chat/assess-cta";
 import { CitationsDisclosure } from "@/components/chat/citations-disclosure";
 import type { ChatTurn } from "@/lib/types";
 
@@ -37,7 +38,7 @@ export function UserTurn({ question }: { question: string }) {
  * treatment (caution colour, its own icon, an explanation of why) rather than
  * rendering as prose a user might skim past.
  */
-function AbstentionTurn() {
+function AbstentionTurn({ question }: { question?: string }) {
   return (
     <Bubble>
       <div className="border-caution/35 bg-caution/[0.07] rounded-2xl border p-5 sm:p-6">
@@ -54,6 +55,7 @@ function AbstentionTurn() {
           This is intended behaviour. An unanswered question is safer than a
           confident wrong one.
         </p>
+        <AssessCta text={question} variant="refusal" />
       </div>
     </Bubble>
   );
@@ -89,16 +91,19 @@ function ErrorTurn({ kind, message }: Extract<ChatTurn, { role: "error" }>) {
   );
 }
 
-export function AssistantTurn({ turn }: { turn: ChatTurn }) {
+/** `question` is the user message this turn answers; it rides along into the
+ *  assessment's describe box via the CTA. Rendering is otherwise unchanged. */
+export function AssistantTurn({ turn, question }: { turn: ChatTurn; question?: string }) {
   if (turn.role === "error") return <ErrorTurn {...turn} />;
   if (turn.role !== "assistant") return null;
-  if (turn.result.abstained) return <AbstentionTurn />;
+  if (turn.result.abstained) return <AbstentionTurn question={question} />;
 
   return (
     <Bubble>
       <div className="type-body whitespace-pre-wrap">{turn.result.answer}</div>
 
       <CitationsDisclosure citations={turn.result.citations} />
+      <AssessCta text={question} variant="answer" />
     </Bubble>
   );
 }
