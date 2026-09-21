@@ -93,12 +93,13 @@ export function TraceList({ initial }: { initial?: Page }) {
       </div>
 
       <div className="border-hairline mt-6 overflow-x-auto rounded-2xl border">
-        <table className="w-full min-w-[52rem] border-collapse text-left">
+        <table className="w-full min-w-[56rem] border-collapse text-left">
           <thead className="bg-card">
             <tr className="type-micro text-ink-soft [&>th]:px-3 [&>th]:py-2.5 [&>th]:font-medium [&>th]:whitespace-nowrap">
               <th scope="col">When</th>
               <th scope="col">Env</th>
-              <th scope="col" className="w-[40%]">
+              <th scope="col">User</th>
+              <th scope="col" className="min-w-[16rem]">
                 Question
               </th>
               <th scope="col">Retrieval</th>
@@ -114,20 +115,20 @@ export function TraceList({ initial }: { initial?: Page }) {
             {status === "loading" ? (
               [0, 1, 2, 3, 4].map((i) => (
                 <tr key={i} className="border-hairline border-t">
-                  <td colSpan={6} className="px-3 py-3">
+                  <td colSpan={7} className="px-3 py-3">
                     <Skeleton className="h-4 w-full" />
                   </td>
                 </tr>
               ))
             ) : status === "error" ? (
               <tr className="border-hairline border-t">
-                <td colSpan={6} className="type-meta text-ink-soft px-3 py-6">
+                <td colSpan={7} className="type-meta text-ink-soft px-3 py-6">
                   Traces could not be loaded right now.
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr className="border-hairline border-t">
-                <td colSpan={6} className="type-meta text-ink-soft px-3 py-6">
+                <td colSpan={7} className="type-meta text-ink-soft px-3 py-6">
                   No traces yet.
                 </td>
               </tr>
@@ -138,10 +139,24 @@ export function TraceList({ initial }: { initial?: Page }) {
                   className="border-hairline hover:bg-grounded/[0.04] type-meta border-t align-top [&>td]:px-3 [&>td]:py-2.5"
                 >
                   <td className="type-micro font-mono whitespace-nowrap">
-                    {new Date(t.created_at).toLocaleString()}
+                    {/* Date over time: half the width of a one-line timestamp. */}
+                    <span className="block">{new Date(t.created_at).toLocaleDateString()}</span>
+                    <span className="text-ink-soft block">
+                      {new Date(t.created_at).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
                   </td>
                   <td>
                     <EnvBadge env={t.environment} />
+                  </td>
+                  <td className="type-micro font-mono">
+                    {/* Truncation must sit on a block INSIDE the cell: a td's
+                        minimum width in auto layout is its full text. */}
+                    <span className="block max-w-[11rem] truncate" title={t.user_email}>
+                      {t.user_email}
+                    </span>
                   </td>
                   <td>
                     <Link
@@ -156,7 +171,11 @@ export function TraceList({ initial }: { initial?: Page }) {
                       </span>
                     ) : null}
                   </td>
-                  <td className="type-micro font-mono">{t.retrieval_config}</td>
+                  <td className="type-micro font-mono">
+                    <span className="block max-w-[12rem] truncate" title={t.retrieval_config}>
+                      {t.retrieval_config}
+                    </span>
+                  </td>
                   <td className="text-right font-mono tabular-nums whitespace-nowrap">
                     {t.prompt_tokens ?? "–"} / {t.completion_tokens ?? "–"}
                   </td>

@@ -208,6 +208,35 @@ def test_admin_list_is_newest_first_and_paginates_by_before(seeded):
     assert str(seeded["newer"].id) not in ids
 
 
+def test_admin_list_shows_who_asked_and_filters_by_user_email(seeded):
+    c = seeded["client"]
+    owner, admin = seeded["owner"], seeded["admin"]
+
+    r = c.get("/admin/traces?environment=test", headers=_admin(seeded))
+    rows = [
+        t
+        for t in r.json()["traces"]
+        if t["id"] in {str(seeded["older"].id), str(seeded["newer"].id)}
+    ]
+    assert len(rows) == 2
+    assert {t["user_email"] for t in rows} == {owner.email}
+    assert {t["user_id"] for t in rows} == {str(owner.id)}
+
+    # Exact-match filter, case-insensitive on the address.
+    both = c.get(
+        f"/admin/traces?user_email={owner.email.upper()}", headers=_admin(seeded)
+    ).json()["traces"]
+    assert {t["id"] for t in both} == {str(seeded["older"].id), str(seeded["newer"].id)}
+    none = c.get(
+        f"/admin/traces?user_email={admin.email}", headers=_admin(seeded)
+    ).json()
+    assert none["traces"] == []
+
+    detail = c.get(f"/admin/traces/{seeded['newer'].id}", headers=_admin(seeded)).json()
+    assert detail["user_email"] == owner.email
+    assert detail["user_id"] == str(owner.id)
+
+
 def test_admin_detail_orders_candidates_and_replays_the_actor_prior(seeded):
     r = seeded["client"].get(
         f"/admin/traces/{seeded['newer'].id}", headers=_admin(seeded)

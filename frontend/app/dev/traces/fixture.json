@@ -2,6 +2,8 @@
   "id": "fa9eb0b8-6ac1-4676-866d-ee0d0fa89176",
   "created_at": "2026-09-21T11:48:53.450867+00:00",
   "environment": "production",
+  "user_id": "00000000-0000-4000-8000-0000000000aa",
+  "user_email": "operator@example.com",
   "question": "What obligations apply to providers of high-risk AI systems?",
   "retrieval_config": "hybrid_bm25|actor=provider|factor=0.25",
   "abstained": false,

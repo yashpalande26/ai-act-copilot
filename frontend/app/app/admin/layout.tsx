@@ -22,7 +22,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           Back to chat
         </Link>
       </SiteHeader>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">{children}</main>
+      {/* 7xl rather than the app's 6xl: an operator table earns the width. */}
+      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">{children}</main>
     </div>
   );
 }

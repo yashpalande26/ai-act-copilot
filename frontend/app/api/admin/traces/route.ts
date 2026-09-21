@@ -5,6 +5,8 @@ import { listTraces } from "@/lib/fastapi";
 
 const ENVIRONMENTS = new Set(["production", "dev", "test"]);
 const ISO_RE = /^\d{4}-\d{2}-\d{2}T[\d:.]+(?:Z|[+-]\d{2}:\d{2})$/;
+// Shape check only (exact match happens server-side); keeps junk out of the URL.
+const EMAIL_RE = /^[^\s@/]{1,128}@[^\s@/]{1,128}$/;
 
 /**
  * BFF for the admin trace list. Relays only: the admin decision is FastAPI's
@@ -24,6 +26,7 @@ export async function GET(request: Request) {
   const limit = Number.isInteger(limitRaw) && limitRaw >= 1 && limitRaw <= 200 ? limitRaw : 50;
   const before = url.searchParams.get("before") ?? undefined;
   const environment = url.searchParams.get("environment") ?? undefined;
+  const userEmail = url.searchParams.get("user_email")?.trim() ?? undefined;
 
   const outcome = await listTraces(
     { subject: session.user.id ?? session.user.email, email: session.user.email },
@@ -31,6 +34,7 @@ export async function GET(request: Request) {
       limit,
       before: before && ISO_RE.test(before) ? before : undefined,
       environment: environment && ENVIRONMENTS.has(environment) ? environment : undefined,
+      userEmail: userEmail && EMAIL_RE.test(userEmail) ? userEmail : undefined,
     },
   );
 

@@ -42,6 +42,8 @@ export type TraceSummary = {
   id: string;
   created_at: string;
   environment: string;
+  user_id: string;
+  user_email: string;
   question: string;
   retrieval_config: string;
   abstained: boolean;

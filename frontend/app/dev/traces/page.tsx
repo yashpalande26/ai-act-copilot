@@ -25,7 +25,7 @@ export default async function TracesPreview({
   const trace = fixture as Trace;
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-6 py-8">
+    <main className="mx-auto w-full max-w-7xl px-6 py-8">
       <p className="type-eyebrow text-ink-faint mb-8">Preview harness, not a product page</p>
       {view === "list" ? (
         <TraceList

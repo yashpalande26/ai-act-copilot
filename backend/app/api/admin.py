@@ -1,6 +1,7 @@
 """Operator-only trace viewer: GET /admin/traces and GET /admin/traces/{id}.
 
-Reads query_trace and retrieval_trace exactly as _write_trace_safe wrote them.
+Reads query_trace and retrieval_trace exactly as _write_trace_safe wrote them,
+joined to the user who asked (query_trace -> chat_session -> app_user).
 Nothing here is derived from the live retriever; the one computed field,
 `downweighted`, replays the actor prior's decision from two stored facts:
 the query actor recorded in retrieval_config and the provision's own label
@@ -8,8 +9,9 @@ from the static actor map.
 
 Access: deps.require_admin (service token, then the ADMIN_EMAILS allowlist,
 else 404). Admin reads have NO user filter by design and see every user's
-traces; this is deliberately separate from the per-user ownership model in
-history.py, and the two are never combined. No quota, no OpenAI.
+traces, including who asked; this is deliberately separate from the per-user
+ownership model in history.py, and the two are never combined. No quota, no
+OpenAI.
 """
 
 from datetime import datetime
@@ -22,7 +24,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import Admin, Caller, DbSession
 from app.config import PER_MINUTE_LIMIT
-from app.db.models import Chunk, QueryTrace, RetrievalTrace
+from app.db.models import AppUser, ChatSession, Chunk, QueryTrace, RetrievalTrace
 from app.ingestion.chunker import citation_label
 from app.rate_limit import limiter
 from app.retrieval.actor import actor_for
@@ -64,6 +66,8 @@ class TraceSummary(BaseModel):
     id: UUID
     created_at: datetime
     environment: str
+    user_id: UUID
+    user_email: str
     question: str
     retrieval_config: str
     abstained: bool
@@ -106,11 +110,13 @@ class TraceDetail(TraceSummary):
     candidates: list[TraceCandidate]
 
 
-def _summary(qt: QueryTrace) -> dict:
+def _summary(qt: QueryTrace, user_id: UUID, user_email: str) -> dict:
     return {
         "id": qt.id,
         "created_at": qt.created_at,
         "environment": qt.environment,
+        "user_id": user_id,
+        "user_email": user_email,
         "question": qt.query_text,
         "retrieval_config": qt.retrieval_config,
         "abstained": qt.abstained,
@@ -122,6 +128,15 @@ def _summary(qt: QueryTrace) -> dict:
     }
 
 
+def _traces_with_user():
+    """query_trace joined to the user who asked, via chat_session."""
+    return (
+        select(QueryTrace, AppUser.id, AppUser.email)
+        .join(ChatSession, ChatSession.id == QueryTrace.chat_session_id)
+        .join(AppUser, AppUser.id == ChatSession.user_id)
+    )
+
+
 @router.get("/traces", response_model=TraceList)
 @limiter.limit(PER_MINUTE_LIMIT)
 def list_traces(
@@ -129,30 +144,29 @@ def list_traces(
     limit: int = Query(default=50, ge=1, le=200),
     before: datetime | None = None,
     environment: str | None = None,
+    user_email: str | None = None,
     caller: Caller = Admin,
     session: Session = DbSession,
 ) -> TraceList:
     # Keyset pagination on created_at: stable while new traces keep arriving,
     # which offset paging is not. `before` is the previous page's last row.
-    stmt = select(QueryTrace)
+    stmt = _traces_with_user()
     if before is not None:
         stmt = stmt.where(QueryTrace.created_at < before)
     if environment is not None:
         stmt = stmt.where(QueryTrace.environment == environment)
-    rows = (
-        session.execute(
-            stmt.order_by(QueryTrace.created_at.desc(), QueryTrace.id.desc()).limit(
-                limit + 1
-            )
+    if user_email is not None:
+        stmt = stmt.where(AppUser.email == user_email.strip().lower())
+    rows = session.execute(
+        stmt.order_by(QueryTrace.created_at.desc(), QueryTrace.id.desc()).limit(
+            limit + 1
         )
-        .scalars()
-        .all()
-    )
+    ).all()
     more = len(rows) > limit
     page = rows[:limit]
     return TraceList(
-        traces=[TraceSummary(**_summary(qt)) for qt in page],
-        next_before=page[-1].created_at if more and page else None,
+        traces=[TraceSummary(**_summary(qt, uid, email)) for qt, uid, email in page],
+        next_before=page[-1][0].created_at if more and page else None,
     )
 
 
@@ -164,9 +178,12 @@ def get_trace(
     caller: Caller = Admin,
     session: Session = DbSession,
 ) -> TraceDetail:
-    qt = session.get(QueryTrace, query_trace_id)
-    if qt is None:
+    row = session.execute(
+        _traces_with_user().where(QueryTrace.id == query_trace_id)
+    ).first()
+    if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
+    qt, user_id, user_email = row
 
     info = parse_retrieval_config(qt.retrieval_config)
     rows = session.execute(
@@ -215,7 +232,7 @@ def get_trace(
     )
 
     return TraceDetail(
-        **_summary(qt),
+        **_summary(qt, user_id, user_email),
         retrieval=info,
         answer=qt.answer_text,
         citations=citations,

@@ -171,12 +171,13 @@ export function getSession(identity: Identity, id: string) {
 
 export function listTraces(
   identity: Identity,
-  params: { limit?: number; before?: string; environment?: string },
+  params: { limit?: number; before?: string; environment?: string; userEmail?: string },
 ) {
   const qs = new URLSearchParams();
   if (params.limit) qs.set("limit", String(params.limit));
   if (params.before) qs.set("before", params.before);
   if (params.environment) qs.set("environment", params.environment);
+  if (params.userEmail) qs.set("user_email", params.userEmail);
   const query = qs.toString();
   return getBackend<{ traces: TraceSummary[]; next_before: string | null }>(
     `/admin/traces${query ? `?${query}` : ""}`,

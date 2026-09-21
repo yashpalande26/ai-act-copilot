@@ -45,7 +45,7 @@ Backend (Railway → Variables). Nothing else is read by the code.
 | `OPENAI_API_KEY` | |
 | `INTERNAL_API_SECRET` | byte-identical to the Vercel value |
 | `APP_ENV` | `production` |
-| `ADMIN_EMAILS` | comma-separated operator e-mails allowed to open the admin trace viewer (`/admin/*`). Unset means nobody. This is the real gate; keep it to operator accounts, since traces contain user questions and answers. |
+| `ADMIN_EMAILS` | comma-separated operator e-mails allowed to open the admin trace viewer (`/admin/*`). Unset means nobody. This is the real gate; keep it to operator accounts: the viewer shows each question, its answer, and **the e-mail of the user who asked**, which is personal data. |
 
 Frontend (Vercel → Environment Variables, Production scope). Nothing is `NEXT_PUBLIC_`.
 

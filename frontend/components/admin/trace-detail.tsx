@@ -13,7 +13,9 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <dt className="type-micro text-ink-faint">{label}</dt>
-      <dd className="type-meta font-mono">{value}</dd>
+      <dd className="type-meta truncate font-mono" title={value}>
+        {value}
+      </dd>
     </div>
   );
 }
@@ -31,8 +33,9 @@ function TraceDetailView({ trace }: { trace: Trace }) {
           All traces
         </Link>
         <h1 className="type-h2 mt-3 text-balance">{trace.question}</h1>
-        <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-6">
+        <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-7">
           <Stat label="When" value={new Date(trace.created_at).toLocaleString()} />
+          <Stat label="User" value={trace.user_email} />
           <Stat label="Environment" value={trace.environment} />
           <Stat label="Model" value={trace.model} />
           <Stat
