@@ -19,7 +19,13 @@ from app.config import (
     app_env,
     internal_api_secret,
 )
-from app.db.models import AppUser, Assessment, ChatSession, QueryTrace
+from app.db.models import (
+    AppUser,
+    Assessment,
+    ChatSession,
+    ExtractionRun,
+    QueryTrace,
+)
 from app.db.session import SessionLocal
 
 
@@ -110,6 +116,19 @@ def get_owned_session(session: Session, user_id: UUID, session_id: UUID) -> Chat
     return chat
 
 
+def get_owned_extraction(
+    session: Session, user_id: UUID, extraction_id: UUID
+) -> ExtractionRun:
+    """Same rule as the other owned reads: foreign and unknown ids are the
+    same 404, so an id cannot be probed for existence."""
+    row = session.get(ExtractionRun, extraction_id)
+    if row is None or row.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="extraction_not_found"
+        )
+    return row
+
+
 def get_owned_assessment(
     session: Session, user_id: UUID, assessment_id: UUID
 ) -> Assessment:
@@ -145,18 +164,32 @@ def calls_today(session: Session, user_id: UUID | None = None) -> int:
     production: each environment has its own budget, so local dev and pytest
     rows can never consume production's quota, and a production instance that
     was deployed without APP_ENV still counts (and protects) its own rows.
+
+    One budget, two tables: a free-text extraction (extraction_run) spends the
+    same daily allowance as a chat turn. The extraction row is attributed by
+    its own user_id and, unlike query_trace, is written fail-closed.
     """
-    stmt = (
+    day, env = _utc_day_start(), app_env()
+    chat = (
         select(func.count())
         .select_from(QueryTrace)
-        .where(QueryTrace.created_at >= _utc_day_start())
-        .where(QueryTrace.environment == app_env())
+        .where(QueryTrace.created_at >= day)
+        .where(QueryTrace.environment == env)
+    )
+    extraction = (
+        select(func.count())
+        .select_from(ExtractionRun)
+        .where(ExtractionRun.created_at >= day)
+        .where(ExtractionRun.environment == env)
     )
     if user_id is not None:
-        stmt = stmt.join(
+        chat = chat.join(
             ChatSession, ChatSession.id == QueryTrace.chat_session_id
         ).where(ChatSession.user_id == user_id)
-    return session.execute(stmt).scalar() or 0
+        extraction = extraction.where(ExtractionRun.user_id == user_id)
+    return (session.execute(chat).scalar() or 0) + (
+        session.execute(extraction).scalar() or 0
+    )
 
 
 def enforce_daily_quota(session: Session, user: AppUser) -> None:

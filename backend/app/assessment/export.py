@@ -175,8 +175,15 @@ def render_export(
     saved_at: datetime,
     engine_version: str,
     environment: str,
+    prefilled_at: datetime | None = None,
 ) -> str:
     d = report.decision
+    answers_line = (
+        f"pre-filled from a description on {prefilled_at.strftime('%Y-%m-%d %H:%M UTC')}, "
+        "then reviewed and confirmed by the user before this record was saved"
+        if prefilled_at is not None
+        else "entered by the user"
+    )
     roles = ", ".join(ROLE_LABEL.get(r, r) for r in d.roles) or "none selected"
     out: list[str] = []
     out.append(
@@ -194,7 +201,8 @@ def render_export(
         f"<div><dt>Consolidated text of: </dt><dd>{esc(report.corpus_consolidated_date)}</dd></div>"
         f"<div><dt>Environment: </dt><dd>{esc(environment)}</dd></div>"
         f"<div><dt>Record: </dt><dd>{esc(assessment_id)}</dd></div>"
-        f"<div><dt>Roles: </dt><dd>{esc(roles)}</dd></div></dl></header>"
+        f"<div><dt>Roles: </dt><dd>{esc(roles)}</dd></div>"
+        f"<div><dt>Answers: </dt><dd>{esc(answers_line)}</dd></div></dl></header>"
     )
     out.append(
         f'<section class="card tone-{esc(d.headline)}"><p class="eyebrow">Result</p>'

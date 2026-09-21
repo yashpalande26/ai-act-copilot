@@ -37,6 +37,13 @@ class Assessment(Base):
     roles: Mapped[list] = mapped_column(JSONB)
     obligation_citation_ids: Mapped[list] = mapped_column(JSONB)
     penalties: Mapped[dict] = mapped_column(JSONB)
+    # Provenance of the answers: "form" (typed in) or "extracted" (pre-filled
+    # from a description by the extraction run below, then confirmed and
+    # possibly edited by the user; what is stored is what the user confirmed).
+    source: Mapped[str] = mapped_column(server_default="form")
+    extraction_run_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("extraction_run.id")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

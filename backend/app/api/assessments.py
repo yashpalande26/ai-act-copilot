@@ -27,6 +27,7 @@ from app.api.deps import (
     DbSession,
     ServiceToken,
     get_owned_assessment,
+    get_owned_extraction,
     resolve_user,
 )
 from app.assessment.export import render_export
@@ -34,7 +35,7 @@ from app.assessment.report import build_report
 from app.assessment.schema import Answers, AssessmentResult
 from app.assessment.version import ENGINE_VERSION
 from app.config import PER_MINUTE_LIMIT, app_env
-from app.db.models import Assessment
+from app.db.models import Assessment, ExtractionRun
 from app.rate_limit import limiter
 
 router = APIRouter(prefix="/assessments")
@@ -43,6 +44,14 @@ KNOWN_LIMITATION = (
     "Provision text is rendered from the current corpus when an assessment is "
     "reopened; a saved assessment is not an immutable snapshot of the quoted text."
 )
+
+
+def _prefilled_at(session: Session, row: Assessment) -> datetime | None:
+    """When the answers started from a free-text extraction, its timestamp."""
+    if row.extraction_run_id is None:
+        return None
+    run = session.get(ExtractionRun, row.extraction_run_id)
+    return run.created_at if run is not None else None
 
 
 class SavedSummary(BaseModel):
@@ -54,6 +63,7 @@ class SavedSummary(BaseModel):
     corpus_consolidated_date: str
     environment: str
     high_risk_basis: str | None
+    source: str  # "form" | "extracted"
 
 
 class SavedList(BaseModel):
@@ -66,6 +76,8 @@ class Saved(BaseModel):
     engine_version: str
     corpus_consolidated_date: str
     environment: str
+    source: str  # "form" | "extracted" (pre-filled from a description, then confirmed)
+    extraction_id: UUID | None
     answers: Answers
     report: AssessmentResult
     known_limitation: str = KNOWN_LIMITATION
@@ -81,6 +93,7 @@ def _summary(row: Assessment) -> SavedSummary:
         corpus_consolidated_date=row.corpus_consolidated_date,
         environment=row.environment,
         high_risk_basis=(row.answers or {}).get("annex_iii_point") or None,
+        source=row.source,
     )
 
 
@@ -89,10 +102,20 @@ def _summary(row: Assessment) -> SavedSummary:
 def save_assessment(
     request: Request,  # required by slowapi to key the limiter
     answers: Answers,
+    extraction_id: UUID | None = None,
     caller: Caller = ServiceToken,
     session: Session = DbSession,
 ) -> Saved:
+    """`extraction_id` (query) links the record to the free-text extraction
+    the answers started from. Owner-scoped: someone else's or an unknown id
+    is a 404 and nothing is saved. The answers stored are the ones POSTED,
+    i.e. what the user confirmed and possibly edited, never the raw output."""
     user = resolve_user(session, caller)
+    extraction = (
+        get_owned_extraction(session, user.id, extraction_id)
+        if extraction_id is not None
+        else None
+    )
     try:
         report = build_report(session, answers)
     except LookupError as exc:
@@ -113,6 +136,8 @@ def save_assessment(
             p.citation_id for g in report.obligations for p in g.provisions
         ],
         penalties=report.penalties.model_dump(mode="json"),
+        source="extracted" if extraction is not None else "form",
+        extraction_run_id=extraction.id if extraction is not None else None,
     )
     session.add(row)
     session.commit()
@@ -123,6 +148,8 @@ def save_assessment(
         engine_version=row.engine_version,
         corpus_consolidated_date=row.corpus_consolidated_date,
         environment=row.environment,
+        source=row.source,
+        extraction_id=row.extraction_run_id,
         answers=answers,
         report=report,
     )
@@ -176,6 +203,7 @@ def export_assessment(
         saved_at=row.created_at,
         engine_version=row.engine_version,
         environment=row.environment,
+        prefilled_at=_prefilled_at(session, row),
     )
     filename = f"ai-act-assessment-{str(row.id)[:8]}-{row.created_at:%Y-%m-%d}.html"
     disposition = "attachment" if download else "inline"
@@ -211,6 +239,8 @@ def get_assessment(
         engine_version=row.engine_version,
         corpus_consolidated_date=row.corpus_consolidated_date,
         environment=row.environment,
+        source=row.source,
+        extraction_id=row.extraction_run_id,
         answers=answers,
         report=report,
     )
