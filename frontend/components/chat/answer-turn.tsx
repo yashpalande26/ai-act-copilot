@@ -6,7 +6,7 @@ import {
   WifiOffIcon,
 } from "lucide-react";
 
-import { CitationCard } from "@/components/chat/citation-card";
+import { CitationsDisclosure } from "@/components/chat/citations-disclosure";
 import type { ChatTurn } from "@/lib/types";
 
 function Bubble({ children }: { children: React.ReactNode }) {
@@ -98,18 +98,7 @@ export function AssistantTurn({ turn }: { turn: ChatTurn }) {
     <Bubble>
       <div className="type-body whitespace-pre-wrap">{turn.result.answer}</div>
 
-      {turn.result.citations.length > 0 ? (
-        <section aria-label="Cited provisions" className="space-y-2.5">
-          <h3 className="type-micro text-ink-soft font-medium tracking-[0.07em] uppercase">
-            Cited provisions ({turn.result.citations.length})
-          </h3>
-          <div className="space-y-2">
-            {turn.result.citations.map((citation) => (
-              <CitationCard key={citation.citation_id} citation={citation} />
-            ))}
-          </div>
-        </section>
-      ) : null}
+      <CitationsDisclosure citations={turn.result.citations} />
     </Bubble>
   );
 }
