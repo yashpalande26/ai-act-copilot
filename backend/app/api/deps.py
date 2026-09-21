@@ -89,6 +89,26 @@ def resolve_user(session: Session, caller: Caller) -> AppUser:
     return user
 
 
+def get_owned_session(session: Session, user_id: UUID, session_id: UUID) -> ChatSession:
+    """Load a chat session the caller owns, or 404.
+
+    404 rather than 403 on purpose, and the same 404 for "no such session" and
+    "someone else's session": confirming that a foreign id exists is free
+    information for an attacker. Shared by /ask (continue a thread) and the
+    history endpoints (list and reopen), so the ownership rule lives once.
+    """
+    chat = (
+        session.execute(select(ChatSession).where(ChatSession.id == session_id))
+        .scalars()
+        .first()
+    )
+    if chat is None or chat.user_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="session_not_found"
+        )
+    return chat
+
+
 def _utc_day_start() -> datetime:
     now = datetime.now(UTC)
     return now.replace(hour=0, minute=0, second=0, microsecond=0)

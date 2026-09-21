@@ -2,6 +2,8 @@ import "server-only";
 
 import { SignJWT } from "jose";
 
+import type { SessionDetail, SessionSummary } from "@/lib/types";
+
 /**
  * Server-only bridge to the FastAPI backend (the "BFF" half of the contract).
  *
@@ -113,4 +115,49 @@ export async function askBackend(
   if (response.status === 422) return { kind: "invalid" };
   if (response.status === 503) return { kind: "unavailable" };
   return { kind: "error" };
+}
+
+// --- conversation history (read-only) ---------------------------------------
+
+export type HistoryOutcome<T> =
+  | { kind: "ok"; data: T }
+  | { kind: "not_found" }
+  | { kind: "unauthorized" }
+  | { kind: "unavailable" }
+  | { kind: "error" };
+
+type Identity = { subject: string; email: string };
+
+/**
+ * GET against the backend with a freshly minted service token. Same token,
+ * same closed set of outcomes as askBackend; these calls never spend money.
+ */
+async function getBackend<T>(path: string, identity: Identity): Promise<HistoryOutcome<T>> {
+  const base = requireEnv("FASTAPI_URL").replace(/\/$/, "");
+  const token = await mintServiceToken(identity.subject, identity.email);
+
+  let response: Response;
+  try {
+    response = await fetch(`${base}${path}`, {
+      headers: { authorization: `Bearer ${token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch {
+    return { kind: "unavailable" };
+  }
+
+  if (response.ok) return { kind: "ok", data: (await response.json()) as T };
+  if (response.status === 404) return { kind: "not_found" };
+  if (response.status === 401) return { kind: "unauthorized" };
+  if (response.status === 503) return { kind: "unavailable" };
+  return { kind: "error" };
+}
+
+export function listSessions(identity: Identity) {
+  return getBackend<{ sessions: SessionSummary[] }>("/sessions", identity);
+}
+
+export function getSession(identity: Identity, id: string) {
+  return getBackend<SessionDetail>(`/sessions/${encodeURIComponent(id)}`, identity);
 }

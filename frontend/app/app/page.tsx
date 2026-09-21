@@ -1,8 +1,9 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { LogOutIcon } from "lucide-react";
 
 import { auth, signOut } from "@/auth";
-import { ChatPanel } from "@/components/chat/chat-panel";
+import { ChatShell } from "@/components/chat/chat-shell";
 import { SiteHeader } from "@/components/site-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,10 @@ export default async function AppPage() {
         </DropdownMenu>
       </SiteHeader>
 
-      <ChatPanel userName={name} />
+      {/* Suspense: ChatShell reads ?s= via useSearchParams. */}
+      <Suspense fallback={null}>
+        <ChatShell userName={name} />
+      </Suspense>
     </div>
   );
 }

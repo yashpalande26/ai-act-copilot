@@ -17,8 +17,10 @@ from app.api.deps import (
     DbSession,
     ServiceToken,
     enforce_daily_quota,
+    get_owned_session,
     resolve_user,
 )
+from app.api.history import derive_title
 from app.config import MAX_OUTPUT_TOKENS, MAX_QUESTION_CHARS, PER_MINUTE_LIMIT
 from app.db.models import ChatSession, CorpusVersion
 from app.generation.answer import ABSTENTION_TEXT, generate_grounded_answer
@@ -48,24 +50,26 @@ class AskResponse(BaseModel):
 
 
 def _get_or_create_session(
-    session: Session, user_id: UUID, corpus_version_id: int, session_id: UUID | None
+    session: Session,
+    user_id: UUID,
+    corpus_version_id: int,
+    session_id: UUID | None,
+    question: str,
 ) -> ChatSession:
     if session_id is not None:
-        chat = (
-            session.execute(select(ChatSession).where(ChatSession.id == session_id))
-            .scalars()
-            .first()
-        )
         # Ownership check: without it a caller could append to - and read the
-        # history of - another user's conversation. 404 rather than 403 so we
-        # don't confirm that someone else's session id exists.
-        if chat is None or chat.user_id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="session_not_found"
-            )
-        return chat
+        # history of - another user's conversation. Shared with the history
+        # endpoints (deps.get_owned_session) so the rule exists once.
+        return get_owned_session(session, user_id, session_id)
 
-    chat = ChatSession(user_id=user_id, corpus_version_id=corpus_version_id)
+    # The title is the first question, trimmed to a sidebar-sized line. Set
+    # once here; older sessions without one get the same derivation at read
+    # time in history.py, so no backfill is needed.
+    chat = ChatSession(
+        user_id=user_id,
+        corpus_version_id=corpus_version_id,
+        title=derive_title(question),
+    )
     session.add(chat)
     session.commit()
     return chat
@@ -93,7 +97,7 @@ def ask(
         )
 
     chat = _get_or_create_session(
-        session, user.id, corpus_version.id, payload.session_id
+        session, user.id, corpus_version.id, payload.session_id, payload.question
     )
 
     result = generate_grounded_answer(

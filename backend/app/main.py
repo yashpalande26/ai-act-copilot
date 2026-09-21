@@ -10,6 +10,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.api.ask import router as ask_router
 from app.api.classify import router as classify_router
+from app.api.history import router as history_router
 from app.config import app_env
 from app.rate_limit import limiter
 
@@ -43,6 +44,7 @@ app = FastAPI(lifespan=lifespan, **_docs_kwargs(app_env()))
 app.state.limiter = limiter
 app.include_router(classify_router)
 app.include_router(ask_router)
+app.include_router(history_router)
 
 
 def _error(status_code: int, code: str, message: str, request_id: str) -> JSONResponse:
