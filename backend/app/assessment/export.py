@@ -94,8 +94,22 @@ def eurlex(cid: str) -> str:
     return f"{EURLEX}#{cid.split('.')[0]}"
 
 
-def eur(v: float | None) -> str:
-    return "enter turnover" if v is None else f"EUR {v:,.0f}"
+def eur(v: float) -> str:
+    return f"EUR {v:,.0f}"
+
+
+# Shown in place of a personalised ceiling when it could not be computed.
+# Never a computed "EUR 0": see penalties.turnover_status.
+CEILING_PROMPT = {
+    "missing": "enter annual turnover to compute",
+    "zero": "turnover entered as 0; enter a positive annual turnover to compute",
+}
+
+
+def ceiling(v: float | None, status: str) -> str:
+    if v is not None:
+        return eur(v)
+    return CEILING_PROMPT.get(status, CEILING_PROMPT["missing"])
 
 
 def provision(p: ProvisionText, depth: int = 0) -> str:
@@ -133,21 +147,23 @@ def group(g: ObligationGroup) -> str:
     return f'<section class="card">{"".join(parts)}</section>'
 
 
-def penalty(line: PenaltyLine) -> str:
+def penalty(line: PenaltyLine, turnover_status: str) -> str:
     rule = {
         "eur_only": "fixed amount (not an undertaking)",
         "lower": "whichever is lower",
         "higher": "whichever is higher",
     }[line.rule]
-    status = "relevant to your answers" if line.applicable else "shown for completeness"
+    relevance = (
+        "relevant to your answers" if line.applicable else "shown for completeness"
+    )
     basis = "".join(provision(b) for b in line.rule_basis)
     return (
         f'<div class="pen"><div class="head"><span class="label">{esc(line.paragraph.citation_label)}</span>'
-        f'<span class="cid">{esc(status)}</span></div>'
+        f'<span class="cid">{esc(relevance)}</span></div>'
         f"<dl><div><dt>Fixed cap</dt><dd>{esc(eur(line.eur_cap))}</dd></div>"
         f"<div><dt>Turnover cap</dt><dd>{esc(line.pct_cap)} %</dd></div>"
         f"<div><dt>Rule</dt><dd>{esc(rule)}</dd></div>"
-        f"<div><dt>Maximum ceiling for you</dt><dd>{esc(eur(line.ceiling_eur))}</dd></div></dl>"
+        f"<div><dt>Maximum ceiling for you</dt><dd>{esc(ceiling(line.ceiling_eur, turnover_status))}</dd></div></dl>"
         f"{commentary(line.why)}{provision(line.paragraph)}{basis}</div>"
     )
 
@@ -231,7 +247,10 @@ def render_export(
 
     out.append("<h2>Maximum administrative fine ceilings (Article 99)</h2>")
     out.append(commentary(report.penalties.commentary))
-    out.extend(penalty(line) for line in report.penalties.lines)
+    out.extend(
+        penalty(line, report.penalties.turnover_status)
+        for line in report.penalties.lines
+    )
     out.append("<h3>What authorities weigh</h3>" + provision(report.penalties.factors))
 
     out.append("<h2>Notes (commentary)</h2><ul>")

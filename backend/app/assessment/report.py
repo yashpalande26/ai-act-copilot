@@ -136,6 +136,9 @@ def _penalties(corpus: _Corpus, a: Answers, d: Decision) -> Penalties:
     obligations_flagged = bool(
         d.in_scope and (d.high_risk_basis or d.transparency or d.gpai)
     )
+    status = penalties.turnover_status(
+        undertaking=a.undertaking, turnover_eur=a.turnover_eur
+    )
     lines = penalties.compute(
         par3_text=corpus.text("art_99.par_3"),
         par4_text=corpus.text("art_99.par_4"),
@@ -167,7 +170,14 @@ def _penalties(corpus: _Corpus, a: Answers, d: Decision) -> Penalties:
             "allows for the relevant paragraph, computed from the quoted text and "
             "the turnover you entered. They are not an estimate of any fine; "
             "Article 99(7) lists what authorities weigh in each case."
+            if status in ("provided", "not_needed")
+            else "These are the maximum administrative fine ceilings the Regulation "
+            "allows for the relevant paragraph, quoted from the text. No positive "
+            "annual turnover was entered, so the percentage limb is not computed "
+            "for you. They are not an estimate of any fine; Article 99(7) lists "
+            "what authorities weigh in each case."
         ),
+        turnover_status=status,
     )
 
 

@@ -97,7 +97,18 @@ function Group({ g }: { g: ObligationGroup }) {
   );
 }
 
-function PenaltyRow({ line }: { line: PenaltyLine }) {
+type TurnoverStatus = Report["penalties"]["turnover_status"];
+
+// Shown in place of a personalised ceiling when it could not be computed.
+// Never a computed "EUR 0": the backend leaves ceiling_eur null for 0 turnover.
+const CEILING_PROMPT: Record<TurnoverStatus, string> = {
+  provided: "enter annual turnover to compute",
+  not_needed: "enter annual turnover to compute",
+  missing: "enter annual turnover to compute",
+  zero: "turnover entered as 0; enter a positive annual turnover to compute",
+};
+
+function PenaltyRow({ line, turnoverStatus }: { line: PenaltyLine; turnoverStatus: TurnoverStatus }) {
   const rule =
     line.rule === "eur_only"
       ? "fixed amount (not an undertaking)"
@@ -128,7 +139,7 @@ function PenaltyRow({ line }: { line: PenaltyLine }) {
         <div>
           <dt className="type-micro text-ink-faint">Maximum ceiling for you</dt>
           <dd className="font-mono font-medium">
-            {line.ceiling_eur === null ? "enter turnover" : eur.format(line.ceiling_eur)}
+            {line.ceiling_eur === null ? CEILING_PROMPT[turnoverStatus] : eur.format(line.ceiling_eur)}
           </dd>
         </div>
       </dl>
@@ -250,7 +261,11 @@ export function AssessmentReport({ report }: { report: Report }) {
         <Commentary>{report.penalties.commentary}</Commentary>
         <ul className="space-y-3">
           {report.penalties.lines.map((line) => (
-            <PenaltyRow key={line.paragraph.citation_id} line={line} />
+            <PenaltyRow
+              key={line.paragraph.citation_id}
+              line={line}
+              turnoverStatus={report.penalties.turnover_status}
+            />
           ))}
         </ul>
         <div className="border-hairline bg-card rounded-2xl border p-4 sm:p-5">

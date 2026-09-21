@@ -34,7 +34,7 @@ HR_TECH = {
 
 
 def test_engine_version_shape_and_stability():
-    assert ENGINE_VERSION.startswith("assess-1.")
+    assert ENGINE_VERSION.startswith("assess-2.")
     assert len(ENGINE_VERSION.split(".")[-1]) == 12
     assert rules_hash() == rules_hash()
 
@@ -209,6 +209,52 @@ def test_export_is_owner_only_404_for_others_and_401_anonymous(seeded):
     assert foreign.status_code == unknown.status_code == 404
     assert foreign.json()["error"]["code"] == "assessment_not_found"
     assert c.get(f"/assessments/{saved_id}/export.html").status_code == 401
+
+
+_ZERO_CEILING = re.compile(r"EUR 0(?!\d)")  # "EUR 0" but not "EUR 60,000"
+
+
+def test_zero_turnover_shows_the_statutory_caps_and_a_prompt_not_eur_0(seeded):
+    # Reproduces the production report: SME, transparency obligations, turnover 0.
+    c, alice = seeded["client"], seeded["alice"]
+    answers = {
+        "roles": ["provider"],
+        "interacts_with_persons": True,
+        "undertaking": True,
+        "turnover_eur": 0,
+        "sme_or_startup": True,
+    }
+    saved = c.post("/assessments", json=answers, headers=alice).json()
+    pen = saved["report"]["penalties"]
+    assert pen["turnover_status"] == "zero"
+    assert all(line["ceiling_eur"] is None for line in pen["lines"])
+    assert all(line["rule"] == "lower" for line in pen["lines"])  # SME rule intact
+    assert "No positive annual turnover was entered" in pen["commentary"]
+
+    html = c.get(f"/assessments/{saved['id']}/export.html", headers=alice).text
+    assert not _ZERO_CEILING.search(html)
+    assert "EUR 15,000,000" in html and "3.0 %" in html  # statutory cap + percentage
+    assert "turnover entered as 0; enter a positive annual turnover to compute" in html
+    assert "whichever is lower" in html
+
+
+def test_missing_turnover_shows_the_caps_and_asks_for_turnover(seeded):
+    c, alice = seeded["client"], seeded["alice"]
+    answers = {
+        "roles": ["provider"],
+        "interacts_with_persons": True,
+        "undertaking": True,
+    }
+    saved = c.post("/assessments", json=answers, headers=alice).json()
+    pen = saved["report"]["penalties"]
+    assert pen["turnover_status"] == "missing"
+    assert all(line["ceiling_eur"] is None for line in pen["lines"])
+
+    html = c.get(f"/assessments/{saved['id']}/export.html", headers=alice).text
+    assert not _ZERO_CEILING.search(html)
+    assert "EUR 15,000,000" in html
+    assert "enter annual turnover to compute" in html
+    assert "turnover entered as 0" not in html
 
 
 def test_invalid_answers_are_422_and_nothing_is_saved(seeded):

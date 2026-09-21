@@ -1103,7 +1103,8 @@
         }
       ]
     },
-    "commentary": "These are the maximum administrative fine ceilings the Regulation allows for the relevant paragraph, computed from the quoted text and the turnover you entered. They are not an estimate of any fine; Article 99(7) lists what authorities weigh in each case."
+    "commentary": "These are the maximum administrative fine ceilings the Regulation allows for the relevant paragraph, computed from the quoted text and the turnover you entered. They are not an estimate of any fine; Article 99(7) lists what authorities weigh in each case.",
+    "turnover_status": "provided"
   },
   "commentary": [
     "This report is informational and is not legal advice. It restates your answers against the quoted text of the Regulation; it does not certify compliance and cannot replace counsel.",

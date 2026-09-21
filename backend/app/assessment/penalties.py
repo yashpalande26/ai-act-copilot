@@ -10,10 +10,30 @@ Rules, each quoted in the report:
   par_5   incorrect information   EUR cap or %, whichever HIGHER
   par_6   SMEs and start-ups      each of the above, whichever LOWER
   par_6a  SMCs                    par_4 and par_5 only, whichever LOWER
+
+A personalised ceiling is computed only from a POSITIVE turnover. Missing
+(None) and an entered 0 both leave ceiling_eur None: under the "lower" rule
+0 % of 0 would print as "EUR 0", which is arithmetic, not a defensible reading
+of the Article. The two cases are told apart by turnover_status() so the
+report can say which input is needed.
 """
 
 import re
 from dataclasses import dataclass
+from typing import Literal
+
+TurnoverStatus = Literal["provided", "missing", "zero", "not_needed"]
+
+
+def turnover_status(*, undertaking: bool, turnover_eur: float | None) -> TurnoverStatus:
+    if not undertaking:
+        return "not_needed"  # eur_only: the fixed cap applies, no turnover involved
+    if turnover_eur is None:
+        return "missing"
+    if turnover_eur <= 0:
+        return "zero"
+    return "provided"
+
 
 _EUR = re.compile(r"EUR\s*((?:\d{1,3}(?:\s\d{3})+)|\d+)")
 _PCT = re.compile(r"(\d+(?:[.,]\d+)?)\s*%")
@@ -72,7 +92,7 @@ def compute(
             )
             if on
         )
-        if turnover_eur is None:
+        if turnover_status(undertaking=True, turnover_eur=turnover_eur) != "provided":
             return Ceiling(
                 pid,
                 eur,

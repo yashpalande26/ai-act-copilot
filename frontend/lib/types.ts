@@ -177,7 +177,13 @@ export type AssessmentReport = {
   product_route: ProvisionText[];
   obligations: ObligationGroup[];
   dates: ProvisionText[];
-  penalties: { lines: PenaltyLine[]; factors: ProvisionText; commentary: string };
+  penalties: {
+    lines: PenaltyLine[];
+    factors: ProvisionText;
+    commentary: string;
+    /** Why ceiling_eur may be null on every line; "missing" and "zero" get distinct prompts. */
+    turnover_status: "provided" | "missing" | "zero" | "not_needed";
+  };
   commentary: string[];
 };
 

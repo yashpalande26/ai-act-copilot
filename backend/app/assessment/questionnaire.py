@@ -272,7 +272,7 @@ _RAW: list[tuple[str, str, list[tuple]]] = [
                 "turnover_eur",
                 "number",
                 "Total worldwide annual turnover for the preceding financial year, in EUR",
-                "Used only to compute the ceilings; not stored.",
+                "Used to compute the ceilings. Included in your saved assessment if you save one.",
                 [],
             ),
             (

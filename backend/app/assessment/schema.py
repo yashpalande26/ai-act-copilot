@@ -109,6 +109,9 @@ class Penalties(BaseModel):
     lines: list[PenaltyLine]
     factors: ProvisionText  # art_99.par_7, always shown
     commentary: str
+    # Why ceiling_eur may be None on every line: "missing" (no turnover given)
+    # and "zero" (0 entered) are distinct inputs and get distinct prompts.
+    turnover_status: Literal["provided", "missing", "zero", "not_needed"]
 
 
 class Decision(BaseModel):

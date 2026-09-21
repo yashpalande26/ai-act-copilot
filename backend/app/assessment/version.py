@@ -1,6 +1,9 @@
-"""ENGINE_VERSION: "assess-1.<rules_hash>".
+"""ENGINE_VERSION: "assess-<ENGINE_MAJOR>.<rules_hash>".
 
-The "1" is bumped by hand for a change in the engine's *logic* (engine.py).
+ENGINE_MAJOR is bumped by hand for a change in *logic* (engine.py,
+penalties.py) that alters a record without touching the rule data below.
+History: 1 -> 2 when a turnover of 0 stopped computing to a "EUR 0" ceiling
+and became "not computed" (ADR-13 note).
 The hash is computed from the rule DATA in code, so any change to a rule row
 changes the version automatically and a saved assessment can always say
 which rules produced it. The serialisation is canonical (sorted keys, sorted
@@ -17,7 +20,7 @@ import json
 from app.assessment import engine, obligations, questionnaire
 from app.assessment.schema import PROHIBITED_KEYS
 
-ENGINE_MAJOR = 1
+ENGINE_MAJOR = 2
 
 
 def rules_payload() -> dict:

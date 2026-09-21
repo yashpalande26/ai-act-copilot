@@ -78,6 +78,10 @@ say which rules and which text produced the decision at save time, which is enou
 notice a change, not to reproduce the old text. ClassificationRun is dead code to remove
 in a later cleanup. Migration 6aa3cd421b84 must run before the code that writes the table
 deploys (the ADR-11 rule).
+Note (2026-09-21): ENGINE_MAJOR bumped 1 -> 2, the first exercise of the hand-bump rule.
+penalties.py logic changed: a turnover of 0 no longer computes to a "EUR 0" ceiling under
+the SME "lower" rule; it is "not computed" and the record prompts for a positive turnover.
+Rule data was untouched, so the hash alone would not have moved.
 Status: Accepted.
 
 ## ADR-12: The assessment wedge is deterministic end to end; no LLM, no eval gate (2026-09-21)

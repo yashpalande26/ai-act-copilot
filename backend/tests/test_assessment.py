@@ -275,6 +275,30 @@ def test_non_undertaking_and_unknown_turnover():
     assert c["art_99.par_4"].ceiling_eur is None
 
 
+def test_zero_turnover_is_never_computed_into_a_zero_ceiling():
+    # The bug: an SME with turnover 0 got min(cap, 0 % of 0) == 0 on every line.
+    for sme in (True, False):
+        c = _compute(turnover_eur=0, sme_or_startup=sme)
+        assert all(line.ceiling_eur is None for line in c.values())
+        # The statutory figures are still there for the report to show.
+        assert c["art_99.par_4"].eur_cap == 15_000_000
+        assert c["art_99.par_4"].pct_cap == 3.0
+        assert c["art_99.par_4"].rule == ("lower" if sme else "higher")
+    # A positive turnover computes exactly as before.
+    assert (
+        _compute(turnover_eur=1, sme_or_startup=True)["art_99.par_4"].ceiling_eur
+        == 0.03
+    )
+
+
+def test_turnover_status_tells_missing_from_zero():
+    ts = penalties.turnover_status
+    assert ts(undertaking=True, turnover_eur=None) == "missing"
+    assert ts(undertaking=True, turnover_eur=0) == "zero"
+    assert ts(undertaking=True, turnover_eur=2_000_000) == "provided"
+    assert ts(undertaking=False, turnover_eur=None) == "not_needed"
+
+
 # --- corpus-backed: every referenced id exists; API end to end ---------------
 
 
