@@ -15,6 +15,7 @@ from app.config import (
     DAILY_LIMIT_PER_USER,
     SERVICE_TOKEN_ALGORITHM,
     SERVICE_TOKEN_LEEWAY_SECONDS,
+    app_env,
     internal_api_secret,
 )
 from app.db.models import AppUser, ChatSession, QueryTrace
@@ -105,16 +106,23 @@ def calls_today(session: Session, user_id: UUID | None = None) -> int:
     so concurrent in-flight calls are not yet counted; and _write_trace_safe is
     best-effort and swallows failures, so a failed trace write is uncounted.
     The per-minute slowapi cap bounds both to ~10 uncounted calls (~$0.10).
+
+    Scoped to the CURRENT environment (config.app_env), not hardcoded to
+    production: each environment has its own budget, so local dev and pytest
+    rows can never consume production's quota, and a production instance that
+    was deployed without APP_ENV still counts (and protects) its own rows.
     """
-    stmt = select(func.count()).select_from(QueryTrace)
+    stmt = (
+        select(func.count())
+        .select_from(QueryTrace)
+        .where(QueryTrace.created_at >= _utc_day_start())
+        .where(QueryTrace.environment == app_env())
+    )
     if user_id is not None:
         stmt = stmt.join(
             ChatSession, ChatSession.id == QueryTrace.chat_session_id
         ).where(ChatSession.user_id == user_id)
-    return (
-        session.execute(stmt.where(QueryTrace.created_at >= _utc_day_start())).scalar()
-        or 0
-    )
+    return session.execute(stmt).scalar() or 0
 
 
 def enforce_daily_quota(session: Session, user: AppUser) -> None:

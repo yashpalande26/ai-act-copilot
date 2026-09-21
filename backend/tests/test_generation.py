@@ -234,6 +234,19 @@ def test_index_present_uses_hybrid_bm25_and_records_it(monkeypatch):
     assert _captured_trace_config(session) == "hybrid_bm25|actor=none"
 
 
+def test_trace_is_stamped_with_current_environment(monkeypatch):
+    _patch_retrieval(monkeypatch, [_fr(1, citation_id="art_1")])
+    session = _make_session()
+
+    _run_one_turn(monkeypatch, session)
+
+    traces = [o for o in session.added if isinstance(o, QueryTrace)]
+    assert len(traces) == 1
+    # conftest forces APP_ENV=test, so a test-written trace can never count
+    # against production's daily quota.
+    assert traces[0].environment == "test"
+
+
 def test_actor_prior_reorders_context_and_is_recorded_in_trace(monkeypatch):
     # A deployer question with a provider chunk fused ABOVE a deployer chunk.
     provider_first = [

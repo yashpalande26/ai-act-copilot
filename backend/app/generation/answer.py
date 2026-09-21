@@ -5,6 +5,7 @@ from uuid import UUID
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.config import app_env
 from app.db.models import Citation, Message, QueryTrace, RetrievalTrace
 from app.ingestion.embedder import _get_client
 from app.retrieval.actor import (
@@ -181,6 +182,7 @@ def _write_trace_safe(
             answer_text=result.answer,
             abstained=(result.answer == ABSTENTION_TEXT),
             model=CHAT_MODEL,
+            environment=app_env(),
             # What actually served this turn - "hybrid_bm25" or
             # "vector_only_degraded" - never a fixed string, so a silent
             # degradation is queryable rather than invisible.

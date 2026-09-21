@@ -40,6 +40,27 @@ SERVICE_TOKEN_ALGORITHM = "HS256"
 SERVICE_TOKEN_LEEWAY_SECONDS = 10
 
 
+# --- environment ----------------------------------------------------------
+# Which deployment this process is. Stamped onto every query_trace row so the
+# daily quota (deps.calls_today) counts only rows from the SAME environment:
+# local dev and pytest can never consume production's budget, and production
+# never counts theirs. Defaults to "dev" so a process that was never told
+# otherwise cannot label its rows production; production opts in explicitly
+# via APP_ENV=production (a Railway service variable). tests/conftest.py
+# forces "test". Any other value is refused loudly rather than becoming a
+# silent fourth bucket.
+APP_ENVIRONMENTS = ("production", "dev", "test")
+
+
+def app_env() -> str:
+    value = os.environ.get("APP_ENV", "dev")
+    if value not in APP_ENVIRONMENTS:
+        raise RuntimeError(
+            f"APP_ENV={value!r} is not one of {APP_ENVIRONMENTS}; refusing to guess."
+        )
+    return value
+
+
 def internal_api_secret() -> str:
     """Shared HMAC key for the BFF service token. Server-side only, in BOTH the
     FastAPI env and the Next.js server env - never NEXT_PUBLIC_, never shipped

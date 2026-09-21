@@ -265,7 +265,69 @@ def test_internal_error_leaks_nothing(client, monkeypatch):
 
 def test_existing_endpoints_unaffected():
     c = TestClient(app)
-    assert c.get("/health").json() == {"status": "ok"}
+    # conftest forces APP_ENV=test; on Railway this reads "production".
+    assert c.get("/health").json() == {"status": "ok", "environment": "test"}
+
+
+# --- quota is scoped to the current environment --------------------------
+
+
+def test_calls_today_counts_only_current_environment(monkeypatch):
+    """A trace written under one environment is invisible to another's quota.
+
+    Runs inside ONE transaction that is rolled back at the end: rows are
+    flushed so calls_today can see them, never committed, so the live table
+    is left exactly as it was. No LLM call is involved anywhere.
+    """
+    if not os.environ.get("DATABASE_URL"):
+        pytest.skip("DATABASE_URL not configured")
+    from sqlalchemy import select
+
+    from app.db.models import QueryTrace
+    from app.db.session import SessionLocal
+
+    session = SessionLocal()
+    try:
+        cv = (
+            session.execute(select(CorpusVersion).order_by(CorpusVersion.id.desc()))
+            .scalars()
+            .first()
+        )
+        if cv is None:
+            pytest.skip("No corpus_version found; run ingest.py first")
+
+        user = AppUser(email=f"quota-scope-test-{uuid4()}@example.com")
+        session.add(user)
+        session.flush()
+        chat = ChatSession(user_id=user.id, corpus_version_id=cv.id)
+        session.add(chat)
+        session.flush()
+        assert deps_module.calls_today(session, user.id) == 0
+
+        session.add(
+            QueryTrace(
+                chat_session_id=chat.id,
+                corpus_version_id=cv.id,
+                query_text="q",
+                answer_text="a",
+                abstained=False,
+                model="test-model",
+                environment=config.app_env(),  # "test" under conftest
+                retrieval_config="hybrid_bm25|actor=none",
+                retrieval_latency_ms=1,
+            )
+        )
+        session.flush()
+
+        # Visible to the environment that wrote it...
+        assert deps_module.calls_today(session, user.id) == 1
+        assert deps_module.calls_today(session) >= 1
+        # ...and invisible to production's quota.
+        monkeypatch.setattr(deps_module, "app_env", lambda: "production")
+        assert deps_module.calls_today(session, user.id) == 0
+    finally:
+        session.rollback()
+        session.close()
 
 
 # --- integration --------------------------------------------------------

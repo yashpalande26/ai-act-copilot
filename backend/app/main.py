@@ -1,4 +1,6 @@
+import os
 import sys
+from contextlib import asynccontextmanager
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Request, status
@@ -8,9 +10,27 @@ from slowapi.errors import RateLimitExceeded
 
 from app.api.ask import router as ask_router
 from app.api.classify import router as classify_router
+from app.config import app_env
 from app.rate_limit import limiter
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    # Railway injects RAILWAY_ENVIRONMENT_NAME on every deploy. Running there
+    # without APP_ENV=production still works (the quota counts the instance's
+    # own "dev" rows, so it stays protected) but every trace is mislabelled,
+    # so say so loudly at boot rather than let it be discovered in the data.
+    if os.environ.get("RAILWAY_ENVIRONMENT_NAME") and app_env() != "production":
+        print(
+            "ACTION REQUIRED: running on Railway with APP_ENV="
+            f"{app_env()!r}. Set APP_ENV=production on the service so "
+            "query_trace rows and the daily quota are attributed correctly.",
+            file=sys.stderr,
+        )
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 app.state.limiter = limiter
 app.include_router(classify_router)
 app.include_router(ask_router)
@@ -71,4 +91,6 @@ def unhandled_handler(request: Request, exc: Exception) -> JSONResponse:
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    # `environment` is the deploy smoke test: hit /health on Railway and read
+    # "production". Harmless to expose; it is one of three fixed words.
+    return {"status": "ok", "environment": app_env()}

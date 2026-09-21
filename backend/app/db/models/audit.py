@@ -43,6 +43,11 @@ class QueryTrace(Base):
     answer_text: Mapped[str] = mapped_column(Text)
     abstained: Mapped[bool]
     model: Mapped[str]
+    # Which deployment wrote this row ("production" / "dev" / "test", see
+    # config.APP_ENVIRONMENTS). The daily quota counts only rows from the
+    # current environment, so non-production traffic cannot consume
+    # production's budget. server_default covers rows that predate the column.
+    environment: Mapped[str] = mapped_column(server_default="dev")
     retrieval_config: Mapped[str]  # e.g. "hybrid" - plain str, not an enum
     retrieval_latency_ms: Mapped[int]
     generation_latency_ms: Mapped[

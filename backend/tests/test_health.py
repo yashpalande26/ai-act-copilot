@@ -8,4 +8,5 @@ client = TestClient(app)
 def test_health():
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    # conftest forces APP_ENV=test; on Railway this field reads "production".
+    assert response.json() == {"status": "ok", "environment": "test"}
