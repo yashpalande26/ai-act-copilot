@@ -17,16 +17,21 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 # --- limits -------------------------------------------------------------
-# Grounded in measured cost: a 5-chunk context averages ~335 tokens (p95 ~834);
-# with the system prompt and question that is ~500 input tokens typical,
-# ~1000 p95. At gpt-4o rates ($2.50/1M in, $10/1M out) and an 800-token output
-# ceiling, worst case is ~$0.0105 per call and typical ~$0.005.
+# Grounded in measured cost at the 15-chunk context (ADR-8, 21 Sep 2026):
+# real /ask turns through the production path record ~1,100-1,400 prompt
+# tokens and ~260-340 completion tokens. At gpt-4o rates ($2.50/1M in,
+# $10/1M out) that is ~$0.006 per call typical and ~$0.0115 worst case with
+# output at the 800-token ceiling; the query embedding adds ~$0.000002. At
+# the caps below, worst-case exposure is ~$0.23/day/user and ~$1.15/day
+# global. Note calls_today() counts every query_trace row, including the
+# ones the test_ask_api integration tests write, so the global cap is also
+# a budget for test and eval traffic on the same UTC day.
 MAX_QUESTION_CHARS = 2000  # ~500 tokens; rejected by Pydantic before any spend
 MAX_OUTPUT_TOKENS = 800
 
 PER_MINUTE_LIMIT = "10/minute"  # slowapi burst guard (in-memory)
-DAILY_LIMIT_PER_USER = 100  # ~$1.05/day/user worst case
-DAILY_LIMIT_GLOBAL = 2000  # circuit breaker: ~$21/day total exposure
+DAILY_LIMIT_PER_USER = 20  # ~$0.23/day/user worst case at slice 15 (21 Sep 2026)
+DAILY_LIMIT_GLOBAL = 100  # circuit breaker: ~$1.15/day total exposure
 
 # A 60s token with 10s leeway. The leeway absorbs ordinary NTP drift between
 # the Next.js and FastAPI hosts, which would otherwise cause intermittent 401s
