@@ -2,9 +2,10 @@ import { notFound } from "next/navigation";
 
 import type { AssessmentReport as Report, QuestionnaireDef } from "@/lib/types";
 
+import report from "@/lib/fixtures/assessment-report.json";
+
 import { AssessHarness } from "./harness";
 import questionnaire from "./questionnaire.json";
-import report from "./report.json";
 
 /**
  * Design harness for the assessment wedge. 404 in production. Both fixtures

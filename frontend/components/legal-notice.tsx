@@ -1,7 +1,9 @@
 import { InfoIcon } from "lucide-react";
 
 /**
- * The honesty framing, shown wherever answers appear.
+ * The honesty framing, shown wherever results appear: chat answers and
+ * assessment reports alike, so the wording must be accurate for both. The
+ * assessment is deterministic, so "generated" would be wrong there.
  *
  * Deliberately not dismissible: for a compliance tool the disclaimer is part
  * of the product, not an interruption to be cleared. The variants differ only
@@ -28,7 +30,7 @@ export function LegalNotice({
         <span className="text-ink font-medium">
           Informational, not legal advice.
         </span>{" "}
-        Answers are generated from the consolidated EU AI Act text and are for
+        Results are drawn from the consolidated EU AI Act text and are for
         orientation only. Only the version published in the Official Journal is
         legally authentic. Have anything you intend to act on reviewed by a
         qualified professional.
