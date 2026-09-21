@@ -1,6 +1,47 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-10: Deterministic actor prior, an advisory retrieval re-weight (2026-09-21)
+Context: Enumeration-tier contamination sat at 6 after ADR-8 and did not move with breadth
+or slice. All six were actor cross-cites: provider questions pulling deployer provisions
+from Articles 26 and 27, and the two Article 50 transparency queries citing each other's
+paragraphs (par_1/2 are provider duties, par_3/4 deployer duties). The retriever had no
+notion of whose obligation a passage governs, and "obligations of providers" versus
+"obligations of deployers" are near-identical in both embedding and BM25 space.
+Decision: A DERIVED actor map, not a stored column. app/retrieval/actor.py labels each
+provision provider / deployer / importer / distributor / authorised_representative / None,
+deterministically from corpus text, with one comment per row quoting the sentence that
+justifies it and a docstring listing every row deliberately left absent (art_13's
+heading-keyword trap, art_4, art_25, art_62, art_8-15, enforcement articles). Points
+inherit their article's label; Articles 49 and 50 are labelled per paragraph. A
+conservative regex detects the query's target actor and fires only when exactly one actor
+family is named; zero or two or more families make the prior a no-op. apply_actor_prior
+soft-down-weights the RRF score of candidates whose non-null label mismatches the query
+(factor 0.25), over the full 25-candidate list before the context slice. Nothing is
+removed; None-labelled and matching chunks are untouched; rrf_score stays raw in the trace
+and query_trace.retrieval_config records actor and factor on every turn. Advisory only,
+and kept out of the APPROVE / REFER / DECLINE engine: grep-verified that app/classifier
+and app/api/classify.py import nothing from retrieval.
+Evidence: Enumeration contamination 6 -> 0, mean ctx_recall 0.817 -> 0.867, with
+provider_obligations rising 0.583 -> 0.833 because the freed slots admitted three more
+Article 16 points. Single-gold guard sets (easy 16, hard 35, realistic 56) did not regress
+at any factor; no gold chunk was ever down-weighted; the only rank that moved was easy
+gs_04, 3 -> 2 (easy MRR 0.885 -> 0.896). Factor 0.25 was chosen by Yash from a post-hoc
+sweep over {1.0, 0.75, 0.5, 0.25, 0.0} on identical retrieval: it is the first factor to
+clear all contamination, and 0.0 (a hard filter) produced identical numbers while
+forfeiting the property that a mislabelled chunk ranked highly by both legs can still
+surface. Step 2 on the live production path reproduced the sweep's 0.867 / 0 exactly.
+Consequences: The residual provider_obligations misses (art_16.pt_g at fused rank 17,
+pt_j at rank 35) are a retrieval-ranking ceiling, not actor confusion. Generation-side
+used_contamination confirmation is deferred to a budget top-up; it is bounded above by
+ctx_contamination, which is now 0. The map is human-curated and a label error is
+recoverable because the prior is soft. The evidence base is small (5 enumeration queries
+plus 16 actor-naming curated queries), and the detector's conservatism is what bounds the
+risk on everything it has not seen. Boundary cases F1-F7 (art_13, art_43/48, art_73,
+art_22/54 par_2, art_27.par_5, GPAI providers, notified bodies) are recorded in the
+actor.py docstring at their approved defaults.
+Status: Accepted.
+
 ## ADR-9: Evaluate Jev (TypeSafe System One) as an advisory reranker / actor classifier, out of the decision path (2026-09-21)
 Context: Two open retrieval problems point at the same shape of tool. Wrong-actor
 contamination (provider obligations cited for a deployer question, and the reverse) sits at
