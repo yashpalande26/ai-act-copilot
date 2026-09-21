@@ -30,7 +30,16 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(lifespan=lifespan)
+def _docs_kwargs(env: str) -> dict[str, str | None]:
+    """OpenAPI surface per environment. Production exposes no schema: /docs,
+    /redoc and /openapi.json are all off, so a public URL advertises nothing
+    about request shapes. Everywhere else keeps FastAPI's defaults."""
+    if env == "production":
+        return {"docs_url": None, "redoc_url": None, "openapi_url": None}
+    return {}
+
+
+app = FastAPI(lifespan=lifespan, **_docs_kwargs(app_env()))
 app.state.limiter = limiter
 app.include_router(classify_router)
 app.include_router(ask_router)

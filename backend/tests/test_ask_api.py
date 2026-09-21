@@ -1,9 +1,7 @@
 import os
-from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 from uuid import uuid4
 
-import jwt
 import pytest
 from fastapi.testclient import TestClient
 
@@ -14,42 +12,12 @@ from app.db.models import AppUser, ChatSession, CorpusVersion
 from app.generation.answer import ABSTENTION_TEXT
 from app.main import app
 from app.retrieval.search import SearchResult
+from tests._auth import auth_headers, make_token
 
-SECRET = "test-internal-secret"
-
-
-@pytest.fixture(autouse=True)
-def _reset_limiter():
-    """slowapi counters persist on the module-level Limiter, so one test's
-    requests would otherwise 429 the next."""
-    from app.rate_limit import limiter
-
-    limiter.reset()
-    yield
-    limiter.reset()
-
-
-@pytest.fixture(autouse=True)
-def _secret(monkeypatch):
-    monkeypatch.setenv("INTERNAL_API_SECRET", SECRET)
-
-
-def _token(sub="user-1", email="a@example.com", expires_in=60, secret=SECRET):
-    now = datetime.now(UTC)
-    return jwt.encode(
-        {
-            "sub": sub,
-            "email": email,
-            "iat": now,
-            "exp": now + timedelta(seconds=expires_in),
-        },
-        secret,
-        algorithm=config.SERVICE_TOKEN_ALGORITHM,
-    )
-
-
-def _auth(**kw):
-    return {"Authorization": f"Bearer {_token(**kw)}"}
+# Token helpers and the INTERNAL_API_SECRET / limiter-reset fixtures are shared
+# with test_classify_api via tests/_auth.py and conftest.py.
+_token = make_token
+_auth = auth_headers
 
 
 def _sr(citation_id="art_16.pt_a"):

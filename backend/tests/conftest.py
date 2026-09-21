@@ -31,6 +31,27 @@ os.environ["APP_ENV"] = "test"
 LIVE_OPT_IN = "RUN_LIVE_TESTS"
 
 
+@pytest.fixture(autouse=True)
+def _service_secret(monkeypatch):
+    """Every authenticated endpoint (/ask, /classify) verifies tokens against
+    INTERNAL_API_SECRET; tests mint theirs with tests._auth.SECRET."""
+    from tests._auth import SECRET
+
+    monkeypatch.setenv("INTERNAL_API_SECRET", SECRET)
+
+
+@pytest.fixture(autouse=True)
+def _reset_limiter():
+    """slowapi counters persist on the module-level Limiter, so one test's
+    requests would otherwise 429 the next. Global because both /ask and
+    /classify are rate-limited."""
+    from app.rate_limit import limiter
+
+    limiter.reset()
+    yield
+    limiter.reset()
+
+
 def pytest_collection_modifyitems(config, items):
     if os.environ.get(LIVE_OPT_IN) == "1":
         return
