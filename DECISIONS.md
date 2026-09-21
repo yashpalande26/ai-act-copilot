@@ -1,6 +1,51 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-11: Environment-tagged query_trace; the daily quota is per environment (2026-09-21)
+Context: Local dev, the two pytest live-stack tests, and any trace-writing eval all write
+query_trace rows to the same Supabase that production will read, and calls_today()
+counted every row for the UTC day. That was invisible at DAILY_LIMIT_GLOBAL=2000 and
+became reachable at 100 (ADR-8's cost follow-up): roughly fifty local pytest runs in a day
+would have tripped the circuit breaker and 429'd real users. On the day of the change the
+table held 12 rows, 9 of them written by pytest.
+Decision: An environment label, DERIVED from config and stored on the row, not inferred
+from account names. config.app_env() reads APP_ENV, defaults to "dev", and raises on any
+value outside ("production", "dev", "test"). query_trace gains an environment column
+(server_default "dev") stamped at the single trace write site, _write_trace_safe.
+calls_today() filters environment == app_env(), so each environment has its own budget:
+production counts only production, local dev still exercises a working quota against its
+own rows, and tests count only test rows. pytest declares itself via tests/conftest.py
+(APP_ENV=test, assigned rather than setdefault so a developer's shell value cannot leak
+in); production code never sniffs for pytest. /health returns the environment as the
+deploy smoke test, and startup prints an ACTION REQUIRED line if RAILWAY_ENVIRONMENT_NAME
+is set while APP_ENV is not production. Alternatives rejected: excluding test emails in
+calls_today() (brittle, and does nothing for the owner's own local /ask turns); making
+tests stop persisting traces (leaves the trace path untested and again ignores local dev);
+a separate database per environment (correct long-term isolation, but a re-ingest plus
+two migration targets for a bug one column fixes, and complementary rather than
+competing, since the label is still wanted inside each database).
+Evidence: Additive migration f59000150c0d applied to Supabase; ADD COLUMN with a constant
+default is catalog-only on Postgres 11+, and the backfill read dev 3 / test 9, exactly
+the account split measured beforehand. pytest with OPENAI_API_KEY empty: 115 passed, 5
+skipped (the live tests), zero paid calls, and a six-table row diff of +0 around the run.
+The new DB-backed test flushes one trace inside a transaction, proves it is counted under
+test and invisible under production, and rolls back. All APP_ENV conditions verified
+in-process: unset -> dev, production -> production, staging -> refused, Railway variable
+without APP_ENV -> the warning fires, with APP_ENV=production -> silent.
+Consequences: The default of "dev" means a process that was never explicitly told
+otherwise can never write production rows. A Railway instance deployed without APP_ENV
+labels and counts only its own dev rows, so that misconfiguration is a labelling error,
+not an open quota. Deploy rule, added to the checklist next to build_bm25_index.py:
+migrate BEFORE deploying code, because _write_trace_safe swallows failures by design, so
+a trace write against a missing column fails silently, and an uncounted call is an open
+quota with no error anywhere. The label also gives the eval-validity work a clean filter:
+mining query_trace WHERE environment = 'production' yields real out-of-sample questions
+with no test or dev noise. Known gaps carried: the five live-stack tests spend 3 chat-model
+calls plus 3 embedding calls (~$0.02) per run, measured with the class-level counter; they
+are now marked @pytest.mark.live and gated behind RUN_LIVE_TESTS=1, so a plain pytest makes
+zero paid calls even with a key present.
+Status: Accepted.
+
 ## ADR-10: Deterministic actor prior, an advisory retrieval re-weight (2026-09-21)
 Context: Enumeration-tier contamination sat at 6 after ADR-8 and did not move with breadth
 or slice. All six were actor cross-cites: provider questions pulling deployer provisions
