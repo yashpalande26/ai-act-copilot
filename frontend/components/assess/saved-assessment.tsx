@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, DownloadIcon, FileTextIcon } from "lucide-react";
 
 import { Commentary } from "@/components/assess/provision";
 import { AssessmentReport } from "@/components/assess/report";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SavedAssessment } from "@/lib/types";
 
@@ -59,6 +60,20 @@ export function SavedAssessmentView({ id }: { id: string }) {
           <ArrowLeftIcon className="size-3.5" aria-hidden />
           New assessment
         </Link>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <a href={`/api/assessments/${saved.id}/export`} target="_blank" rel="noreferrer noopener">
+              <FileTextIcon className="size-4" aria-hidden />
+              Open the record
+            </a>
+          </Button>
+          <Button asChild variant="ghost" size="sm">
+            <a href={`/api/assessments/${saved.id}/export?download=1`}>
+              <DownloadIcon className="size-4" aria-hidden />
+              Download HTML
+            </a>
+          </Button>
+        </div>
         <dl className="type-micro text-ink-soft mt-3 flex flex-wrap gap-x-6 gap-y-1">
           <div>
             <dt className="inline">Saved: </dt>

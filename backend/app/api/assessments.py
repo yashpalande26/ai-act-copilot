@@ -17,6 +17,7 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, Request, status
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -28,6 +29,7 @@ from app.api.deps import (
     get_owned_assessment,
     resolve_user,
 )
+from app.assessment.export import render_export
 from app.assessment.report import build_report
 from app.assessment.schema import Answers, AssessmentResult
 from app.assessment.version import ENGINE_VERSION
@@ -146,6 +148,44 @@ def list_assessments(
         .all()
     )
     return SavedList(assessments=[_summary(r) for r in rows])
+
+
+@router.get("/{assessment_id}/export.html", response_class=HTMLResponse)
+@limiter.limit(PER_MINUTE_LIMIT)
+def export_assessment(
+    request: Request,  # required by slowapi to key the limiter
+    assessment_id: UUID,
+    download: bool = False,
+    caller: Caller = ServiceToken,
+    session: Session = DbSession,
+) -> HTMLResponse:
+    """The self-contained HTML record. Same ownership rule as the JSON route
+    (foreign or unknown id -> 404). `download=1` sets an attachment
+    disposition; otherwise the document opens in the tab."""
+    user = resolve_user(session, caller)
+    row = get_owned_assessment(session, user.id, assessment_id)
+    try:
+        report = build_report(session, Answers.model_validate(row.answers))
+    except LookupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="corpus_unavailable"
+        ) from exc
+    html = render_export(
+        report,
+        assessment_id=str(row.id),
+        saved_at=row.created_at,
+        engine_version=row.engine_version,
+        environment=row.environment,
+    )
+    filename = f"ai-act-assessment-{str(row.id)[:8]}-{row.created_at:%Y-%m-%d}.html"
+    disposition = "attachment" if download else "inline"
+    return HTMLResponse(
+        html,
+        headers={
+            "Content-Disposition": f'{disposition}; filename="{filename}"',
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @router.get("/{assessment_id}", response_model=Saved)

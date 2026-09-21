@@ -248,3 +248,44 @@ export function listAssessments(identity: Identity) {
 export function getAssessment(identity: Identity, id: string) {
   return getBackend<SavedAssessment>(`/assessments/${encodeURIComponent(id)}`, identity);
 }
+
+export type ExportOutcome =
+  | { kind: "ok"; html: string; contentDisposition: string }
+  | { kind: "not_found" }
+  | { kind: "unauthorized" }
+  | { kind: "unavailable" }
+  | { kind: "error" };
+
+/** The self-contained HTML record, relayed byte for byte with its disposition. */
+export async function fetchAssessmentExport(
+  identity: Identity,
+  id: string,
+  download: boolean,
+): Promise<ExportOutcome> {
+  const base = requireEnv("FASTAPI_URL").replace(/\/$/, "");
+  const token = await mintServiceToken(identity.subject, identity.email);
+  const path = `/assessments/${encodeURIComponent(id)}/export.html${download ? "?download=1" : ""}`;
+
+  let response: Response;
+  try {
+    response = await fetch(`${base}${path}`, {
+      headers: { authorization: `Bearer ${token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch {
+    return { kind: "unavailable" };
+  }
+
+  if (response.ok) {
+    return {
+      kind: "ok",
+      html: await response.text(),
+      contentDisposition: response.headers.get("content-disposition") ?? "inline",
+    };
+  }
+  if (response.status === 404) return { kind: "not_found" };
+  if (response.status === 401) return { kind: "unauthorized" };
+  if (response.status === 503) return { kind: "unavailable" };
+  return { kind: "error" };
+}

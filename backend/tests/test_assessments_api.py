@@ -8,6 +8,7 @@ end to end while nothing persists; rollback at the end. No LLM anywhere.
 import hashlib
 import json
 import os
+import re
 from uuid import uuid4
 
 import pytest
@@ -148,6 +149,66 @@ def test_second_user_gets_404_and_an_empty_list(seeded):
     assert strip(foreign) == strip(unknown)
     assert strip(foreign)["code"] == "assessment_not_found"
     assert c.get("/assessments", headers=bob).json()["assessments"] == []
+
+
+# --- export.html -------------------------------------------------------------
+
+
+def test_export_renders_the_dated_cited_record(seeded):
+    c, alice = seeded["client"], seeded["alice"]
+    saved = c.post("/assessments", json=HR_TECH, headers=alice).json()
+    saved_id = saved["id"]
+
+    r = c.get(f"/assessments/{saved_id}/export.html", headers=alice)
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/html")
+    assert r.headers["content-disposition"].startswith("inline;")
+    html = r.text
+
+    # Dated and versioned.
+    assert saved["created_at"][:10] in html  # assessed-on date
+    assert saved["engine_version"] in html
+    assert saved["corpus_consolidated_date"] in html
+    assert saved_id in html
+    # Every obligation citation id, verbatim text alongside, EUR-Lex anchors.
+    report = saved["report"]
+    for g in report["obligations"]:
+        for p in g["provisions"]:
+            assert p["citation_id"] in html, p["citation_id"]
+    assert "anx_III.pt_4.sub_a" in html and "recruitment or selection" in html
+    assert "eur-lex.europa.eu" in html and "#art_16" in html
+    # Computed ceilings for an SME with EUR 2M turnover, from the quoted text.
+    assert "EUR 60,000" in html and "EUR 20,000" in html
+    assert "whichever is lower" in html and "art_99.par_6" in html
+    # Framing and hygiene.
+    assert "not legal advice" in html.lower()
+    assert "appears to" in html
+    assert "you are compliant" not in html.lower()
+    assert "—" not in html
+    assert "<script" not in html.lower()
+    # Self-contained: the only absolute URLs are the EUR-Lex citation anchors;
+    # no stylesheets, images, fonts or imports are fetched from anywhere.
+    urls = re.findall(r'(?:href|src)="(https?://[^"]+)"', html)
+    assert urls and all(u.startswith("https://eur-lex.europa.eu/") for u in urls)
+    lower = html.lower()
+    assert "<link" not in lower and "<img" not in lower
+    assert "@import" not in lower and "url(" not in lower
+    assert "not an immutable snapshot" in html
+
+    d = c.get(f"/assessments/{saved_id}/export.html?download=1", headers=alice)
+    assert d.headers["content-disposition"].startswith("attachment;")
+    assert d.headers["content-disposition"].endswith('.html"')
+
+
+def test_export_is_owner_only_404_for_others_and_401_anonymous(seeded):
+    c, alice, bob = seeded["client"], seeded["alice"], seeded["bob"]
+    saved_id = c.post("/assessments", json=HR_TECH, headers=alice).json()["id"]
+
+    foreign = c.get(f"/assessments/{saved_id}/export.html", headers=bob)
+    unknown = c.get(f"/assessments/{uuid4()}/export.html", headers=bob)
+    assert foreign.status_code == unknown.status_code == 404
+    assert foreign.json()["error"]["code"] == "assessment_not_found"
+    assert c.get(f"/assessments/{saved_id}/export.html").status_code == 401
 
 
 def test_invalid_answers_are_422_and_nothing_is_saved(seeded):
