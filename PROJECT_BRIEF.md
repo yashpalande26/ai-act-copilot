@@ -251,6 +251,8 @@ The Digital Omnibus (**Regulation (EU) 2026/1744**) is enacted and in force sinc
 - **ADR-005** — `docker-compose.yml` fate: originally "keep for offline fallback," but Supabase is the sole live DB and the file has repeatedly caused local-vs-Supabase confusion. **Resolution pending Yash's call** (supersede ADR-005 and `git rm` the file, or keep it and stop treating it as dead).
 - **ADR-6** — exact article-reference lookup deferred: detect citation pattern in query → direct `citation_id` lookup; revisit once eval quantifies how often it's needed.
 - **ADR-7** — **RESOLVED (20 Sep 2026): hybrid retrieval SHIPPED.** Native FTS was measured inert; its OR-join fix lifted hard-case ranking but regressed precision and was reverted; BM25 (`bm25s`, IDF-weighted) replaced it and now ships at RRF lexical 0.6 over `index_text`. Root cause of the late-breaking bug: BM25 indexed `chunk_text` while vectors embedded `index_text` — an asymmetry that made the sparse leg heading-blind. Breadth and a per-query router were both tested and rejected with numbers.
+- **ADR-8** — **ACCEPTED (21 Sep 2026): retrieval breadth 25 / context slice 15.** List-type questions were truncated by retrieval, not generation (`used_recall` equalled `ctx_recall` at every setting). Enumeration mean recall 0.433 → 0.817; hard-set MRR 0.902 → 0.874, judged cosmetic because an answer-level judge held faithfulness (4.85 → 4.95) and relevance flat. Weights, `min_similarity` and RRF `k` unchanged. Per-call cost roughly triples, so `config.py` quota recalibration is owed before deploy.
+- **ADR-9** — Jev (TypeSafe System One) as an **advisory** reranker / actor classifier, deferred behind a cheaper fix: try a deterministic actor tag from `citation_id` first, and only benchmark Jev against cross-encoder and open-weights alternatives if contamination (~6) survives it. If ever adopted it flags or down-weights only, never hard-decides, and stays out of the deterministic APPROVE/REFER/DECLINE path.
 
 ## 17. Deferred / To-Verify register
 *Single place for everything we consciously postponed, so no chat loses it. The files remember; nothing else does. Review this section at the start of each new phase.*
@@ -265,7 +267,16 @@ The Digital Omnibus (**Regulation (EU) 2026/1744**) is enacted and in force sinc
 - **5 of 7 flagged `golden_set_realistic.yaml` labels are still unverified against EUR-Lex.** Until then the weight-0.6 decision rests on LLM-generated labels. All three eval sets are LLM-generated; none is human-authored, so they may share a blind spot the way the first two shared the heading one.
 - **`load_index` caches per process** — a rebuilt index is NOT picked up until restart. A deploy that rebuilds the index without restarting the app keeps serving the old one.
 
+**Deferred from the breadth/slice change (21 Sep 2026, ADR-8):**
+- **Deterministic actor/article field from `citation_id`** to filter or down-weight wrong-actor passages. Contamination sits at ~6 and ADR-8 did not move it. *Next tight loop.*
+- **`config.py` daily-quota recalibration** — per-call cost roughly tripled at slice 15, and the current limits were calibrated against a 5-chunk context. **Before public deploy.**
+- **`run_eval.py` `RETRIEVAL_DEPTH` realignment** to the production breadth constant, so the harness can actually see the parameter it validates. Also fix the stale docstring claiming fetch-10-then-slice-5 equals fetch-5 — false whenever `min_similarity > 0`, because the filter is applied after the SQL `LIMIT`.
+- **Full judged before/after guard for the breadth/slice change**, once the OpenAI budget is topped up. ADR-8 shipped on retrieval-only validation plus a static wiring proof.
+
 **Deferred build work:**
+- **Persist the assembled prompt string and the raw model completion** for debugging. Today `retrieval_trace` stores the chunks plus a used flag, and `query_trace`/`message`/`citation` store the answer, so the exact text sent to the model is not recoverable after the fact.
+- **Conversation persistence in the UI** — list and resume past chats. The data already exists in `chat_session`/`message`; only the frontend surface is missing. Optional follow-on: multi-turn context memory.
+- **Jev advisory reranker / verification-layer experiment** — gated behind the deterministic actor tag above, benchmarked on our corpus against cross-encoder and open-weights alternatives (see **ADR-9**).
 - **Reranker — v2 experiment, gated on the heading-aware eval.** LegalBench-RAG found general rerankers can *hurt* on legal text, so this only ships if `golden_set_realistic.yaml` proves lift. Do not add it on general-purpose reputation.
 - **CI regression gate** — wire eval metrics into GitHub Actions to block regressions (DeepEval, pytest-native).
 - **Observability / tracing** — Langfuse or Arize Phoenix. Planned for the eval/observability phase; nothing built yet. *This is where the eval numbers get a dashboard instead of terminal output.*

@@ -1,6 +1,51 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-9: Evaluate Jev (TypeSafe System One) as an advisory reranker / actor classifier, out of the decision path (2026-09-21)
+Context: Two open retrieval problems point at the same shape of tool. Wrong-actor
+contamination (provider obligations cited for a deployer question, and the reverse) sits at
+about 6 across every breadth/slice setting tested, so ADR-8 did not move it. A deterministic
+actor tag derived from citation_id handles whole-article cases cleanly (art_16 is provider,
+art_26 is deployer) but cannot disambiguate an intra-article actor split: Article 50 puts
+provider duties in par_1/par_2 and deployer duties in par_3/par_4, all under one article id.
+Jev is a cheap typed-decision classifier that fits exactly that niche, and could rerank more
+generally.
+Decision: Try the deterministic actor tag FIRST, because it is free, auditable and covers the
+majority of cases. Only if residual contamination remains after that, run a feature-flagged
+Jev experiment benchmarked on OUR corpus (RRF-only vs RRF+Jev vs RRF-fused-with-Jev), measured
+against the alternatives rather than in isolation: a hosted cross-encoder (Voyage, Cohere) and
+open-weights Laya. Adopt only on our own numbers.
+Constraints if adopted: Jev stays ADVISORY. It may flag or down-weight a passage, never
+hard-decide one, and it stays strictly out of the deterministic APPROVE / REFER / DECLINE
+path. It produces no prose rationale, its weights are closed, and "cannot hallucinate" means
+schema-constrained output, not correct output. Pin the version. For a regulated product,
+prefer self-hostable Laya if it wins on the numbers.
+Consequences: a new external dependency only if it earns its place on measured lift. Keep an
+independent judge for the benchmark, so the model being selected is not also the model
+grading the selection.
+Status: Candidate / deferred.
+
+## ADR-8: Retrieval candidate breadth 25, context slice 15 (2026-09-21)
+Context: List-type questions were being truncated by retrieval, not by generation. A breadth
+of 10 candidates cannot hold a 12-item answer, and a 5-chunk context slice cannot present one.
+The enumeration tier (see Step 31) measured used_recall equal to ctx_recall at every setting
+tested, which localises the ceiling precisely: the model cites everything it is handed and
+invents nothing, so the loss is upstream in retrieval.
+Decision: RETRIEVAL_CANDIDATE_BREADTH 10 -> 25, final_context_size 5 -> 15. RRF weights
+(vector 0.4 / lexical 0.6), min_similarity 0.3 and RRF k=60 are unchanged, so this moves one
+axis only and stays comparable to the ADR-7 measurements.
+Evidence: enumeration mean recall 0.433 -> 0.817. Hard-set MRR 0.902 -> 0.874, judged cosmetic
+rather than real because an answer-level judge showed faithfulness 4.85 -> 4.95 and relevance
+flat across the same settings (see Step 32).
+Consequences: per-call cost roughly triples, because the prompt now carries 15 chunks instead
+of 5. config.py's daily-quota numbers were calibrated against a 5-chunk context and are owed a
+recalibration before any public deploy. Wrong-actor contamination is unchanged at about 6 and
+is tracked separately (ADR-9). The full judged before/after guard was deferred to a budget
+top-up; validation at ship time was retrieval-only plus a static wiring proof, which confirms
+the constants reach all three call sites and reproduces 0.817 on the live config, but does not
+re-measure generation quality end to end.
+Status: Accepted.
+
 ## ADR-7: Lexical retrieval is currently inert on real queries; calibration deferred to eval phase (2026-09-18)
 Context: websearch_to_tsquery AND-joins all terms by default. Across every real query
 tested (step 22 "Article 6(2)", step 23 control "credit scoring high risk", 3 off-topic
