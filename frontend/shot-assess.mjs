@@ -41,14 +41,28 @@ for (const [w, width, height] of VIEWPORTS) {
 
     await page.goto(`${BASE}/dev/assess?view=form`, { waitUntil: "networkidle" });
     await page.waitForTimeout(300);
-    const formProbe = await page.evaluate(() => ({
-      radios: document.querySelectorAll('input[type="radio"]').length,
-      steps: document.querySelectorAll('[aria-label="Steps"] li').length,
-      pageScrollsX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-    }));
+    const formProbe = await page.evaluate(() => {
+      // Each question's text must appear exactly once in the rendered text.
+      const labels = [...document.querySelectorAll('[role="group"] > p[id$="-label"]')].map((p) => p.textContent.trim());
+      const body = document.body.innerText;
+      const occurrences = labels.map((l) => body.split(l).length - 1);
+      return {
+        radios: document.querySelectorAll('input[type="radio"]').length,
+        steps: document.querySelectorAll('[aria-label="Steps"] li').length,
+        questions: labels.length,
+        maxLabelOccurrences: Math.max(...occurrences),
+        groupsLabelled: [...document.querySelectorAll('[role="group"]')].every((g) => document.getElementById(g.getAttribute("aria-labelledby") ?? "")),
+        pageScrollsX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      };
+    });
     await page.screenshot({ path: `${OUT}/form-${w}-${theme}.png`, fullPage: true });
 
-    report.push({ viewport: w, theme, ...probe, formRadios: formProbe.radios, formSteps: formProbe.steps, formScrollsX: formProbe.pageScrollsX });
+    report.push({
+      viewport: w, theme, ...probe,
+      formQuestions: formProbe.questions, maxLabelOccurrences: formProbe.maxLabelOccurrences,
+      groupsLabelled: formProbe.groupsLabelled, formRadios: formProbe.radios, formSteps: formProbe.steps,
+      formScrollsX: formProbe.pageScrollsX,
+    });
     await ctx.close();
   }
 }

@@ -73,14 +73,23 @@ function Field({
   onChange: (v: AnswerValue) => void;
 }) {
   const name = `q-${q.id}`;
+  const labelId = `${name}-label`;
+  // One visible label, referenced by id. A <fieldset>/<legend> pair was the
+  // first version, but <legend> ignores absolute positioning in WebKit, so a
+  // "visually hidden" legend rendered as a second copy of the question.
   return (
-    <fieldset className="border-hairline bg-card rounded-2xl border p-4 sm:p-5">
-      <legend className="sr-only">{q.label}</legend>
-      <p className="type-body text-ink font-medium">{q.label}</p>
+    <div
+      role="group"
+      aria-labelledby={labelId}
+      className="border-hairline bg-card rounded-2xl border p-4 sm:p-5"
+    >
+      <p id={labelId} className="type-body text-ink font-medium">
+        {q.label}
+      </p>
       {q.help ? <Commentary>{q.help}</Commentary> : null}
 
       {q.kind === "boolean" ? (
-        <div className="mt-3 flex gap-2" role="radiogroup" aria-label={q.label}>
+        <div className="mt-3 flex gap-2" role="radiogroup" aria-labelledby={labelId}>
           {[
             ["Yes", true],
             ["No", false],
@@ -114,7 +123,7 @@ function Field({
           step="1"
           value={value === null || value === undefined ? "" : String(value)}
           onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
-          aria-label={q.label}
+          aria-labelledby={labelId}
           className="border-hairline bg-paper type-meta focus-visible:ring-ring mt-3 w-full max-w-xs rounded-xl border px-3.5 py-2 font-mono focus-visible:ring-2 focus-visible:outline-none"
           placeholder="e.g. 2000000"
         />
@@ -167,7 +176,7 @@ function Field({
       ) : null}
 
       <BasisDisclosure q={q} />
-    </fieldset>
+    </div>
   );
 }
 
