@@ -333,6 +333,7 @@ def test_calls_today_counts_only_current_environment(monkeypatch):
 # --- integration --------------------------------------------------------
 
 
+@pytest.mark.live
 def test_ask_integration_real_stack():
     if not os.environ.get("DATABASE_URL") or not os.environ.get("OPENAI_API_KEY"):
         pytest.skip("DATABASE_URL / OPENAI_API_KEY not configured")

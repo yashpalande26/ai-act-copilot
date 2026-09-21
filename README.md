@@ -19,3 +19,5 @@ Run the tests:
 cd backend
 pytest
 ```
+
+A plain `pytest` never spends money: the five live-stack tests (real Supabase + real OpenAI: measured at 3 chat-model calls and 3 embedding calls per run) are marked `live` and skipped unless you opt in explicitly with `RUN_LIVE_TESTS=1 pytest` (they still need `DATABASE_URL`, `OPENAI_API_KEY` and `INTERNAL_API_SECRET` in `backend/.env`).

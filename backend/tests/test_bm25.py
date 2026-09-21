@@ -173,6 +173,7 @@ def test_bm25_search_preserves_bm25_order_not_db_order(tmp_path, monkeypatch):
 # --- integration --------------------------------------------------------
 
 
+@pytest.mark.live
 def test_bm25_search_against_real_corpus():
     if not os.environ.get("DATABASE_URL") or not os.environ.get("OPENAI_API_KEY"):
         pytest.skip("DATABASE_URL / OPENAI_API_KEY not configured")

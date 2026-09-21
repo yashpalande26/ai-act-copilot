@@ -6,3 +6,6 @@ extend-exclude = ["alembic/versions"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "live: hits the real database and paid OpenAI endpoints; skipped unless RUN_LIVE_TESTS=1",
+]

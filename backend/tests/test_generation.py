@@ -388,6 +388,7 @@ def test_trace_write_failure_does_not_affect_answer_or_product_data(
     assert "trace write failed" in capsys.readouterr().err
 
 
+@pytest.mark.live
 def test_grounded_generation_integration_real_query():
     if not os.environ.get("OPENAI_API_KEY") or not os.environ.get("DATABASE_URL"):
         pytest.skip("OPENAI_API_KEY/DATABASE_URL not configured")

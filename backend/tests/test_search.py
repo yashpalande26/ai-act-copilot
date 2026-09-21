@@ -226,6 +226,7 @@ def test_rrf_absent_term_contributes_zero():
 # --- integration (real DB + real OpenAI embedding call) -----------------
 
 
+@pytest.mark.live
 def test_hybrid_search_integration_real_query():
     if not os.environ.get("OPENAI_API_KEY") or not os.environ.get("DATABASE_URL"):
         pytest.skip("OPENAI_API_KEY/DATABASE_URL not configured")

@@ -62,6 +62,7 @@ def test_aggregation_all_parse_failures_returns_zero_not_a_crash():
     assert pass_at_4_rate(results) == 0.0
 
 
+@pytest.mark.live
 def test_judge_integration_real_call_plausible_score():
     if not os.environ.get("OPENAI_API_KEY"):
         pytest.skip("OPENAI_API_KEY not configured")
