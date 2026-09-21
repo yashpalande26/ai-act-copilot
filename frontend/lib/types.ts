@@ -37,6 +37,51 @@ export type SessionDetail = {
   messages: SessionMessage[];
 };
 
+/** Mirrors GET /admin/traces (operator-only). */
+export type TraceSummary = {
+  id: string;
+  created_at: string;
+  environment: string;
+  question: string;
+  retrieval_config: string;
+  abstained: boolean;
+  model: string;
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
+  retrieval_latency_ms: number;
+  generation_latency_ms: number | null;
+};
+
+export type TraceRetrieval = {
+  config: string;
+  query_actor: string | null;
+  factor: number | null;
+  legacy: boolean;
+};
+
+export type TraceCandidate = {
+  final_rank: number;
+  citation_id: string;
+  citation_label: string;
+  chunk_id: number | null;
+  chunk_preview: string | null;
+  vector_rank: number | null;
+  lexical_rank: number | null;
+  rrf_score: number | null;
+  similarity: number | null;
+  used_in_context: boolean;
+  actor: string | null;
+  downweighted: boolean;
+};
+
+/** Mirrors GET /admin/traces/{id}. */
+export type TraceDetail = TraceSummary & {
+  retrieval: TraceRetrieval;
+  answer: string;
+  citations: { citation_id: string; citation_label: string }[];
+  candidates: TraceCandidate[];
+};
+
 export type ChatTurn =
   | { role: "user"; id: string; question: string }
   | { role: "assistant"; id: string; result: AskResult }

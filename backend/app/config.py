@@ -61,6 +61,17 @@ def app_env() -> str:
     return value
 
 
+# --- admin allowlist --------------------------------------------------------
+# Comma-separated e-mail addresses allowed to read the admin trace viewer
+# (/admin/*). Compared, lower-cased, against the e-mail asserted in the
+# verified BFF service token. Unset or empty means NO admins: the viewer is
+# closed by default in every environment. Set as a Railway service variable
+# (and mirrored on Vercel, server-only, purely to hide the link).
+def admin_emails() -> frozenset[str]:
+    raw = os.environ.get("ADMIN_EMAILS", "")
+    return frozenset(e.strip().lower() for e in raw.split(",") if e.strip())
+
+
 def internal_api_secret() -> str:
     """Shared HMAC key for the BFF service token. Server-side only, in BOTH the
     FastAPI env and the Next.js server env - never NEXT_PUBLIC_, never shipped

@@ -15,6 +15,7 @@ from app.config import (
     DAILY_LIMIT_PER_USER,
     SERVICE_TOKEN_ALGORITHM,
     SERVICE_TOKEN_LEEWAY_SECONDS,
+    admin_emails,
     app_env,
     internal_api_secret,
 )
@@ -162,3 +163,22 @@ def enforce_daily_quota(session: Session, user: AppUser) -> None:
 
 DbSession = Depends(get_db)
 ServiceToken = Depends(require_service_token)
+
+
+def require_admin(caller: Caller = ServiceToken) -> Caller:
+    """Operator-only routes. Composes with require_service_token: the token
+    is verified first (401 when absent or bad), then the asserted e-mail must
+    be on the ADMIN_EMAILS allowlist, else 404.
+
+    404, not 403, and the same 404 as an unknown route: a non-admin cannot
+    learn that the admin surface exists. This is a DIFFERENT model from the
+    per-user history ownership check (get_owned_session): admin reads have no
+    user filter and see every trace; everyone else sees none. The two never
+    mix.
+    """
+    if caller.email.lower() not in admin_emails():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
+    return caller
+
+
+Admin = Depends(require_admin)

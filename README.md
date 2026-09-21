@@ -45,6 +45,7 @@ Backend (Railway → Variables). Nothing else is read by the code.
 | `OPENAI_API_KEY` | |
 | `INTERNAL_API_SECRET` | byte-identical to the Vercel value |
 | `APP_ENV` | `production` |
+| `ADMIN_EMAILS` | comma-separated operator e-mails allowed to open the admin trace viewer (`/admin/*`). Unset means nobody. This is the real gate; keep it to operator accounts, since traces contain user questions and answers. |
 
 Frontend (Vercel → Environment Variables, Production scope). Nothing is `NEXT_PUBLIC_`.
 
@@ -55,6 +56,7 @@ Frontend (Vercel → Environment Variables, Production scope). Nothing is `NEXT_
 | `INTERNAL_API_SECRET` | byte-identical to the Railway value |
 | `FASTAPI_URL` | `https://<service>.up.railway.app`, no trailing slash |
 | `AUTH_URL` | `https://<project>.vercel.app`, **Production scope only**. Not required by Auth.js v5 on Vercel, but pins the OAuth callback origin to the production domain. Leave it unset for Preview. |
+| `ADMIN_EMAILS` | the same list as on Railway. UX only: hides the admin link and 404s the admin pages for everyone else. FastAPI enforces its own copy on every request. |
 | `AUTH_RESEND_KEY`, `AUTH_DB_URL`, `AUTH_EMAIL_FROM` | leave unset (magic-link stays off) |
 
 `INTERNAL_API_SECRET` is generated once and pasted into both dashboards. A trailing newline or a re-generation on one side turns every question into a 401 that the UI reports as "The service is misconfigured".
@@ -63,7 +65,7 @@ Frontend (Vercel → Environment Variables, Production scope). Nothing is `NEXT_
 
 1. **Railway:** New project → Deploy from GitHub → this repo. Service Settings → Root Directory `backend`. Confirm the start and pre-deploy commands from `railway.json` appear in Settings.
 2. Settings → Networking → Generate Domain. Copy it. Make sure App Sleeping is **off** (a sleeping instance turns the first question of the day into a 20-30 s cold start).
-3. Variables → the four backend values above. Deploy.
+3. Variables → the five backend values above (`ADMIN_EMAILS` may stay empty until you want the trace viewer). Deploy.
 4. Deploy logs, in order: the alembic line (`Running upgrade ...` or already at head), then `documents indexed: N` and `candidate sets match: True` from the index build, then uvicorn listening, and **no** `ACTION REQUIRED` line.
 5. Smoke the backend alone (zero cost):
    `curl https://<railway>/health` → `environment: production`;

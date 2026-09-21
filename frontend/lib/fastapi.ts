@@ -2,7 +2,12 @@ import "server-only";
 
 import { SignJWT } from "jose";
 
-import type { SessionDetail, SessionSummary } from "@/lib/types";
+import type {
+  SessionDetail,
+  SessionSummary,
+  TraceDetail,
+  TraceSummary,
+} from "@/lib/types";
 
 /**
  * Server-only bridge to the FastAPI backend (the "BFF" half of the contract).
@@ -160,4 +165,25 @@ export function listSessions(identity: Identity) {
 
 export function getSession(identity: Identity, id: string) {
   return getBackend<SessionDetail>(`/sessions/${encodeURIComponent(id)}`, identity);
+}
+
+// --- admin trace viewer (read-only, allowlisted server-side) ---------------
+
+export function listTraces(
+  identity: Identity,
+  params: { limit?: number; before?: string; environment?: string },
+) {
+  const qs = new URLSearchParams();
+  if (params.limit) qs.set("limit", String(params.limit));
+  if (params.before) qs.set("before", params.before);
+  if (params.environment) qs.set("environment", params.environment);
+  const query = qs.toString();
+  return getBackend<{ traces: TraceSummary[]; next_before: string | null }>(
+    `/admin/traces${query ? `?${query}` : ""}`,
+    identity,
+  );
+}
+
+export function getTrace(identity: Identity, id: string) {
+  return getBackend<TraceDetail>(`/admin/traces/${encodeURIComponent(id)}`, identity);
 }
