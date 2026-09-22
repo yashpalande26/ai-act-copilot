@@ -371,6 +371,35 @@
   }
 }
 
+/* In-flight chat turn: a thin ink sweep on a paper track. Indeterminate on
+   purpose (the page cannot see which stage the pipeline is on). Under
+   prefers-reduced-motion the sweep is a still segment. */
+.pending-track {
+  position: relative;
+  height: 3px;
+  width: min(100%, 22rem);
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--ink) 10%, transparent);
+}
+.pending-sweep {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 38%;
+  border-radius: inherit;
+  background: var(--ink);
+  opacity: 0.55;
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes pending-sweep {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(265%); }
+  }
+  .pending-sweep {
+    animation: pending-sweep 1.6s cubic-bezier(0.45, 0, 0.35, 1) infinite;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

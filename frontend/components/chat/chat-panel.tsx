@@ -56,6 +56,8 @@ type Props = {
   userName: string;
   turns: ChatTurn[];
   pending: boolean;
+  /** Harness only: render a later phase of the in-flight indicator without waiting. */
+  pendingStartedAt?: number;
   /** A past session is being fetched. */
   loading?: boolean;
   loadError?: string | null;
@@ -71,6 +73,7 @@ export function ChatPanel({
   userName,
   turns,
   pending,
+  pendingStartedAt,
   loading = false,
   loadError = null,
   onSubmit,
@@ -188,7 +191,7 @@ export function ChatPanel({
                   />
                 ),
               )}
-              {pending ? <PendingTurn /> : null}
+              {pending ? <PendingTurn startedAt={pendingStartedAt} /> : null}
             </div>
           )}
           <div ref={endRef} />

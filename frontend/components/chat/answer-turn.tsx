@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
 import {
   AlertTriangleIcon,
   CircleSlashIcon,
@@ -137,25 +141,58 @@ export function AssistantTurn({ turn, question }: { turn: ChatTurn; question?: s
   );
 }
 
-export function PendingTurn() {
+/**
+ * In-flight turn. Honest by construction: it never names a stage it cannot
+ * see. The bar says a request is running from the first frame; the copy
+ * arrives after a second so a fast answer never flashes a sentence; a
+ * second, calmer line after eight seconds says longer questions take longer
+ * (the profiled pipeline: simple turns about 6 s, questions with several
+ * parts up to 19 s). Unmounted by ChatPanel the moment the answer or the
+ * abstention lands. `startedAt` exists so a harness can render a later
+ * phase without waiting.
+ */
+export const PENDING_COPY = {
+  early: "Working through the Act. Complex questions check several provisions and can take a few seconds.",
+  late: "Still working. Questions with several parts can take up to 20 seconds. The answer will cite the provisions it relies on.",
+} as const;
+const PENDING_COPY_AT_MS = 1000;
+const PENDING_LATE_AT_MS = 8000;
+
+type PendingPhase = "bar" | "early" | "late";
+
+export function PendingTurn({ startedAt }: { startedAt?: number } = {}) {
+  const [started] = useState(() => startedAt ?? Date.now());
+  const [phase, setPhase] = useState<PendingPhase>(() => phaseAt(started));
+
+  useEffect(() => {
+    const tick = () => setPhase(phaseAt(started));
+    const a = window.setTimeout(tick, Math.max(0, started + PENDING_COPY_AT_MS - Date.now()));
+    const b = window.setTimeout(tick, Math.max(0, started + PENDING_LATE_AT_MS - Date.now()));
+    return () => {
+      window.clearTimeout(a);
+      window.clearTimeout(b);
+    };
+  }, [started]);
+
   return (
     <Bubble>
-      <div
-        className="type-body text-ink-soft flex items-center gap-3"
-        role="status"
-        aria-live="polite"
-      >
-        <span className="flex gap-1.5" aria-hidden>
-          {[0, 150, 300].map((delay) => (
-            <span
-              key={delay}
-              className="bg-muted-foreground/45 size-1.5 animate-bounce rounded-full"
-              style={{ animationDelay: `${delay}ms` }}
-            />
-          ))}
-        </span>
-        Searching the Act and drafting a cited answer
+      <div role="status" aria-live="polite" data-testid="pending-turn" data-phase={phase} className="space-y-3">
+        <div className="pending-track" aria-hidden>
+          <span className="pending-sweep" />
+        </div>
+        {phase === "bar" ? (
+          <span className="sr-only">Working on your question</span>
+        ) : (
+          <p className="type-meta text-ink-soft max-w-prose">{PENDING_COPY[phase]}</p>
+        )}
       </div>
     </Bubble>
   );
+}
+
+function phaseAt(started: number): PendingPhase {
+  const elapsed = Date.now() - started;
+  if (elapsed >= PENDING_LATE_AT_MS) return "late";
+  if (elapsed >= PENDING_COPY_AT_MS) return "early";
+  return "bar";
 }
