@@ -99,6 +99,10 @@ class GroundedAnswer(BaseModel):
     answer: str
     citations: list[SearchResult]
     message_id: UUID
+    # The standalone question retrieval actually ran on when a follow-up was
+    # rewritten inside the pipeline (Stage 1 graph node); None otherwise. The
+    # same value is stored as query_trace.rewritten_query.
+    rewritten_query: str | None = None
 
 
 class RewriteInfo(BaseModel):
@@ -312,18 +316,15 @@ def apply_dense_anchor(
     return merged[: max(len(all_fused), 1)], True
 
 
-def retrieve_candidates(
+def _hybrid_candidates(
     session: Session,
     query: str,
     corpus_version_id: int,
     *,
-    min_similarity: float = 0.3,
-    dense_anchor_floor: float | None | str = "default",
-    final_context_size: int = 15,
-) -> tuple[list[FusedResult], str]:
-    """The production candidate list: vector + BM25, RRF, actor prior, dense
-    anchor. One function so the evals measure exactly what /ask serves.
-    Returns (fused candidates, retrieval_config string)."""
+    min_similarity: float,
+) -> tuple[list[FusedResult], list[SearchResult], str]:
+    """The two legs and their RRF fusion for ONE query, before the actor prior
+    and the dense anchor. Returns (fused, vector_results, retrieval_config)."""
     vector_results = vector_search(
         session,
         query,
@@ -343,6 +344,20 @@ def retrieve_candidates(
         lexical_weight=RETRIEVAL_LEXICAL_WEIGHT,
         top_k=RETRIEVAL_CANDIDATE_BREADTH,
     )
+    return all_fused, vector_results, retrieval_config
+
+
+def _rank_candidates(
+    all_fused: list[FusedResult],
+    vector_results: list[SearchResult],
+    retrieval_config: str,
+    query: str,
+    *,
+    dense_anchor_floor: float | None | str,
+    final_context_size: int,
+) -> tuple[list[FusedResult], str]:
+    """Actor prior, then dense anchor, on an already-fused candidate list.
+    `query` is the question the actor is detected on."""
     # Advisory actor prior, applied over the FULL candidate list before the
     # slice: when the question names exactly one actor, chunks labelled with
     # a different actor sink. Recorded in retrieval_config either way, so a
@@ -368,6 +383,105 @@ def retrieve_candidates(
         if anchored:
             retrieval_config += "|anchor=dense"
     return all_fused, retrieval_config
+
+
+def retrieve_candidates(
+    session: Session,
+    query: str,
+    corpus_version_id: int,
+    *,
+    min_similarity: float = 0.3,
+    dense_anchor_floor: float | None | str = "default",
+    final_context_size: int = 15,
+) -> tuple[list[FusedResult], str]:
+    """The production candidate list: vector + BM25, RRF, actor prior, dense
+    anchor. One function so the evals measure exactly what /ask serves.
+    Returns (fused candidates, retrieval_config string)."""
+    all_fused, vector_results, retrieval_config = _hybrid_candidates(
+        session, query, corpus_version_id, min_similarity=min_similarity
+    )
+    return _rank_candidates(
+        all_fused,
+        vector_results,
+        retrieval_config,
+        query,
+        dense_anchor_floor=dense_anchor_floor,
+        final_context_size=final_context_size,
+    )
+
+
+def fuse_query_candidates(
+    first: list[FusedResult], second: list[FusedResult], *, top_k: int
+) -> list[FusedResult]:
+    """Fuse the RRF candidate lists of two queries for the same turn. RRF is a
+    sum of per-list terms, so adding the two per-query scores of a chunk is
+    exactly weighted RRF over the four underlying lists (vector and lexical
+    for each query); a chunk both queries retrieve is rewarded, a chunk only
+    one retrieves keeps its own score. Deduplicated by chunk id. The trace
+    keeps the better vector and lexical rank across the two queries."""
+    by_id: dict[int, FusedResult] = {}
+    for f in [*first, *second]:
+        cur = by_id.get(f.result.chunk_id)
+        if cur is None:
+            by_id[f.result.chunk_id] = f.model_copy()
+            continue
+        cur.rrf_score += f.rrf_score
+        for attr in ("vector_rank", "lexical_rank"):
+            a, b = getattr(cur, attr), getattr(f, attr)
+            setattr(
+                cur,
+                attr,
+                min(x for x in (a, b) if x is not None)
+                if a is not None or b is not None
+                else None,
+            )
+    fused = sorted(by_id.values(), key=lambda f: f.rrf_score, reverse=True)
+    return fused[:top_k]
+
+
+def retrieve_candidates_dual(
+    session: Session,
+    raw_query: str,
+    rewritten_query: str,
+    corpus_version_id: int,
+    *,
+    min_similarity: float = 0.3,
+    dense_anchor_floor: float | None | str = "default",
+    final_context_size: int = 15,
+) -> tuple[list[FusedResult], str]:
+    """Stage 1b (22 Sep 2026): a rewritten follow-up retrieves on BOTH the
+    user's raw follow-up and the standalone rewrite. Each query runs the
+    production legs and RRF; the two candidate lists are fused by summed RRF
+    (fuse_query_candidates) BEFORE the actor prior and the context slice. The
+    raw follow-up keeps the lexical signal the rewrite can lose (measured:
+    "penalties for not doing that?" had Article 99(4) at fused rank 2 while
+    the rewrite, saturated by "CE marking", dropped it from the 25); the
+    rewrite resolves the referent. The actor prior fires on the rewrite (the
+    resolved question; the graph has already checked it does not contradict
+    the raw one). The dense anchor uses whichever query's top vector hit is
+    the more similar. retrieval_config carries |dual."""
+    raw_fused, raw_vec, raw_cfg = _hybrid_candidates(
+        session, raw_query, corpus_version_id, min_similarity=min_similarity
+    )
+    rw_fused, rw_vec, rw_cfg = _hybrid_candidates(
+        session, rewritten_query, corpus_version_id, min_similarity=min_similarity
+    )
+    all_fused = fuse_query_candidates(
+        raw_fused, rw_fused, top_k=RETRIEVAL_CANDIDATE_BREADTH
+    )
+    # A degraded leg on either query is a degraded turn.
+    config = raw_cfg if raw_cfg == rw_cfg else "vector_only_degraded"
+    best_vec = max(
+        (v for v in (raw_vec, rw_vec) if v), key=lambda v: v[0].similarity, default=[]
+    )
+    return _rank_candidates(
+        all_fused,
+        best_vec,
+        config + "|dual",
+        rewritten_query,
+        dense_anchor_floor=dense_anchor_floor,
+        final_context_size=final_context_size,
+    )
 
 
 @dataclass
@@ -405,11 +519,21 @@ def retrieve_step(
     *,
     min_similarity: float = 0.3,
     final_context_size: int = 15,
+    raw_query: str | None = None,
 ) -> RetrievalStep:
+    """`raw_query`, when given and different from `query`, is the user's
+    follow-up as typed while `query` is its standalone rewrite: retrieval then
+    runs on both and fuses (retrieve_candidates_dual). The plain path never
+    passes it."""
     retrieval_start = time.monotonic()
-    all_fused, retrieval_config = retrieve_candidates(
-        session, query, corpus_version_id, min_similarity=min_similarity
-    )
+    if raw_query is not None and raw_query != query:
+        all_fused, retrieval_config = retrieve_candidates_dual(
+            session, raw_query, query, corpus_version_id, min_similarity=min_similarity
+        )
+    else:
+        all_fused, retrieval_config = retrieve_candidates(
+            session, query, corpus_version_id, min_similarity=min_similarity
+        )
     retrieval_latency_ms = int((time.monotonic() - retrieval_start) * 1000)
     # Equivalent to the old rrf_rank_and_fuse(..., top_k=final_context_size):
     # rrf_rank_and_fuse sorts the full candidate set by rrf_score BEFORE
@@ -502,6 +626,9 @@ def decide_step(
             citations=[f.result for f in fused],
             message_id=message.id,
         )
+
+    if rw.applied:
+        result.rewritten_query = query
 
     if write_trace:
         _write_trace_safe(

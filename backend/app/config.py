@@ -103,6 +103,28 @@ def agentic_rag_enabled() -> bool:
     return os.environ.get("AGENTIC_RAG", "0") == "1"
 
 
+# Stage 1b node default. "1" since the passing run of 22 Sep 2026
+# (evals/runs/stage1b_dual.json vs stage0_off.json): multi-turn context
+# recall 1.000 held, citation accuracy 0.875 -> 1.000, the coreference
+# follow-up answers citing Article 99(4), unanswerable 7/7 refused, 0 drift
+# violations, single-hop identical. Only effective when AGENTIC_RAG=1, which
+# stays off; AGENTIC_REWRITE=0 restores Stage 0 inside the graph.
+AGENTIC_REWRITE_DEFAULT = "1"
+
+
+def agentic_rewrite_enabled() -> bool:
+    """Stage 1: the contextual query-rewrite node at the front of the graph.
+    Effective only when the graph runs (AGENTIC_RAG=1); AGENTIC_REWRITE=0
+    with the graph on is exactly Stage 0, which is how the node's isolated
+    effect is measured. Reuses app.generation.rewrite (gpt-4o-mini, entity
+    guard, idempotence, fail-open) and adds the actor-conflict rule and the
+    no-retry answerability rule in app.generation.graph."""
+    return (
+        agentic_rag_enabled()
+        and os.environ.get("AGENTIC_REWRITE", AGENTIC_REWRITE_DEFAULT) == "1"
+    )
+
+
 # --- admin allowlist --------------------------------------------------------
 # Comma-separated e-mail addresses allowed to read the admin trace viewer
 # (/admin/*). Compared, lower-cased, against the e-mail asserted in the

@@ -32,10 +32,11 @@ def _sr(citation_id="art_16.pt_a"):
 
 
 class _Answer:
-    def __init__(self, answer, citations):
+    def __init__(self, answer, citations, rewritten_query=None):
         self.answer = answer
         self.citations = citations
         self.message_id = uuid4()
+        self.rewritten_query = rewritten_query
 
 
 @pytest.fixture

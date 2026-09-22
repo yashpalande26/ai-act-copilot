@@ -156,7 +156,10 @@ def ask(
     )
 
     return AskResponse(
-        rewritten_query=rewrite.query if rewrite.applied else None,
+        # Rewritten by the route (FOLLOWUP_REWRITE) or inside the graph
+        # (AGENTIC_REWRITE); whichever ran, the UI shows what was retrieved.
+        rewritten_query=result.rewritten_query
+        or (rewrite.query if rewrite.applied else None),
         answer=result.answer,
         citations=[
             AskCitation(

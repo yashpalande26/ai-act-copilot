@@ -7,11 +7,17 @@ AGENTIC_RAG flag applies to the run exactly as it would to a user.
     python evals/gate.py out/off.json out/on.json --equivalence
 
 Per trace (evals/metrics.py): context_recall, context_precision (against the
-15-chunk context the generator sees, read from retrieve_candidates, the same
-function the pipeline calls), citation_accuracy (gold covered by the returned
-citations), inline_mention, predicted_abstention, and with the judge on
-(default) faithfulness and answer_relevance from evals/judge.py. Aggregated
-per bucket and pooled, with abstention F1_ans / F1_ref / macro.
+15-chunk context the pipeline ACTUALLY served, captured from retrieve_step,
+so a rewrite node's effect on the context is measured, not the raw question's
+retrieval), citation_accuracy (gold covered by the returned citations),
+inline_mention, predicted_abstention, and with the judge on (default)
+faithfulness and answer_relevance from evals/judge.py. Aggregated per bucket
+and pooled, with abstention F1_ans / F1_ref / macro.
+
+Stage 1 fields per trace: rewrite_outcome (applied | guarded | ambiguous |
+None), rewritten_query, rewrite_introduced (the entities the guard rejected),
+served_introduced: an INDEPENDENT re-check of every served rewrite against
+the conversation (must be empty; the guard is tested, not trusted).
 
 Multi-turn items seed their history as Message rows in a fresh chat session
 before the follow-up is asked, so a Stage 1 rewrite node can read it through
@@ -42,14 +48,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from sqlalchemy import select
 
-from app.config import agentic_rag_enabled
+from app.config import agentic_rag_enabled, agentic_rewrite_enabled
 from app.db.models import AppUser, ChatSession, CorpusVersion, Message
 from app.db.session import SessionLocal
-from app.generation.answer import (
-    generate_grounded_answer,
-    is_abstention,
-    retrieve_candidates,
-)
+from app.generation import answer as answer_module
+from app.generation import graph as graph_module
+from app.generation.answer import generate_grounded_answer, is_abstention
+from app.generation.rewrite import _transcript, introduced_entities
 from evals.judge import judge_answer_relevance, judge_faithfulness
 from evals.metrics import (
     abstention_f1,
@@ -116,6 +121,26 @@ def main() -> None:
         items = [i for i in items if i["bucket"] == args.bucket]
 
     flag = agentic_rag_enabled()
+    node = agentic_rewrite_enabled()
+    # Capture what the pipeline served: the context slice and the rewrite.
+    captured: dict = {}
+    real_retrieve = answer_module.retrieve_step
+    real_rewrite = graph_module.rewrite_followup
+
+    def capturing_retrieve(sess, query, cv_id, **kw):
+        step = real_retrieve(sess, query, cv_id, **kw)
+        captured["retrieved"] = step
+        captured["retrieval_query"] = query
+        return step
+
+    def capturing_rewrite(history, question, extractor=None):
+        res = real_rewrite(history, question, extractor)
+        captured["rewrite"] = res
+        captured["history"] = history
+        return res
+
+    answer_module.retrieve_step = capturing_retrieve
+    graph_module.rewrite_followup = capturing_rewrite
     session = SessionLocal()
     real_commit = session.commit
     session.commit = session.flush  # nothing persists
@@ -130,7 +155,8 @@ def main() -> None:
         session.flush()
         print(
             f"set {args.set.name} ({len(items)} items)  corpus {cv.consolidated_date}"
-            f"  AGENTIC_RAG={'1' if flag else '0'}  judge={'off' if args.no_judge else 'on'}"
+            f"  AGENTIC_RAG={'1' if flag else '0'}  AGENTIC_REWRITE={'1' if node else '0'}"
+            f"  judge={'off' if args.no_judge else 'on'}"
             f"  env {os.environ.get('APP_ENV', 'dev')}"
         )
         traces: list[dict] = []
@@ -143,8 +169,7 @@ def main() -> None:
             session.flush()
             q = it["question"]
             gold = it["gold_citation_ids"]
-            fused, cfg = retrieve_candidates(session, q, cv.id)
-            context_ids = [f.result.citation_id for f in fused[:CONTEXT]]
+            captured.clear()
             t0 = time.monotonic()
             res = generate_grounded_answer(
                 session, q, cv.id, chat.id, max_output_tokens=800
@@ -152,6 +177,34 @@ def main() -> None:
             latency_ms = int((time.monotonic() - t0) * 1000)
             abstained = is_abstention(res.answer)
             cited = [c.citation_id for c in res.citations]
+            step = captured.get("retrieved")
+            context_ids = [f.result.citation_id for f in step.fused] if step else []
+            cfg = step.retrieval_config if step else "none"
+            rw = captured.get("rewrite")
+            served_rewrite = (
+                rw.query
+                if rw is not None
+                and rw.applied
+                and captured.get("retrieval_query") == rw.query
+                else None
+            )
+            served_introduced = (
+                introduced_entities(
+                    served_rewrite, _transcript(captured["history"]) + "\n" + q
+                )
+                if served_rewrite
+                else []
+            )
+            outcome = None
+            if rw is not None and rw.attempted:
+                if served_rewrite:
+                    outcome = "applied"
+                elif rw.introduced:
+                    outcome = "guarded"
+                elif rw.applied:
+                    outcome = "ambiguous"
+                else:
+                    outcome = "passthrough"
             row = {
                 "id": it["id"],
                 "bucket": it["bucket"],
@@ -162,6 +215,10 @@ def main() -> None:
                 "predicted_abstention": abstained,
                 "context_ids": context_ids,
                 "retrieval_config": cfg,
+                "rewrite_outcome": outcome,
+                "rewritten_query": served_rewrite,
+                "rewrite_introduced": list(rw.introduced) if rw is not None else [],
+                "served_introduced": served_introduced,
                 "context_recall": context_recall(context_ids, gold),
                 "context_precision": context_precision(context_ids, gold),
                 "citation_accuracy": citation_accuracy(cited, gold),
@@ -187,6 +244,16 @@ def main() -> None:
                 f" cite={fmt(row['citation_accuracy'])} inline={row['inline_mention']}"
                 f" faith={row.get('faithfulness')} rel={row.get('answer_relevance')}"
                 f" {latency_ms}ms | {q[:70]}"
+                + (
+                    f"\n      rewrite[{outcome}]: {served_rewrite or rw.query if rw else ''}"
+                    + (
+                        f" REJECTED {list(rw.introduced)}"
+                        if rw is not None and rw.introduced
+                        else ""
+                    )
+                    if outcome
+                    else ""
+                )
             )
 
         by_bucket = defaultdict(list)
@@ -231,6 +298,23 @@ def main() -> None:
         print(
             "abstention F1 is macro(F1_ans, F1_ref); n/a means the class had no expected and no predicted members."
         )
+        attempted = [t for t in traces if t["rewrite_outcome"]]
+        if attempted:
+            outcomes = {
+                k: sum(t["rewrite_outcome"] == k for t in attempted)
+                for k in ("applied", "guarded", "ambiguous", "passthrough")
+            }
+            leaked = [t["id"] for t in traces if t["served_introduced"]]
+            print(
+                f"\n== REWRITE NODE ==  attempted {len(attempted)}  "
+                + "  ".join(f"{k} {v}" for k, v in outcomes.items())
+            )
+            print(
+                f"  drift-guard rejections (caught, fell back): {outcomes['guarded']}"
+            )
+            print(
+                f"  served rewrites that introduce an entity absent from the conversation (independent re-check, gate 0): {len(leaked)} {leaked}"
+            )
         if args.json:
             args.json.parent.mkdir(parents=True, exist_ok=True)
             args.json.write_text(
@@ -248,6 +332,8 @@ def main() -> None:
             )
             print(f"wrote {args.json}")
     finally:
+        answer_module.retrieve_step = real_retrieve
+        graph_module.rewrite_followup = real_rewrite
         session.commit = real_commit
         session.rollback()
         session.close()
