@@ -39,6 +39,26 @@ export default function CitationsPreview() {
     id: "preview-scope",
     result: { answer: "", citations: [], abstained: true, session_id: null, scope_notice: true },
   };
+  const systemQuestion = "we use AI to screen CVs for hiring, is that allowed?";
+  const systemAnswer: ChatTurn = {
+    role: "assistant",
+    id: "preview-system",
+    result: {
+      answer:
+        "AI systems intended to be used for the recruitment or selection of natural persons, including to analyse and filter job applications, are listed as high-risk AI systems in Annex III, point 4(a). Whether a specific system falls within that point depends on its intended purpose: whether it is used for recruitment or selection, such as screening applications.",
+      citations: [
+        {
+          citation_id: "anx_III.pt_4.sub_a",
+          citation_label: "Annex III, point 4(a)",
+          quoted_text:
+            "AI systems intended to be used for the recruitment or selection of natural persons, in particular to place targeted job advertisements, to analyse and filter job applications, and to evaluate candidates;",
+        },
+      ],
+      abstained: false,
+      session_id: "preview",
+      system_description: true,
+    },
+  };
   const error: ChatTurn = {
     role: "error",
     id: "preview-error",
@@ -55,6 +75,8 @@ export default function CitationsPreview() {
         <AssistantTurn turn={abstention} question={question} />
         <UserTurn question="hey" />
         <AssistantTurn turn={scope} question="hey" />
+        <UserTurn question={systemQuestion} />
+        <AssistantTurn turn={systemAnswer} question={systemQuestion} />
         <AssistantTurn turn={error} question={question} />
       </div>
     </main>

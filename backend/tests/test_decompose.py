@@ -176,6 +176,7 @@ def _run(
     monkeypatch.setenv("AGENTIC_GRADE", "1")
     monkeypatch.setenv("AGENTIC_VERIFY", "0")
     monkeypatch.setenv("AGENTIC_DECOMPOSE", "1" if on else "0")
+    monkeypatch.setenv("QUERY_UNDERSTANDING", "0")
     monkeypatch.setattr(graph_module, "plan_decomposition", lambda q: plan_result)
     retrieve_calls = []
     grade_calls = []
@@ -371,9 +372,9 @@ def test_decompose_node_is_inert_when_off(monkeypatch):
 def test_graph_has_no_loop_and_decompose_sits_between_rewrite_and_retrieve():
     g = graph_module.GRAPH.get_graph()
     edges = {(e.source, e.target) for e in g.edges}
-    assert ("rewrite", "decompose") in edges and ("decompose", "retrieve") in edges
+    assert ("understand", "decompose") in edges and ("decompose", "retrieve") in edges
     assert not any(
-        t in ("rewrite", "decompose", "retrieve")
+        t in ("rewrite", "understand", "decompose", "retrieve")
         for s, t in edges
         if s in ("retrieve", "grade", "generate", "verify", "decide")
     )

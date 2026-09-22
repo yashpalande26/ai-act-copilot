@@ -89,7 +89,14 @@ def test_aggregate_average_recall_across_fixture():
 # --- agentic four-bucket set (evals/agentic_set.json) ------------------------
 
 AGENTIC_SET = Path(__file__).resolve().parents[1] / "evals" / "agentic_set.json"
-BUCKETS = {"single_hop", "multi_turn", "multi_hop", "unanswerable", "reference"}
+BUCKETS = {
+    "single_hop",
+    "multi_turn",
+    "multi_hop",
+    "unanswerable",
+    "reference",
+    "plain_language",
+}
 
 
 def _agentic_items():
@@ -110,6 +117,8 @@ def test_agentic_set_gold_matches_answerability():
     for i in _agentic_items():
         if i["expected_abstention"]:
             assert i["gold_citation_ids"] == [], i["id"]
+        elif i.get("route_or_abstain"):
+            assert i["gold_citation_ids"] == [] and i.get("must_route"), i["id"]
         else:
             assert i["gold_citation_ids"], i["id"]
         assert isinstance(i["history"], list)

@@ -66,6 +66,10 @@ class AskResponse(BaseModel):
     # Turn 2+ only: the standalone question the answer was retrieved for,
     # when the follow-up was rewritten. None on a first turn or a pass-through.
     rewritten_query: str | None = None
+    # ADR-21: the question described the user's own AI system; the answer
+    # explains what the Act says about that type of system and the UI routes
+    # to the assessment for the classification. Never a verdict here.
+    system_description: bool = False
 
 
 def _get_or_create_session(
@@ -171,4 +175,5 @@ def ask(
         ],
         abstained=result.answer == ABSTENTION_TEXT,
         session_id=chat.id,
+        system_description=bool(getattr(result, "system_description", False)),
     )

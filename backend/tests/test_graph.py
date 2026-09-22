@@ -76,6 +76,7 @@ def _run(monkeypatch, *, flag: bool, fused, llm_text):
     monkeypatch.setenv("AGENTIC_RAG", "1" if flag else "0")
     monkeypatch.setenv("AGENTIC_REWRITE", "0")  # Stage 0 equivalence: nodes off
     monkeypatch.setenv("AGENTIC_GRADE", "0")
+    monkeypatch.setenv("QUERY_UNDERSTANDING", "0")
     monkeypatch.setenv("AGENTIC_VERIFY", "0")
     monkeypatch.setenv("AGENTIC_DECOMPOSE", "0")
     _patch_retrieval(monkeypatch, fused)
@@ -218,13 +219,15 @@ def test_graph_shape_is_rewrite_retrieve_grade_generate_decide():
         "grade",
         "retrieve",
         "rewrite",
+        "understand",
         "verify",
     ]
     edges = {(e.source, e.target) for e in g.edges}
     assert edges == {
         ("__start__", "rewrite"),
-        ("rewrite", "decompose"),
+        ("rewrite", "understand"),
         ("rewrite", "decide"),
+        ("understand", "decompose"),
         ("decompose", "retrieve"),
         ("retrieve", "grade"),
         ("retrieve", "decide"),
@@ -264,6 +267,7 @@ def _stage1(monkeypatch, *, history, rewrite_result, fused, llm_text, upstream=N
     monkeypatch.setenv("AGENTIC_RAG", "1")
     monkeypatch.setenv("AGENTIC_REWRITE", "1")
     monkeypatch.setenv("AGENTIC_GRADE", "0")
+    monkeypatch.setenv("QUERY_UNDERSTANDING", "0")
     monkeypatch.setenv("AGENTIC_VERIFY", "0")
     monkeypatch.setenv("AGENTIC_DECOMPOSE", "0")
     monkeypatch.setattr(graph_module, "load_history", lambda s, cid: history)

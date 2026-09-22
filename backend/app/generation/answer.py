@@ -112,6 +112,10 @@ class GroundedAnswer(BaseModel):
     # rewritten inside the pipeline (Stage 1 graph node); None otherwise. The
     # same value is stored as query_trace.rewritten_query.
     rewritten_query: str | None = None
+    # ADR-21: the question described the user's own AI system in plain
+    # language; the answer is in explain-and-route mode and the UI shows the
+    # route to the assessment. Never a verdict.
+    system_description: bool = False
 
 
 class RewriteInfo(BaseModel):
@@ -189,7 +193,17 @@ def _context_blocks(fused: list[FusedResult]) -> str:
     return "\n\n".join(blocks)
 
 
-def _build_user_prompt(query: str, fused: list[FusedResult]) -> str:
+def _build_user_prompt(
+    query: str, fused: list[FusedResult], framed_question: str | None = None
+) -> str:
+    if framed_question:
+        # ADR-21: the user's words are shown, but the question the model is
+        # asked is the one the chat may answer (what the Act says about this
+        # kind of system), not the one it may not (the user's own verdict).
+        return (
+            f"Context:\n{_context_blocks(fused)}\n\nThe user wrote: {query}\n\n"
+            f"Question: {framed_question}"
+        )
     return f"Context:\n{_context_blocks(fused)}\n\nQuestion: {query}"
 
 
@@ -673,6 +687,7 @@ def generate_step(
     max_output_tokens: int | None = None,
     extra_instruction: str | None = None,
     parts: list[tuple[str, list[FusedResult]]] | None = None,
+    framed_question: str | None = None,
 ) -> GenerationStep:
     """`extra_instruction`, when given, is appended to the user message (never
     to the system prompt, which is the grounding contract). Only the Stage 3
@@ -683,7 +698,9 @@ def generate_step(
         # Pre-LLM abstention: nothing to ground on, so no call is made.
         return GenerationStep(None, None, None, None)
     prompt = (
-        _build_parts_prompt(query, parts) if parts else _build_user_prompt(query, fused)
+        _build_parts_prompt(query, parts)
+        if parts
+        else _build_user_prompt(query, fused, framed_question)
     )
     if extra_instruction:
         prompt = f"{prompt}\n\n{extra_instruction}"
@@ -726,10 +743,12 @@ def decide_step(
     write_trace: bool = True,
     rewrite: "RewriteInfo | None" = None,
     path_tag: str = "",
+    system_description: bool = False,
 ) -> GroundedAnswer:
     """Abstain or answer, persist the turn, write the trace. `path_tag` is
     appended to retrieval_config so the audit log says which execution path
-    served the turn (empty for the plain path, "|path=graph" for the graph)."""
+    served the turn (empty for the plain path, "|path=graph" for the graph).
+    `system_description` marks an ADR-21 explain-and-route answer."""
     rw = rewrite or RewriteInfo()
     fused = retrieved.fused
     answer_text = generated.answer_text
@@ -756,6 +775,7 @@ def decide_step(
 
     if rw.applied:
         result.rewritten_query = query
+    result.system_description = system_description
 
     if write_trace:
         _write_trace_safe(

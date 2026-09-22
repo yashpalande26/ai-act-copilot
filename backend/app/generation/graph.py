@@ -1,7 +1,7 @@
 """The grounded-answer pipeline as a LangGraph graph, behind AGENTIC_RAG=1
 (default off).
 
-    START -> rewrite -> decompose -> retrieve -> grade -> generate -> verify -> decide -> END
+    START -> rewrite -> understand -> decompose -> retrieve -> grade -> generate -> verify -> decide -> END
     (retrieve -> decide directly when there is no context: the model is not
     called and decide abstains, exactly as the plain path does;
     rewrite -> decide directly on an actor conflict; grade -> decide when
@@ -71,6 +71,15 @@ after its widen abstains the turn. The grade node does not re-grade a
 context the parts already graded; the verifier checks the composed answer.
 retrieval_config carries |decompose=applied:N or |decompose=skipped.
 
+ADR-21 (22 Sep 2026): the understand node between rewrite and decompose,
+active only when config.query_understanding_enabled() (QUERY_UNDERSTANDING,
+effective inside the graph only). See app.generation.understand: a
+plain-language description of an AI system gets Act-vocabulary search terms
+fused with the question for retrieval, an explain-and-route generation
+instruction, a deterministic verdict-leak check after generation (regenerate
+once, then abstain) and system_description=True on the result.
+retrieval_config carries |understand=applied or |understand=n/a.
+
 Grounding, citations and the refusal sentence are decided downstream by the
 unchanged decide step.
 
@@ -90,6 +99,7 @@ from app.config import (
     agentic_grade_enabled,
     agentic_rewrite_enabled,
     agentic_verify_enabled,
+    query_understanding_enabled,
 )
 from app.generation import answer as pipeline
 from app.generation.answer import (
@@ -108,6 +118,13 @@ from app.generation.grade import (
     reorder,
 )
 from app.generation.rewrite import RewriteResult, load_history, rewrite_followup
+from app.generation.understand import (
+    EXPLAIN_AND_ROUTE_INSTRUCTION,
+    EXPLAIN_FRAMED_QUESTION,
+    Understanding,
+    understand_query,
+    verdict_leaks,
+)
 from app.generation.verify import (
     VerifyResult,
     regeneration_instruction,
@@ -129,6 +146,7 @@ GRADE_TAGS = {
     "skipped": "|grade=skipped",
 }
 DECOMPOSE_SKIPPED_TAG = "|decompose=skipped"
+UNDERSTAND_TAGS = {True: "|understand=applied", False: "|understand=n/a"}
 VERIFY_TAGS = {
     "passed": "|verify=passed",
     "regenerated": "|verify=regenerated",
@@ -151,6 +169,9 @@ class GraphState(TypedDict, total=False):
     max_output_tokens: int | None
     rewrite: RewriteInfo | None
     # produced by nodes
+    understanding: Understanding | None
+    translated_query: str | None  # Act-vocabulary search terms, fused with the question
+    leak_outcome: str | None  # None | regenerated | abstained
     plan: Plan | None
     parts: (
         list[tuple[str, list[FusedResult]]] | None
@@ -211,6 +232,21 @@ def rewrite(state: GraphState) -> dict:
         "rewrite": info,
         "rewrite_result": res,
         "rewrite_outcome": "applied",
+    }
+
+
+def understand(state: GraphState) -> dict:
+    if not query_understanding_enabled():
+        return {}
+    # Judged on the user's own words: a rewrite restates a follow-up in the
+    # Act's phrasing ("What are high-risk AI systems intended to be used for
+    # in admission to ..."), which read as a system description when it is a
+    # legal question (measured: three multi-turn items were "understood" and
+    # would have shown the route note).
+    u = understand_query(state.get("raw_query") or state["query"])
+    return {
+        "understanding": u,
+        "translated_query": u.retrieval_query if u.applies else None,
     }
 
 
@@ -303,15 +339,27 @@ def retrieve(state: GraphState) -> dict:
         )
         return {"retrieved": merged, "parts": parts, "part_retrieve_calls": calls}
     # Stage 1b: a served rewrite retrieves on the raw follow-up AND the
-    # rewrite, fused (answer.retrieve_candidates_dual). Otherwise Stage 0.
+    # rewrite, fused (answer.retrieve_candidates_dual). ADR-21: a translated
+    # plain-language question retrieves on the Act-vocabulary terms AND the
+    # question, fused the same way (the terms take the companion slot; the
+    # actor prior fires on the question). Otherwise Stage 0.
+    companion = state.get("raw_query") or state.get("translated_query")
     step = pipeline.retrieve_step(
         state["session"],
         state["query"],
         state["corpus_version_id"],
         min_similarity=state["min_similarity"],
         final_context_size=state["final_context_size"],
-        raw_query=state.get("raw_query"),
+        raw_query=companion,
     )
+    u = state.get("understanding")
+    if u is not None:
+        step = RetrievalStep(
+            all_fused=step.all_fused,
+            fused=step.fused,
+            retrieval_config=step.retrieval_config + UNDERSTAND_TAGS[u.applies],
+            latency_ms=step.latency_ms,
+        )
     if p is not None:
         step = RetrievalStep(
             all_fused=step.all_fused,
@@ -369,10 +417,17 @@ def grade(state: GraphState) -> dict:
         raw_query=state.get("raw_query"),
         breadth=WIDEN_BREADTH,
     )
+    # Keep the first pass's audit tags (understand, decompose) on the wider
+    # config, which otherwise only knows what the second retrieval did.
+    kept_tags = "".join(
+        seg
+        for seg in ("|understand=applied", "|understand=n/a", DECOMPOSE_SKIPPED_TAG)
+        if seg in step.retrieval_config
+    )
     wider = RetrievalStep(
         all_fused=wider.all_fused,
         fused=wider.fused,
-        retrieval_config=wider.retrieval_config,
+        retrieval_config=wider.retrieval_config + kept_tags,
         latency_ms=step.latency_ms + wider.latency_ms,
     )
     second = grade_context(state["query"], wider.fused)
@@ -395,6 +450,11 @@ def grade(state: GraphState) -> dict:
     return {"retrieved": empty, "grade_outcome": "abstain", "grade_results": results}
 
 
+def _explain_route(state: GraphState) -> bool:
+    u = state.get("understanding")
+    return bool(u is not None and u.applies)
+
+
 def generate(state: GraphState) -> dict:
     return {
         "generated": pipeline.generate_step(
@@ -402,6 +462,10 @@ def generate(state: GraphState) -> dict:
             state["retrieved"].fused,
             max_output_tokens=state["max_output_tokens"],
             parts=state.get("parts") or None,
+            extra_instruction=EXPLAIN_AND_ROUTE_INSTRUCTION
+            if _explain_route(state)
+            else None,
+            framed_question=EXPLAIN_FRAMED_QUESTION if _explain_route(state) else None,
         )
     }
 
@@ -423,25 +487,70 @@ def verify(state: GraphState) -> dict:
     """passed / regenerated once / abstained. Bounded: one regeneration, no
     loop. Only tightens: it can replace an answer with a better-grounded
     draft or with the abstention, never with added content."""
-    if not agentic_verify_enabled():
-        return {}
     generated = state.get("generated")
     if generated is None or generated.answer_text is None:
         return {}
     if pipeline.is_abstention(generated.answer_text):
         return {}
     fused = state["retrieved"].fused
+    if _explain_route(state):
+        # ADR-21 hard line, checked before anything else and regardless of
+        # the verifier flag: the answer may not certify the user's system.
+        leaks = verdict_leaks(generated.answer_text)
+        if leaks:
+            redo = pipeline.generate_step(
+                state["query"],
+                fused,
+                max_output_tokens=state["max_output_tokens"],
+                extra_instruction=EXPLAIN_AND_ROUTE_INSTRUCTION
+                + " A previous draft was rejected because it stated a conclusion "
+                "about the user's own system: "
+                + "; ".join(f'"{x}"' for x in leaks[:3])
+                + ". Remove any such statement.",
+                parts=state.get("parts") or None,
+                framed_question=EXPLAIN_FRAMED_QUESTION,
+            )
+            merged = GenerationStep(
+                answer_text=redo.answer_text,
+                prompt_tokens=(generated.prompt_tokens or 0)
+                + (redo.prompt_tokens or 0),
+                completion_tokens=(generated.completion_tokens or 0)
+                + (redo.completion_tokens or 0),
+                latency_ms=(generated.latency_ms or 0) + (redo.latency_ms or 0),
+            )
+            if (
+                redo.answer_text is None
+                or pipeline.is_abstention(redo.answer_text)
+                or verdict_leaks(redo.answer_text)
+            ):
+                return {
+                    "generated": _abstain_step(generated, redo),
+                    "leak_outcome": "abstained",
+                    "verify_outcome": "abstained",
+                }
+            generated = merged
+            state = {**state, "generated": merged}
+            leak_note = {"generated": merged, "leak_outcome": "regenerated"}
+        else:
+            leak_note = {}
+    else:
+        leak_note = {}
+    if not agentic_verify_enabled():
+        return leak_note
     first = verify_answer(generated.answer_text, fused)
     results = [first]
     if not first.ok and not first.misgrounded:
-        return {"verify_outcome": "skipped", "verify_results": results}
+        return {**leak_note, "verify_outcome": "skipped", "verify_results": results}
     if not first.misgrounded:
-        return {"verify_outcome": "passed", "verify_results": results}
+        return {**leak_note, "verify_outcome": "passed", "verify_results": results}
     redo = pipeline.generate_step(
         state["query"],
         fused,
         max_output_tokens=state["max_output_tokens"],
-        extra_instruction=regeneration_instruction(first),
+        extra_instruction=(
+            EXPLAIN_AND_ROUTE_INSTRUCTION + " " if _explain_route(state) else ""
+        )
+        + regeneration_instruction(first),
         parts=state.get("parts") or None,
     )
     merged = GenerationStep(
@@ -490,6 +599,7 @@ def decide(state: GraphState) -> dict:
         REWRITE_TAGS.get(state.get("rewrite_outcome") or "", "")
         + GRADE_TAGS.get(state.get("grade_outcome") or "", "")
         + VERIFY_TAGS.get(state.get("verify_outcome") or "", "")
+        + ("|leak=" + state["leak_outcome"] if state.get("leak_outcome") else "")
         + PATH_TAG
     )
     return {
@@ -505,12 +615,13 @@ def decide(state: GraphState) -> dict:
             write_trace=state["write_trace"],
             rewrite=state.get("rewrite"),
             path_tag=tag,
+            system_description=_explain_route(state),
         )
     }
 
 
 def route_after_rewrite(state: GraphState) -> str:
-    return "decide" if state.get("rewrite_outcome") == "ambiguous" else "decompose"
+    return "decide" if state.get("rewrite_outcome") == "ambiguous" else "understand"
 
 
 def route_after_retrieve(state: GraphState) -> str:
@@ -526,6 +637,7 @@ def route_after_grade(state: GraphState) -> str:
 def build_graph() -> StateGraph:
     g = StateGraph(GraphState)
     g.add_node("rewrite", rewrite)
+    g.add_node("understand", understand)
     g.add_node("decompose", decompose)
     g.add_node("retrieve", retrieve)
     g.add_node("grade", grade)
@@ -534,8 +646,9 @@ def build_graph() -> StateGraph:
     g.add_node("decide", decide)
     g.add_edge(START, "rewrite")
     g.add_conditional_edges(
-        "rewrite", route_after_rewrite, {"decompose": "decompose", "decide": "decide"}
+        "rewrite", route_after_rewrite, {"understand": "understand", "decide": "decide"}
     )
+    g.add_edge("understand", "decompose")
     g.add_edge("decompose", "retrieve")
     g.add_conditional_edges(
         "retrieve", route_after_retrieve, {"grade": "grade", "decide": "decide"}

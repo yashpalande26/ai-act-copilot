@@ -1,6 +1,98 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-21: Plain-language system questions: explain the type, route the verdict, never certify (2026-09-22)
+Context: Live, "I want to build a property valuation model for bridge lending, how risky is
+it?" refused. The class of query is a user describing their OWN AI system in lay words and
+asking whether it is regulated or how risky it is. Two problems meet here. Retrieval: the
+phrasing has not reached the Act's vocabulary; measured in Part 0, dense retrieval ranked
+Annex III point 5(b) second at a similarity of 0.24 that lost every fusion slot to BM25
+matches on the lay words (and the 0.3 floor had emptied the dense leg altogether: fixed
+first, ADR-20 follow-up). Safety: the honest answer to "how risky is MY system" is a
+classification, and the classification belongs to the deterministic assessment, not to a
+generated answer. The line for this build: chat MAY state what the Act says about a TYPE
+of system, grounded and cited ("AI that evaluates the creditworthiness of natural persons
+is listed in Annex III point 5(b)"); chat MUST NOT certify the user's specific system
+("your system is high-risk").
+Decision: (Part 1, app/generation/understand.py) one gpt-4o-mini structured call that
+says whether the question describes a concrete AI system or use in plain words and, if
+so, returns 2 to 6 Act-vocabulary SEARCH TERMS. The schema has no field for a
+classification, a risk level or advice; terms that repeat the question's own words are
+dropped; a question already in the Act's terms (providers, deployers, Articles, Annexes,
+obligations, "high-risk AI systems") is not applicable without a model call; the check
+runs on the user's typed words, not on a follow-up's rewrite; model trouble means not
+applicable. The terms are FUSED with the question for retrieval (the Stage 1b dual
+pattern, actor prior on the question) so the lay signal is kept. Not applicable means the
+normal path, which scopes or refuses: nothing forces an Act reading onto "how risky is my
+pizza oven?". (Part 2, graph.py and answer.py) for a detected question the generator is
+shown the user's words but asked the question the chat may answer: what the retrieved
+provisions say about systems of this kind and what determines whether a given system
+falls within them; the appended instruction forbids any conclusion about the user's own
+system. A deterministic verdict-leak check (understand.verdict_leaks: "your system is
+high-risk", "you are a provider", with hedged forms allowed) runs after generation
+regardless of the verifier flag: a leaking draft is regenerated once with the leak named,
+a second leak abstains. The response carries system_description=True; the UI renders a
+deterministic note and the route to the assessment. Tags: |understand=applied or
+|understand=n/a, |leak=regenerated or |leak=abstained. Flag QUERY_UNDERSTANDING, inside
+AGENTIC_RAG. Bounded: one understanding call, one regeneration, no web.
+Evidence: New bucket plain_language, 8 authored items (gold flagged for review: the spam
+filter maps to Article 4 by judgement; shop facial recognition to Annex III 1(a); the
+property valuation item to 5(b) by the design's premise). Full pipeline, label-aware
+judge, understanding off vs on, same day: plain_language context recall 0.429 to 0.714,
+context precision 0.250 to 0.479, citation accuracy 0.286 to 0.429, answered 2 to 3 of 7,
+routed 6 of 7, understood 6 of 8 (the chatbot item was judged not a system description;
+the pizza oven correctly not). Verdict leaks: 0 on all 47 items, both runs; 0 leak
+regenerations needed. Existing buckets: single_hop, unanswerable and reference identical
+on every deterministic metric; multi_hop and multi_turn identical on recall, citation
+accuracy and F1_ans; the one-point moves on one single-hop precision and one multi-turn
+faithfulness item are grader reorder and judge variance on identical chunk sets
+(understanding did not fire on them). The flagship: with understanding on, Annex III
+5(b) is at rank 1 of the served context, the route flag is set, and gpt-4o still replies
+with the abstention sentence, across three instruction variants (plain, softened
+abstention condition, the explain question asked in place of the user's). CV screening,
+emotion recognition at work and payment fraud detection explain and route correctly with
+faithfulness 5. Three multi-turn follow-ups were first "understood" through their
+rewrites (Act phrasing inserted by the rewriter); understanding now judges the typed
+words, those three are not applicable, and one other terse follow-up ("And for
+profiling?") is still judged a system question by gpt-4o-mini, with its
+recall, citation accuracy and faithfulness unchanged and only the route note added: the
+detector's remaining false positive, recorded.
+Consequences: Part 1 works: the right provision reaches the context for lay phrasing.
+Part 2 works where the Act names the use (recruitment, emotion recognition, credit
+scoring with its fraud exception). Where the Act does not name the use, the strong model
+declines to stretch the closest provision to it, and the property-valuation case is that
+case: valuing property for bridge loans is not evaluating a natural person's
+creditworthiness, and the model's refusal is defensible law. The value gate named that
+item, so QUERY_UNDERSTANDING stays OFF by default; the eight-item bucket, the leak gate
+and the runs are in place to re-gate after either a design decision (how far chat may
+present a "closest provision" for a use the Act does not name) or prompt tuning of the
+explain step. The hard safety line held everywhere it was measured.
+Correction (2026-09-22, later the same day): the flagship's gold was a flawed premise.
+Annex III 5(b) covers evaluating the creditworthiness of natural persons, not valuing
+property or collateral, so the model's refusal to assert it was correct. Policy set: chat
+MUST NOT stretch to a "closest provision" for a use the Act does not clearly name; it
+explains only what the Act names for the system type, otherwise it routes and asserts no
+provision. ag_pl_01 now has no gold provision and is satisfied by an abstention or by a
+provision-free explanation, routed either way (route_or_abstain in the set; such items sit
+outside recall and F1 and are checked for "stretched to a provision", gate 0). Detector
+fixes: "the AI Act" and "regulation" no longer count as legal vocabulary (the chatbot item
+was wrongly not applicable), and a question under four words is not applicable ("And for
+profiling?"). Re-gate, same day, full pipeline, label-aware judge, corrected gold,
+understanding off vs on: plain_language context recall 0.500 to 0.833, context precision
+0.292 to 0.444, citation accuracy 0.333 to 0.667, F1_ans 0.500 to 0.800; of the five
+Act-named types, CV screening, workplace emotion recognition, payment fraud detection and
+shop facial recognition explain the provision and route (faithfulness 5 each), the shop
+chatbot is understood with Article 50(1) at rank 2 of its context and still abstains, the
+spam filter abstains with Article 4 not retrieved; the property-valuation question abstains
+and routes asserting no provision, stretched 0; the pizza oven is not applicable and
+refuses; understood 7 of 8, routed 7 of 7; verdict leaks 0 on 47 items; single_hop,
+multi_turn, unanswerable and reference identical on every deterministic metric, multi_hop
+identical on recall, citation accuracy and F1_ans; understanding fired on no item outside
+the bucket. Hard and value gates pass; QUERY_UNDERSTANDING is on by default inside
+AGENTIC_RAG. Known limits: the chatbot and spam-filter items still abstain; the detector
+is gpt-4o-mini with two deterministic guards and a four-word minimum.
+Status: Accepted; on inside AGENTIC_RAG (which stays off in production).
+
 ## ADR-20: Agentic RAG as a flag-gated LangGraph pipeline, one measured node at a time (2026-09-22)
 Context: The grounded-answer path was a fixed sequence (retrieve, generate, abstain) that
 served single questions well and had three measured weaknesses: follow-ups lost their

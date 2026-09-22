@@ -60,6 +60,8 @@ from app.generation import answer as answer_module
 from app.generation import graph as graph_module
 from app.generation.answer import generate_grounded_answer, is_abstention
 from app.generation.rewrite import _transcript, introduced_entities
+from app.generation.understand import verdict_leaks
+from app.generation.verify import references_in
 from evals.judge import judge_answer_relevance, judge_faithfulness
 from evals.metrics import (
     abstention_f1,
@@ -73,14 +75,25 @@ from evals.metrics import (
 HERE = Path(__file__).resolve().parent
 SET_PATH = HERE / "agentic_set.json"
 CONTEXT = 15
-BUCKETS = ("single_hop", "multi_turn", "multi_hop", "unanswerable", "reference")
+BUCKETS = (
+    "single_hop",
+    "multi_turn",
+    "multi_hop",
+    "unanswerable",
+    "reference",
+    "plain_language",
+)
 
 
 def summarise(traces: list[dict]) -> dict:
-    answerable = [t for t in traces if not t["expected_abstention"]]
+    # route-or-abstain items (ADR-21: a use the Act does not name) have no
+    # gold and no expected class: an abstention and a provision-free routed
+    # explanation are both correct, so they are outside recall and F1.
+    scored = [t for t in traces if not t.get("route_or_abstain")]
+    answerable = [t for t in scored if not t["expected_abstention"]]
     judged = [t for t in traces if t.get("faithfulness")]
     f1 = abstention_f1(
-        [(t["expected_abstention"], t["predicted_abstention"]) for t in traces]
+        [(t["expected_abstention"], t["predicted_abstention"]) for t in scored]
     )
     return {
         "n": len(traces),
@@ -290,6 +303,20 @@ def main() -> None:
                 ),
                 "retrieve_calls": captured.get("retrieve_calls", 0),
                 "decompose_outcome": decompose_outcome,
+                "understand_outcome": (
+                    "applied"
+                    if "understand=applied" in cfg
+                    else ("n/a" if "understand=n/a" in cfg else None)
+                ),
+                "system_description": bool(getattr(res, "system_description", False)),
+                "verdict_leaks": [] if abstained else verdict_leaks(res.answer),
+                "leak_outcome": next(
+                    (k for k in ("regenerated", "abstained") if f"leak={k}" in tag),
+                    None,
+                ),
+                "must_route": it.get("must_route", False),
+                "route_or_abstain": it.get("route_or_abstain", False),
+                "names_provision": [] if abstained else references_in(res.answer),
                 "sub_queries": sub_queries,
                 "verify_outcome": verify_outcome,
                 "verify_unsupported": [list(v.unsupported_claims) for v in verifies],
@@ -425,6 +452,31 @@ def main() -> None:
             fired_outside = [t["id"] for t in decomposed if t["bucket"] != "multi_hop"]
             print(
                 f"  applied outside multi_hop (must be 0): {len(fired_outside)} {fired_outside}"
+            )
+        leaks = [(t["id"], t["verdict_leaks"][0]) for t in traces if t["verdict_leaks"]]
+        print(
+            f"\n== VERDICT LEAKAGE (hard safety gate, must be 0 on every item) ==  {len(leaks)} {leaks}"
+        )
+        plain = [t for t in traces if t["bucket"] == "plain_language"]
+        if plain:
+            unnamed = [t for t in plain if t["route_or_abstain"]]
+            unnamed_ok = [
+                t["id"]
+                for t in unnamed
+                if (t["predicted_abstention"] or t["system_description"])
+                and not t["names_provision"]
+            ]
+            stretched = [t["id"] for t in unnamed if t["names_provision"]]
+            print(
+                f"== UN-NAMED USES (route or abstain, no provision asserted) ==  ok {len(unnamed_ok)}/{len(unnamed)} {unnamed_ok}"
+                f"  stretched to a provision (must be 0): {len(stretched)} {stretched}"
+            )
+            print(
+                "== PLAIN LANGUAGE ==  understood "
+                f"{sum(t['understand_outcome'] == 'applied' for t in plain)}/{len(plain)}"
+                f"  routed {sum(t['system_description'] for t in plain if t['must_route'])}/{sum(t['must_route'] for t in plain)} of must-route"
+                f"  off-topic item routed (must be 0): {sum(t['system_description'] for t in plain if t['expected_abstention'])}"
+                f"  leak regenerations {sum(t['leak_outcome'] == 'regenerated' for t in traces)}  leak abstentions {sum(t['leak_outcome'] == 'abstained' for t in traces)}"
             )
         verified = [t for t in traces if t["verify_outcome"]]
         if verified:

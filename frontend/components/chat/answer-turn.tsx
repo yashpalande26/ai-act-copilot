@@ -142,10 +142,16 @@ export function AssistantTurn({ turn, question }: { turn: ChatTurn; question?: s
           Understood as: <span className="text-ink-soft">{turn.result.rewritten_query}</span>
         </p>
       ) : null}
+      {turn.result.system_description ? (
+        <p className="type-micro text-ink-faint" data-testid="system-description-note">
+          You described your own system. What follows is what the Act says about that type of system, cited. Whether your
+          system falls within it is decided by the assessment, not here.
+        </p>
+      ) : null}
       <div className="type-body whitespace-pre-wrap">{turn.result.answer}</div>
 
       <CitationsDisclosure citations={turn.result.citations} />
-      <AssessCta text={question} variant="answer" />
+      <AssessCta text={question} variant={turn.result.system_description ? "system" : "answer"} />
     </Bubble>
   );
 }

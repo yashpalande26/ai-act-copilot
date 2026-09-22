@@ -167,6 +167,7 @@ def test_flag_on_and_off_write_identical_rows(monkeypatch, db, answers):
     # Stage 0 equivalence: the graph alone, both agentic nodes pinned off.
     monkeypatch.setenv("AGENTIC_REWRITE", "0")
     monkeypatch.setenv("AGENTIC_GRADE", "0")
+    monkeypatch.setenv("QUERY_UNDERSTANDING", "0")
     monkeypatch.setenv("AGENTIC_VERIFY", "0")
     monkeypatch.setenv("AGENTIC_DECOMPOSE", "0")
     for flag in ("0", "1"):

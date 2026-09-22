@@ -128,6 +128,7 @@ def _run(
     monkeypatch.setenv("AGENTIC_RAG", "1")
     monkeypatch.setenv("AGENTIC_REWRITE", "0")
     monkeypatch.setenv("AGENTIC_GRADE", "1" if on else "0")
+    monkeypatch.setenv("QUERY_UNDERSTANDING", "0")
     monkeypatch.setenv("AGENTIC_VERIFY", "0")
     monkeypatch.setenv("AGENTIC_DECOMPOSE", "0")
     outputs = iter(grades)
@@ -264,13 +265,15 @@ def test_graph_has_no_node_or_edge_outside_the_corpus():
         "grade",
         "retrieve",
         "rewrite",
+        "understand",
         "verify",
     ]
     edges = {(e.source, e.target) for e in g.edges}
     assert edges == {
         ("__start__", "rewrite"),
-        ("rewrite", "decompose"),
+        ("rewrite", "understand"),
         ("rewrite", "decide"),
+        ("understand", "decompose"),
         ("decompose", "retrieve"),
         ("retrieve", "grade"),
         ("retrieve", "decide"),
@@ -282,7 +285,7 @@ def test_graph_has_no_node_or_edge_outside_the_corpus():
     }
     # bounded: no edge returns to retrieve or grade
     assert not any(
-        t in ("decompose", "retrieve", "grade")
+        t in ("understand", "decompose", "retrieve", "grade")
         and s in ("grade", "generate", "verify", "decide")
         for s, t in edges
     )

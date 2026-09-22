@@ -229,6 +229,37 @@ def xref_expansion_enabled() -> bool:
     return os.environ.get("XREF_EXPANSION", XREF_EXPANSION_DEFAULT) == "1"
 
 
+def understand_model() -> str:
+    """The plain-language query-understanding model (ADR-21 Part 1): detects a
+    lay description of an AI system and returns Act-vocabulary search terms.
+    Search terms only; never a classification."""
+    return os.environ.get("UNDERSTAND_MODEL", "openai:gpt-4o-mini")
+
+
+# Query-understanding default. "1" since the re-gate of 22 Sep 2026 under the
+# corrected gold (evals/runs/adr21_final_on_j2.json vs adr21_off_corrected_j2.json):
+# plain-language recall 0.500 -> 0.833, citation accuracy 0.333 -> 0.667,
+# F1_ans 0.500 -> 0.800, Act-named system types explaining and routing 2 -> 4
+# of 5, the un-named use (property valuation) routed with no provision
+# asserted, 0 verdict leaks on 47 items, every other bucket identical and
+# understanding fired on none of them. Only effective when AGENTIC_RAG=1.
+QUERY_UNDERSTANDING_DEFAULT = "1"
+
+
+def query_understanding_enabled() -> bool:
+    """ADR-21: for a plain-language description of an AI system ("a property
+    valuation model for bridge lending, how risky is it?") retrieve on
+    Act-vocabulary search terms fused with the question, answer in
+    explain-and-route mode (what the Act says about that TYPE of system,
+    what determines scope, never a verdict on the user's system) and hand
+    the classification to the assessment. Effective only inside the graph
+    (AGENTIC_RAG=1); legal-term questions are untouched."""
+    return (
+        agentic_rag_enabled()
+        and os.environ.get("QUERY_UNDERSTANDING", QUERY_UNDERSTANDING_DEFAULT) == "1"
+    )
+
+
 # --- admin allowlist --------------------------------------------------------
 # Comma-separated e-mail addresses allowed to read the admin trace viewer
 # (/admin/*). Compared, lower-cased, against the e-mail asserted in the

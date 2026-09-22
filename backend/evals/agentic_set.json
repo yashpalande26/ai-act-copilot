@@ -575,5 +575,114 @@
   ],
   "expected_abstention": false,
   "note": "same question as a turn-2 follow-up after the providers answer that pointed at Section 2"
+ },
+ {
+  "id": "ag_pl_01",
+  "bucket": "plain_language",
+  "source": "authored 2026-09-22 (ADR-21)",
+  "question": "I want to build a property valuation model for bridge lending, how risky is it?",
+  "history": [],
+  "gold_citation_ids": [],
+  "expected_abstention": false,
+  "must_route": true,
+  "no_verdict": true,
+  "note": "CORRECTED 22 Sep 2026: the Act does not clearly name pure property or collateral valuation; Annex III 5(b) covers evaluating the creditworthiness of NATURAL PERSONS. No gold provision. Satisfied by an abstention, or by an explanation that names NO provision, either way routed to the assessment. A named provision here is a stretch and fails.",
+  "route_or_abstain": true
+ },
+ {
+  "id": "ag_pl_02",
+  "bucket": "plain_language",
+  "source": "authored 2026-09-22 (ADR-21)",
+  "question": "we're adding a chatbot to our online shop, does the AI Act apply to us?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_50.par_1"
+  ],
+  "expected_abstention": false,
+  "must_route": true,
+  "no_verdict": true,
+  "note": "transparency for systems intended to interact directly with natural persons"
+ },
+ {
+  "id": "ag_pl_03",
+  "bucket": "plain_language",
+  "source": "authored 2026-09-22 (ADR-21)",
+  "question": "we use AI to screen CVs for hiring, is that allowed?",
+  "history": [],
+  "gold_citation_ids": [
+   "anx_III.pt_4.sub_a"
+  ],
+  "expected_abstention": false,
+  "must_route": true,
+  "no_verdict": true,
+  "note": "recruitment or selection of natural persons"
+ },
+ {
+  "id": "ag_pl_04",
+  "bucket": "plain_language",
+  "source": "authored 2026-09-22 (ADR-21)",
+  "question": "our office wants emotion recognition to monitor staff mood, is that ok?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_5.par_1.pt_f"
+  ],
+  "expected_abstention": false,
+  "must_route": true,
+  "no_verdict": true,
+  "note": "prohibited: inferring emotions in the workplace; Article 50(3) also relevant. Gold flagged: the prohibition is the governing provision"
+ },
+ {
+  "id": "ag_pl_05",
+  "bucket": "plain_language",
+  "source": "authored 2026-09-22 (ADR-21)",
+  "question": "a fraud-detection model for card payments, is it high-risk?",
+  "history": [],
+  "gold_citation_ids": [
+   "anx_III.pt_5.sub_b"
+  ],
+  "expected_abstention": false,
+  "must_route": true,
+  "no_verdict": true,
+  "note": "the governing text is 5(b) itself, whose exception names fraud detection"
+ },
+ {
+  "id": "ag_pl_06",
+  "bucket": "plain_language",
+  "source": "authored 2026-09-22 (ADR-21)",
+  "question": "we run a spam filter with machine learning, do we need to do anything?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_4.par_1"
+  ],
+  "expected_abstention": false,
+  "must_route": true,
+  "no_verdict": true,
+  "note": "GOLD IS A JUDGEMENT: the Act names no provision for a spam filter; AI literacy (Article 4) applies to providers and deployers of any AI system. Flagged for review"
+ },
+ {
+  "id": "ag_pl_07",
+  "bucket": "plain_language",
+  "source": "authored 2026-09-22 (ADR-21)",
+  "question": "we want to use facial recognition in our shop to spot shoplifters",
+  "history": [],
+  "gold_citation_ids": [
+   "anx_III.pt_1.sub_a"
+  ],
+  "expected_abstention": false,
+  "must_route": true,
+  "no_verdict": true,
+  "note": "remote biometric identification is high-risk under Annex III 1(a); Article 5(1)(h) is law-enforcement only. Flagged for review"
+ },
+ {
+  "id": "ag_pl_08",
+  "bucket": "plain_language",
+  "source": "authored 2026-09-22 (ADR-21)",
+  "question": "how risky is my pizza oven?",
+  "history": [],
+  "gold_citation_ids": [],
+  "expected_abstention": true,
+  "must_route": false,
+  "no_verdict": true,
+  "note": "genuinely off-topic: must scope or refuse, never an Act reading"
  }
 ]

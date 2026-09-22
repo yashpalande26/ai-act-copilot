@@ -13,6 +13,10 @@ export type AskResult = {
   session_id: string | null;
   /** A greeting or empty input answered with the scope message, no paid call. */
   scope_notice?: boolean;
+  /** The question described the user's own AI system in plain language: the
+   *  answer says what the Act says about that type of system and the record
+   *  routes to the assessment for the classification. Never a verdict. */
+  system_description?: boolean;
   /** Turn 2+: the standalone question the answer was retrieved for, when the
    *  follow-up was rewritten from the conversation. Null otherwise. */
   rewritten_query?: string | null;
