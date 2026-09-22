@@ -1,12 +1,13 @@
 import sys
 import time
+from dataclasses import dataclass
 from uuid import UUID
 
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import app_env
+from app.config import agentic_rag_enabled, app_env
 from app.db.models import ChatSession, Citation, Message, QueryTrace, RetrievalTrace
 from app.ingestion.embedder import _get_client
 from app.retrieval.actor import (
@@ -369,36 +370,47 @@ def retrieve_candidates(
     return all_fused, retrieval_config
 
 
-def generate_grounded_answer(
+@dataclass
+class RetrievalStep:
+    """What retrieval produced for one turn. `fused` is the context slice the
+    generator sees; `all_fused` is the wider candidate list the trace records."""
+
+    all_fused: list[FusedResult]
+    fused: list[FusedResult]
+    retrieval_config: str
+    latency_ms: int
+
+
+@dataclass
+class GenerationStep:
+    """What the model said, or nothing when generation was skipped because
+    retrieval returned no context (answer_text None)."""
+
+    answer_text: str | None
+    prompt_tokens: int | None
+    completion_tokens: int | None
+    latency_ms: int | None
+
+
+# The pipeline is three steps. generate_grounded_answer runs them in sequence
+# (the plain path); app.generation.graph runs the same three functions as
+# LangGraph nodes when AGENTIC_RAG=1. Both paths must call these and nothing
+# else, so that "flag on" and "flag off" cannot drift apart.
+
+
+def retrieve_step(
     session: Session,
     query: str,
     corpus_version_id: int,
-    chat_session_id: UUID,
-    final_context_size: int = 15,
+    *,
     min_similarity: float = 0.3,
-    write_trace: bool = True,
-    max_output_tokens: int | None = None,
-    user_text: str | None = None,
-    rewrite: "RewriteInfo | None" = None,
-) -> GroundedAnswer:
-    """max_output_tokens bounds the expensive half of a call (gpt-4o output is
-    4x input cost). Default None preserves the previous unbounded behaviour
-    exactly, so existing callers and eval runs are unaffected; the HTTP
-    surface passes an explicit ceiling.
-
-    `query` is what retrieval and the prompt see. `user_text`, when given, is
-    what the user actually typed and is what gets persisted as their message
-    and as query_text on the trace; a follow-up rewrite (app.generation.rewrite)
-    passes the standalone question as `query` and the original as `user_text`.
-    Everything from retrieval onwards is identical either way."""
-    stored_text = user_text if user_text is not None else query
-    rw = rewrite or RewriteInfo()
+    final_context_size: int = 15,
+) -> RetrievalStep:
     retrieval_start = time.monotonic()
     all_fused, retrieval_config = retrieve_candidates(
         session, query, corpus_version_id, min_similarity=min_similarity
     )
     retrieval_latency_ms = int((time.monotonic() - retrieval_start) * 1000)
-
     # Equivalent to the old rrf_rank_and_fuse(..., top_k=final_context_size):
     # rrf_rank_and_fuse sorts the full candidate set by rrf_score BEFORE
     # trimming to top_k, and rrf_score doesn't depend on top_k at all - so
@@ -406,33 +418,23 @@ def generate_grounded_answer(
     # identical top final_context_size, in the same order, every time. The
     # actor prior re-sorts that same full list, so the slice still takes the
     # true top final_context_size of the final ordering.
-    fused = all_fused[:final_context_size]
+    return RetrievalStep(
+        all_fused=all_fused,
+        fused=all_fused[:final_context_size],
+        retrieval_config=retrieval_config,
+        latency_ms=retrieval_latency_ms,
+    )
 
+
+def generate_step(
+    query: str,
+    fused: list[FusedResult],
+    *,
+    max_output_tokens: int | None = None,
+) -> GenerationStep:
     if not fused:
-        message = _persist_turn(
-            session, chat_session_id, stored_text, ABSTENTION_TEXT, fused=[]
-        )
-        result = GroundedAnswer(
-            answer=ABSTENTION_TEXT, citations=[], message_id=message.id
-        )
-        if write_trace:
-            _write_trace_safe(
-                session,
-                chat_session_id,
-                stored_text,
-                result,
-                corpus_version_id,
-                retrieval_latency_ms,
-                generation_latency_ms=None,
-                prompt_tokens=None,
-                completion_tokens=None,
-                all_fused=all_fused,
-                final_context_size=final_context_size,
-                retrieval_config=retrieval_config,
-                **rw.trace_fields(query),
-            )
-        return result
-
+        # Pre-LLM abstention: nothing to ground on, so no call is made.
+        return GenerationStep(None, None, None, None)
     prompt = _build_user_prompt(query, fused)
     generation_start = time.monotonic()
     # Omit max_tokens entirely when unset rather than passing None, so the
@@ -452,15 +454,39 @@ def generate_grounded_answer(
         **optional_kwargs,
     )
     generation_latency_ms = int((time.monotonic() - generation_start) * 1000)
-    answer_text = response.choices[0].message.content
-    prompt_tokens = response.usage.prompt_tokens
-    completion_tokens = response.usage.completion_tokens
+    return GenerationStep(
+        answer_text=response.choices[0].message.content,
+        prompt_tokens=response.usage.prompt_tokens,
+        completion_tokens=response.usage.completion_tokens,
+        latency_ms=generation_latency_ms,
+    )
 
-    if is_abstention(answer_text):
-        # The LLM itself decided the retrieved context didn't actually answer
-        # the question. Persist the same shape as the pre-LLM abstention -
-        # refusal text, zero citations - not citations for chunks the model
-        # just told us were insufficient.
+
+def decide_step(
+    session: Session,
+    query: str,
+    stored_text: str,
+    corpus_version_id: int,
+    chat_session_id: UUID,
+    retrieved: RetrievalStep,
+    generated: GenerationStep,
+    *,
+    final_context_size: int = 15,
+    write_trace: bool = True,
+    rewrite: "RewriteInfo | None" = None,
+    path_tag: str = "",
+) -> GroundedAnswer:
+    """Abstain or answer, persist the turn, write the trace. `path_tag` is
+    appended to retrieval_config so the audit log says which execution path
+    served the turn (empty for the plain path, "|path=graph" for the graph)."""
+    rw = rewrite or RewriteInfo()
+    fused = retrieved.fused
+    answer_text = generated.answer_text
+    if answer_text is None or is_abstention(answer_text):
+        # Either retrieval produced no context, or the LLM itself decided the
+        # retrieved context didn't actually answer the question. Persist the
+        # same shape either way - refusal text, zero citations - not citations
+        # for chunks the model just told us were insufficient.
         message = _persist_turn(
             session, chat_session_id, stored_text, ABSTENTION_TEXT, fused=[]
         )
@@ -484,13 +510,79 @@ def generate_grounded_answer(
             stored_text,
             result,
             corpus_version_id,
-            retrieval_latency_ms,
-            generation_latency_ms,
-            prompt_tokens,
-            completion_tokens,
-            all_fused=all_fused,
+            retrieved.latency_ms,
+            generated.latency_ms,
+            generated.prompt_tokens,
+            generated.completion_tokens,
+            all_fused=retrieved.all_fused,
             final_context_size=final_context_size,
-            retrieval_config=retrieval_config,
+            retrieval_config=retrieved.retrieval_config + path_tag,
             **rw.trace_fields(query),
         )
     return result
+
+
+def generate_grounded_answer(
+    session: Session,
+    query: str,
+    corpus_version_id: int,
+    chat_session_id: UUID,
+    final_context_size: int = 15,
+    min_similarity: float = 0.3,
+    write_trace: bool = True,
+    max_output_tokens: int | None = None,
+    user_text: str | None = None,
+    rewrite: "RewriteInfo | None" = None,
+) -> GroundedAnswer:
+    """max_output_tokens bounds the expensive half of a call (gpt-4o output is
+    4x input cost). Default None preserves the previous unbounded behaviour
+    exactly, so existing callers and eval runs are unaffected; the HTTP
+    surface passes an explicit ceiling.
+
+    `query` is what retrieval and the prompt see. `user_text`, when given, is
+    what the user actually typed and is what gets persisted as their message
+    and as query_text on the trace; a follow-up rewrite (app.generation.rewrite)
+    passes the standalone question as `query` and the original as `user_text`.
+    Everything from retrieval onwards is identical either way.
+
+    AGENTIC_RAG=1 (config.agentic_rag_enabled) runs the same three steps as a
+    LangGraph graph instead of the sequence below; see app.generation.graph."""
+    stored_text = user_text if user_text is not None else query
+    if agentic_rag_enabled():
+        # Imported here so the plain path never loads LangGraph.
+        from app.generation.graph import run_graph
+
+        return run_graph(
+            session=session,
+            query=query,
+            stored_text=stored_text,
+            corpus_version_id=corpus_version_id,
+            chat_session_id=chat_session_id,
+            final_context_size=final_context_size,
+            min_similarity=min_similarity,
+            write_trace=write_trace,
+            max_output_tokens=max_output_tokens,
+            rewrite=rewrite,
+        )
+    retrieved = retrieve_step(
+        session,
+        query,
+        corpus_version_id,
+        min_similarity=min_similarity,
+        final_context_size=final_context_size,
+    )
+    generated = generate_step(
+        query, retrieved.fused, max_output_tokens=max_output_tokens
+    )
+    return decide_step(
+        session,
+        query,
+        stored_text,
+        corpus_version_id,
+        chat_session_id,
+        retrieved,
+        generated,
+        final_context_size=final_context_size,
+        write_trace=write_trace,
+        rewrite=rewrite,
+    )

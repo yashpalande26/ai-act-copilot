@@ -91,6 +91,18 @@ def followup_rewrite_enabled() -> bool:
     return os.environ.get("FOLLOWUP_REWRITE", "0") == "1"
 
 
+def agentic_rag_enabled() -> bool:
+    """OFF by default. Stage 0 of the agentic-RAG plan (22 Sep 2026): when set
+    to 1, /ask and every eval runner execute the grounded-answer pipeline as a
+    LangGraph graph (app.generation.graph) whose nodes call the SAME retrieve,
+    generate and decide functions the plain path calls, in the same order,
+    with the same result. No node behaves differently yet; the graph exists
+    so later stages (query rewriting, retrieval grading, citation
+    verification, bounded decomposition) can be added one flag-gated node at
+    a time and gated against this baseline."""
+    return os.environ.get("AGENTIC_RAG", "0") == "1"
+
+
 # --- admin allowlist --------------------------------------------------------
 # Comma-separated e-mail addresses allowed to read the admin trace viewer
 # (/admin/*). Compared, lower-cased, against the e-mail asserted in the

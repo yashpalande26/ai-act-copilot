@@ -1,4 +1,6 @@
+import json
 import math
+from pathlib import Path
 
 import pytest
 
@@ -82,3 +84,48 @@ def test_ndcg_at_k_respects_the_depth_cutoff():
 def test_aggregate_average_recall_across_fixture():
     recalls = [1.0, 0.0, 1.0, 1.0]
     assert sum(recalls) / len(recalls) == pytest.approx(0.75)
+
+
+# --- agentic four-bucket set (evals/agentic_set.json) ------------------------
+
+AGENTIC_SET = Path(__file__).resolve().parents[1] / "evals" / "agentic_set.json"
+BUCKETS = {"single_hop", "multi_turn", "multi_hop", "unanswerable"}
+
+
+def _agentic_items():
+    return json.loads(AGENTIC_SET.read_text())
+
+
+def test_agentic_set_ids_unique_and_buckets_known():
+    items = _agentic_items()
+    ids = [i["id"] for i in items]
+    assert len(ids) == len(set(ids))
+    assert {i["bucket"] for i in items} == BUCKETS
+    for i in items:
+        assert i["id"].startswith("ag_")
+        assert i["source"], i["id"]
+
+
+def test_agentic_set_gold_matches_answerability():
+    for i in _agentic_items():
+        if i["expected_abstention"]:
+            assert i["gold_citation_ids"] == [], i["id"]
+        else:
+            assert i["gold_citation_ids"], i["id"]
+        assert isinstance(i["history"], list)
+        for turn in i["history"]:
+            assert len(turn) == 2 and turn[0] in ("user", "assistant"), i["id"]
+
+
+def test_agentic_set_multi_hop_needs_two_provisions_and_multi_turn_has_history():
+    for i in _agentic_items():
+        if i["bucket"] == "multi_hop":
+            assert len(i["gold_citation_ids"]) >= 2, i["id"]
+        if i["bucket"] == "multi_turn":
+            assert i["history"], i["id"]
+        if i["bucket"] == "single_hop":
+            assert i["history"] == [], i["id"]
+
+
+def test_agentic_set_no_em_dash():
+    assert "\u2014" not in AGENTIC_SET.read_text()

@@ -1,0 +1,506 @@
+[
+ {
+  "id": "ag_sh_01",
+  "bucket": "single_hop",
+  "source": "golden_set_realistic:gr_01",
+  "question": "How long are the logs of personal data processing kept in the AI regulatory sandbox?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_59.par_1.pt_h"
+  ],
+  "expected_abstention": false,
+  "note": "heading_dependent"
+ },
+ {
+  "id": "ag_sh_02",
+  "bucket": "single_hop",
+  "source": "golden_set_realistic:gr_02",
+  "question": "What measures are required for human oversight to safely interrupt a high-risk AI system?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_14.par_4.pt_e"
+  ],
+  "expected_abstention": false,
+  "note": "heading_dependent"
+ },
+ {
+  "id": "ag_sh_03",
+  "bucket": "single_hop",
+  "source": "golden_set_realistic:gr_16",
+  "question": "What action should market surveillance authorities take if they have sufficient reason to consider general-purpose AI systems non-compliant with the Regulation's requirements?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_75.par_2"
+  ],
+  "expected_abstention": false,
+  "note": "body_dependent"
+ },
+ {
+  "id": "ag_sh_04",
+  "bucket": "single_hop",
+  "source": "golden_set_realistic:gr_17",
+  "question": "What shall the implementing act include provisions on regarding the scientific panel and its members?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_68.par_5"
+  ],
+  "expected_abstention": false,
+  "note": "body_dependent"
+ },
+ {
+  "id": "ag_sh_05",
+  "bucket": "single_hop",
+  "source": "golden_set_realistic:gr_31",
+  "question": "What is the goal of considering the effects and possible interaction resulting from the combined application of the requirements?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_9.par_4"
+  ],
+  "expected_abstention": false,
+  "note": "exact_term"
+ },
+ {
+  "id": "ag_sh_06",
+  "bucket": "single_hop",
+  "source": "golden_set_realistic:gr_32",
+  "question": "What does the strategy for regulatory compliance include regarding high-risk AI systems?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_17.par_1.pt_a"
+  ],
+  "expected_abstention": false,
+  "note": "exact_term"
+ },
+ {
+  "id": "ag_sh_07",
+  "bucket": "single_hop",
+  "source": "golden_set_realistic:gr_41",
+  "question": "Does the processing of personal data in the sandbox impact the rights of data subjects under Union law?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_59.par_1.pt_f"
+  ],
+  "expected_abstention": false,
+  "note": "near_duplicate"
+ },
+ {
+  "id": "ag_sh_08",
+  "bucket": "single_hop",
+  "source": "golden_set_realistic:gr_42",
+  "question": "For what specific purpose can 'real-time' remote biometric identification systems be deployed in publicly accessible spaces for law enforcement according to the given text?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_5.par_2"
+  ],
+  "expected_abstention": false,
+  "note": "near_duplicate"
+ },
+ {
+  "id": "ag_sh_09",
+  "bucket": "single_hop",
+  "source": "golden_set_realistic:gr_49",
+  "question": "In which fields should cooperation with Union institutions and expert groups be prioritized according to the EU AI Act?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_66.pt_h"
+  ],
+  "expected_abstention": false,
+  "note": "control"
+ },
+ {
+  "id": "ag_sh_10",
+  "bucket": "single_hop",
+  "source": "golden_set_realistic:gr_50",
+  "question": "What are some purposes for which AI systems are intended to be used in work-related relationships according to the EU AI Act?",
+  "history": [],
+  "gold_citation_ids": [
+   "anx_III.pt_4.sub_b"
+  ],
+  "expected_abstention": false,
+  "note": "control"
+ },
+ {
+  "id": "ag_sh_11",
+  "bucket": "single_hop",
+  "source": "broad_set:br_04",
+  "question": "who is a provider?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_3.pt_3"
+  ],
+  "expected_abstention": false,
+  "note": "broad definition; gold is a prefix"
+ },
+ {
+  "id": "ag_sh_12",
+  "bucket": "single_hop",
+  "source": "broad_set:br_06",
+  "question": "what is an AI system?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_3.pt_1"
+  ],
+  "expected_abstention": false,
+  "note": "broad definition; gold is a prefix"
+ },
+ {
+  "id": "ag_mt_01",
+  "bucket": "multi_turn",
+  "source": "followup_set:fu_01",
+  "question": "And what identifying information has to be on it or its packaging?",
+  "history": [
+   [
+    "user",
+    "What marking must be affixed to a high-risk AI system to indicate conformity with the regulation?"
+   ],
+   [
+    "assistant",
+    "Article 16(h) requires providers to affix the CE marking to the high-risk AI system to indicate conformity with the Regulation."
+   ]
+  ],
+  "gold_citation_ids": [
+   "art_16.pt_b"
+  ],
+  "expected_abstention": false,
+  "note": "pronoun_ellipsis; standalone form: What information must be provided on a high-risk AI system, its packaging or accompanying documentation to identify the provider?"
+ },
+ {
+  "id": "ag_mt_02",
+  "bucket": "multi_turn",
+  "source": "followup_set:fu_02",
+  "question": "What about admission or access to those institutions?",
+  "history": [
+   [
+    "user",
+    "What are high-risk AI systems intended to be used for in educational and vocational training institutions?"
+   ],
+   [
+    "assistant",
+    "Annex III point 3(b) covers AI systems intended to evaluate learning outcomes, including when used to steer the learning process."
+   ]
+  ],
+  "gold_citation_ids": [
+   "anx_III.pt_3.sub_a"
+  ],
+  "expected_abstention": false,
+  "note": "pronoun_ellipsis; standalone form: What are AI systems intended to be used for in relation to access or admission to educational and vocational training institutions?"
+ },
+ {
+  "id": "ag_mt_03",
+  "bucket": "multi_turn",
+  "source": "followup_set:fu_03",
+  "question": "For what specific purposes can it be deployed at all?",
+  "history": [
+   [
+    "user",
+    "What are the notification requirements for using a 'real-time' remote biometric identification system in publicly accessible spaces?"
+   ],
+   [
+    "assistant",
+    "Article 5(4) requires each use to be notified to the relevant market surveillance authority and the national data protection authority."
+   ]
+  ],
+  "gold_citation_ids": [
+   "art_5.par_2"
+  ],
+  "expected_abstention": false,
+  "note": "pronoun_ellipsis; standalone form: For what specific purposes can 'real-time' remote biometric identification systems be deployed in publicly accessible spaces?"
+ },
+ {
+  "id": "ag_mt_04",
+  "bucket": "multi_turn",
+  "source": "followup_set:fu_11",
+  "question": "What characteristics make a model general-purpose in the first place?",
+  "history": [
+   [
+    "user",
+    "What are the obligations of providers of general-purpose AI models with systemic risk regarding model evaluation?"
+   ],
+   [
+    "assistant",
+    "Article 55(1)(a) requires providers of general-purpose AI models with systemic risk to perform model evaluation with standardised protocols and tools."
+   ]
+  ],
+  "gold_citation_ids": [
+   "art_3.pt_63"
+  ],
+  "expected_abstention": false,
+  "note": "topic_continuation; standalone form: What characteristics must a general-purpose AI model display to be considered capable of performing a wide range of distinct tasks?"
+ },
+ {
+  "id": "ag_mt_05",
+  "bucket": "multi_turn",
+  "source": "followup_set:fu_17",
+  "question": "And the penalties for not doing that?",
+  "history": [
+   [
+    "user",
+    "What marking must be affixed to a high-risk AI system to indicate conformity with the regulation?"
+   ],
+   [
+    "assistant",
+    "Article 16(h) requires providers to affix the CE marking to the high-risk AI system."
+   ]
+  ],
+  "gold_citation_ids": [
+   "art_99.par_4"
+  ],
+  "expected_abstention": false,
+  "note": "entity_trap; standalone form: What are the penalties for a provider's non-compliance with its obligations under Article 16 for a high-risk AI system?"
+ },
+ {
+  "id": "ag_mt_06",
+  "bucket": "multi_turn",
+  "source": "followup_set:fu_18",
+  "question": "What about the one on exploiting vulnerabilities?",
+  "history": [
+   [
+    "user",
+    "What is required for the use of an AI system that generates or manipulates realistic images, videos or audio of a person?"
+   ],
+   [
+    "assistant",
+    "Article 5(1)(ba) addresses systems that generate or manipulate such content of identifiable persons without consent."
+   ]
+  ],
+  "gold_citation_ids": [
+   "art_5.par_1.pt_b"
+  ],
+  "expected_abstention": false,
+  "note": "entity_trap; standalone form: What is the objective or effect of using an AI system that exploits the vulnerabilities of a person or group of persons?"
+ },
+ {
+  "id": "ag_mt_07",
+  "bucket": "multi_turn",
+  "source": "followup_set:fu_30",
+  "question": "And for profiling?",
+  "history": [
+   [
+    "user",
+    "What is the intended use of AI systems by law enforcement authorities that involves assessing the risk of a natural person offending?"
+   ],
+   [
+    "assistant",
+    "Annex III point 6(d) covers systems used by law enforcement to assess the risk of a natural person offending or re-offending."
+   ]
+  ],
+  "gold_citation_ids": [
+   "anx_III.pt_6.sub_e"
+  ],
+  "expected_abstention": false,
+  "note": "terse_pronoun; standalone form: What is the intended use of AI systems by law enforcement authorities that involves profiling natural persons in the course of investigations?"
+ },
+ {
+  "id": "ag_mt_08",
+  "bucket": "multi_turn",
+  "source": "followup_set:fu_40",
+  "question": "Can it change the classification rules too?",
+  "history": [
+   [
+    "user",
+    "What authority does the Commission have to amend Annexes VI and VII in the conformity assessment process?"
+   ],
+   [
+    "assistant",
+    "Article 43(5) empowers the Commission to adopt delegated acts amending Annexes VI and VII."
+   ]
+  ],
+  "gold_citation_ids": [
+   "art_6.par_6"
+  ],
+  "expected_abstention": false,
+  "note": "terse_continuation; standalone form: What authority does the Commission have to amend the classification rules for high-risk AI systems?"
+ },
+ {
+  "id": "ag_mh_01",
+  "bucket": "multi_hop",
+  "source": "authored 2026-09-22",
+  "question": "Who counts as a deployer under the Act, and what human oversight must deployers of high-risk AI systems assign?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_3.pt_4",
+   "art_26.par_2"
+  ],
+  "expected_abstention": false,
+  "note": "compositional: both provisions must be in context; gold awaiting review"
+ },
+ {
+  "id": "ag_mh_02",
+  "bucket": "multi_hop",
+  "source": "authored 2026-09-22",
+  "question": "What is a general-purpose AI model, and when is one classified as a general-purpose AI model with systemic risk?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_3.pt_63",
+   "art_51.par_1"
+  ],
+  "expected_abstention": false,
+  "note": "compositional: both provisions must be in context; gold awaiting review"
+ },
+ {
+  "id": "ag_mh_03",
+  "bucket": "multi_hop",
+  "source": "authored 2026-09-22",
+  "question": "What is a deep fake, and what must a deployer disclose when an AI system generates or manipulates content constituting one?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_3.pt_60",
+   "art_50.par_4"
+  ],
+  "expected_abstention": false,
+  "note": "compositional: both provisions must be in context; gold awaiting review"
+ },
+ {
+  "id": "ag_mh_04",
+  "bucket": "multi_hop",
+  "source": "authored 2026-09-22",
+  "question": "What is a serious incident, and to whom must providers of high-risk AI systems report one?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_3.pt_49",
+   "art_73.par_1"
+  ],
+  "expected_abstention": false,
+  "note": "compositional: both provisions must be in context; gold awaiting review"
+ },
+ {
+  "id": "ag_mh_05",
+  "bucket": "multi_hop",
+  "source": "authored 2026-09-22",
+  "question": "Which use of subliminal techniques is prohibited, and what administrative fine applies to non-compliance with the prohibited practices?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_5.par_1.pt_a",
+   "art_99.par_3"
+  ],
+  "expected_abstention": false,
+  "note": "compositional: both provisions must be in context; gold awaiting review"
+ },
+ {
+  "id": "ag_mh_06",
+  "bucket": "multi_hop",
+  "source": "authored 2026-09-22",
+  "question": "Under what condition are the AI systems listed in Annex III considered high-risk, and which Annex III point covers recruitment or selection of natural persons?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_6.par_2",
+   "anx_III.pt_4.sub_a"
+  ],
+  "expected_abstention": false,
+  "note": "compositional: both provisions must be in context; gold awaiting review"
+ },
+ {
+  "id": "ag_mh_07",
+  "bucket": "multi_hop",
+  "source": "authored 2026-09-22",
+  "question": "What must high-risk AI systems technically allow regarding the recording of events, and what must deployers do when monitoring the system's operation?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_12.par_1",
+   "art_26.par_5"
+  ],
+  "expected_abstention": false,
+  "note": "compositional: both provisions must be in context; gold awaiting review"
+ },
+ {
+  "id": "ag_mh_08",
+  "bucket": "multi_hop",
+  "source": "authored 2026-09-22",
+  "question": "What obligations do providers of general-purpose AI models have, and what additional obligations apply when the model presents systemic risk?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_53.par_1",
+   "art_55.par_1"
+  ],
+  "expected_abstention": false,
+  "note": "compositional: both provisions must be in context; gold awaiting review"
+ },
+ {
+  "id": "ag_un_01",
+  "bucket": "unanswerable",
+  "source": "golden_set_realistic:gr_57",
+  "question": "What is the capital of France?",
+  "history": [],
+  "gold_citation_ids": [],
+  "expected_abstention": true,
+  "note": "off-topic"
+ },
+ {
+  "id": "ag_un_02",
+  "bucket": "unanswerable",
+  "source": "golden_set_realistic:gr_58",
+  "question": "What's the best pizza place in Dublin?",
+  "history": [],
+  "gold_citation_ids": [],
+  "expected_abstention": true,
+  "note": "off-topic"
+ },
+ {
+  "id": "ag_un_03",
+  "bucket": "unanswerable",
+  "source": "offtopic_set:ot_11",
+  "question": "summarise the GDPR for me",
+  "history": [],
+  "gold_citation_ids": [],
+  "expected_abstention": true,
+  "note": "adjacent regulation, not in corpus"
+ },
+ {
+  "id": "ag_un_04",
+  "bucket": "unanswerable",
+  "source": "offtopic_set:ot_03",
+  "question": "write me a poem about autumn",
+  "history": [],
+  "gold_citation_ids": [],
+  "expected_abstention": true,
+  "note": "off-topic task"
+ },
+ {
+  "id": "ag_un_05",
+  "bucket": "unanswerable",
+  "source": "broad_set:br_12",
+  "question": "when does the AI Act start to apply?",
+  "history": [],
+  "gold_citation_ids": [],
+  "expected_abstention": true,
+  "note": "in-domain but ungrounded: the general application sentence of Article 113 is not captured as a provision in corpus 1 (measured 6/6 refusals, ADR-17)"
+ },
+ {
+  "id": "ag_un_06",
+  "bucket": "unanswerable",
+  "source": "followup_set:fu_24",
+  "question": "And what's the best pizza place in Dublin?",
+  "history": [
+   [
+    "user",
+    "What marking must be affixed to a high-risk AI system to indicate conformity?"
+   ],
+   [
+    "assistant",
+    "Article 16(h): the CE marking."
+   ]
+  ],
+  "gold_citation_ids": [],
+  "expected_abstention": true,
+  "note": "off-corpus follow-up inside an on-topic conversation"
+ },
+ {
+  "id": "ag_un_07",
+  "bucket": "unanswerable",
+  "source": "followup_set:fu_25",
+  "question": "Can you also tell me today's weather?",
+  "history": [
+   [
+    "user",
+    "What measures are required for human oversight to safely interrupt a high-risk AI system?"
+   ],
+   [
+    "assistant",
+    "Article 14(4)(e) requires a stop button or similar procedure."
+   ]
+  ],
+  "gold_citation_ids": [],
+  "expected_abstention": true,
+  "note": "off-corpus follow-up inside an on-topic conversation"
+ }
+]
