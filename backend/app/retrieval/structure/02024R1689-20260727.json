@@ -1,0 +1,446 @@
+{
+ "source": "aiact_02024R1689-20260727.html",
+ "celex": "02024R1689",
+ "consolidated_date": "2026-07-27",
+ "chapters": [
+  {
+   "id": "cpt_I",
+   "number": "I",
+   "heading": "GENERAL PROVISIONS",
+   "sections": [],
+   "articles": [
+    "art_1",
+    "art_2",
+    "art_3",
+    "art_4",
+    "art_4a"
+   ]
+  },
+  {
+   "id": "cpt_II",
+   "number": "II",
+   "heading": "PROHIBITED AI PRACTICES",
+   "sections": [],
+   "articles": [
+    "art_5"
+   ]
+  },
+  {
+   "id": "cpt_III",
+   "number": "III",
+   "heading": "HIGH-RISK AI SYSTEMS",
+   "sections": [
+    {
+     "id": "cpt_III.sct_1",
+     "number": "1",
+     "heading": "Classification of AI systems as high-risk",
+     "articles": [
+      "art_6",
+      "art_7"
+     ]
+    },
+    {
+     "id": "cpt_III.sct_2",
+     "number": "2",
+     "heading": "Requirements for high-risk AI systems",
+     "articles": [
+      "art_8",
+      "art_9",
+      "art_10",
+      "art_11",
+      "art_12",
+      "art_13",
+      "art_14",
+      "art_15"
+     ]
+    },
+    {
+     "id": "cpt_III.sct_3",
+     "number": "3",
+     "heading": "Obligations of providers and deployers of high-risk AI systems and other parties",
+     "articles": [
+      "art_16",
+      "art_17",
+      "art_18",
+      "art_19",
+      "art_20",
+      "art_21",
+      "art_22",
+      "art_23",
+      "art_24",
+      "art_25",
+      "art_26",
+      "art_27"
+     ]
+    },
+    {
+     "id": "cpt_III.sct_4",
+     "number": "4",
+     "heading": "Notifying authorities and notified bodies",
+     "articles": [
+      "art_28",
+      "art_29",
+      "art_30",
+      "art_31",
+      "art_32",
+      "art_33",
+      "art_34",
+      "art_35",
+      "art_36",
+      "art_37",
+      "art_38",
+      "art_39"
+     ]
+    },
+    {
+     "id": "cpt_III.sct_5",
+     "number": "5",
+     "heading": "Standards, conformity assessment, certificates, registration",
+     "articles": [
+      "art_40",
+      "art_41",
+      "art_42",
+      "art_43",
+      "art_44",
+      "art_45",
+      "art_46",
+      "art_47",
+      "art_48",
+      "art_49"
+     ]
+    }
+   ],
+   "articles": [
+    "art_6",
+    "art_7",
+    "art_8",
+    "art_9",
+    "art_10",
+    "art_11",
+    "art_12",
+    "art_13",
+    "art_14",
+    "art_15",
+    "art_16",
+    "art_17",
+    "art_18",
+    "art_19",
+    "art_20",
+    "art_21",
+    "art_22",
+    "art_23",
+    "art_24",
+    "art_25",
+    "art_26",
+    "art_27",
+    "art_28",
+    "art_29",
+    "art_30",
+    "art_31",
+    "art_32",
+    "art_33",
+    "art_34",
+    "art_35",
+    "art_36",
+    "art_37",
+    "art_38",
+    "art_39",
+    "art_40",
+    "art_41",
+    "art_42",
+    "art_43",
+    "art_44",
+    "art_45",
+    "art_46",
+    "art_47",
+    "art_48",
+    "art_49"
+   ]
+  },
+  {
+   "id": "cpt_IV",
+   "number": "IV",
+   "heading": "TRANSPARENCY OBLIGATIONS FOR PROVIDERS AND DEPLOYERS OF CERTAIN AI SYSTEMS",
+   "sections": [],
+   "articles": [
+    "art_50"
+   ]
+  },
+  {
+   "id": "cpt_V",
+   "number": "V",
+   "heading": "GENERAL-PURPOSE AI MODELS",
+   "sections": [
+    {
+     "id": "cpt_V.sct_1",
+     "number": "1",
+     "heading": "Classification rules",
+     "articles": [
+      "art_51",
+      "art_52"
+     ]
+    },
+    {
+     "id": "cpt_V.sct_2",
+     "number": "2",
+     "heading": "Obligations for providers of general-purpose AI models",
+     "articles": [
+      "art_53",
+      "art_54"
+     ]
+    },
+    {
+     "id": "cpt_V.sct_3",
+     "number": "3",
+     "heading": "Obligations of providers of general-purpose AI models with systemic risk",
+     "articles": [
+      "art_55"
+     ]
+    },
+    {
+     "id": "cpt_V.sct_4",
+     "number": "4",
+     "heading": "Codes of practice",
+     "articles": [
+      "art_56"
+     ]
+    }
+   ],
+   "articles": [
+    "art_51",
+    "art_52",
+    "art_53",
+    "art_54",
+    "art_55",
+    "art_56"
+   ]
+  },
+  {
+   "id": "cpt_VI",
+   "number": "VI",
+   "heading": "MEASURES IN SUPPORT OF INNOVATION",
+   "sections": [],
+   "articles": [
+    "art_57",
+    "art_58",
+    "art_59",
+    "art_60",
+    "art_60a",
+    "art_61",
+    "art_62",
+    "art_63"
+   ]
+  },
+  {
+   "id": "cpt_VII",
+   "number": "VII",
+   "heading": "GOVERNANCE",
+   "sections": [
+    {
+     "id": "cpt_VII.sct_1",
+     "number": "1",
+     "heading": "Governance at Union level",
+     "articles": [
+      "art_64",
+      "art_65",
+      "art_66",
+      "art_67",
+      "art_68",
+      "art_69"
+     ]
+    },
+    {
+     "id": "cpt_VII.sct_2",
+     "number": "2",
+     "heading": "National competent authorities",
+     "articles": [
+      "art_70"
+     ]
+    }
+   ],
+   "articles": [
+    "art_64",
+    "art_65",
+    "art_66",
+    "art_67",
+    "art_68",
+    "art_69",
+    "art_70"
+   ]
+  },
+  {
+   "id": "cpt_VIII",
+   "number": "VIII",
+   "heading": "EU DATABASE FOR HIGH-RISK AI SYSTEMS",
+   "sections": [],
+   "articles": [
+    "art_71"
+   ]
+  },
+  {
+   "id": "cpt_IX",
+   "number": "IX",
+   "heading": "POST-MARKET MONITORING, INFORMATION SHARING AND MARKET SURVEILLANCE",
+   "sections": [
+    {
+     "id": "cpt_IX.sct_1",
+     "number": "1",
+     "heading": "Post-market monitoring",
+     "articles": [
+      "art_72"
+     ]
+    },
+    {
+     "id": "cpt_IX.sct_2",
+     "number": "2",
+     "heading": "Sharing of information on serious incidents",
+     "articles": [
+      "art_73"
+     ]
+    },
+    {
+     "id": "cpt_IX.sct_3",
+     "number": "3",
+     "heading": "Enforcement",
+     "articles": [
+      "art_74",
+      "art_75",
+      "art_75a",
+      "art_75b",
+      "art_75c",
+      "art_75d",
+      "art_76",
+      "art_77",
+      "art_78",
+      "art_79",
+      "art_80",
+      "art_81",
+      "art_82",
+      "art_83",
+      "art_84"
+     ]
+    },
+    {
+     "id": "cpt_IX.sct_4",
+     "number": "4",
+     "heading": "Remedies",
+     "articles": [
+      "art_85",
+      "art_86",
+      "art_87"
+     ]
+    },
+    {
+     "id": "cpt_IX.sct_5",
+     "number": "5",
+     "heading": "Supervision, investigation, enforcement and monitoring in respect of providers of general-purpose AI models",
+     "articles": [
+      "art_88",
+      "art_89",
+      "art_90",
+      "art_91",
+      "art_92",
+      "art_93",
+      "art_94"
+     ]
+    }
+   ],
+   "articles": [
+    "art_72",
+    "art_73",
+    "art_74",
+    "art_75",
+    "art_75a",
+    "art_75b",
+    "art_75c",
+    "art_75d",
+    "art_76",
+    "art_77",
+    "art_78",
+    "art_79",
+    "art_80",
+    "art_81",
+    "art_82",
+    "art_83",
+    "art_84",
+    "art_85",
+    "art_86",
+    "art_87",
+    "art_88",
+    "art_89",
+    "art_90",
+    "art_91",
+    "art_92",
+    "art_93",
+    "art_94"
+   ]
+  },
+  {
+   "id": "cpt_X",
+   "number": "X",
+   "heading": "CODES OF CONDUCT AND GUIDELINES",
+   "sections": [],
+   "articles": [
+    "art_95",
+    "art_96"
+   ]
+  },
+  {
+   "id": "cpt_XI",
+   "number": "XI",
+   "heading": "DELEGATION OF POWER AND COMMITTEE PROCEDURE",
+   "sections": [],
+   "articles": [
+    "art_97",
+    "art_98"
+   ]
+  },
+  {
+   "id": "cpt_XII",
+   "number": "XII",
+   "heading": "PENALTIES",
+   "sections": [],
+   "articles": [
+    "art_99",
+    "art_100",
+    "art_101"
+   ]
+  },
+  {
+   "id": "cpt_XIII",
+   "number": "XIII",
+   "heading": "FINAL PROVISIONS",
+   "sections": [],
+   "articles": [
+    "art_102",
+    "art_103",
+    "art_104",
+    "art_105",
+    "art_106",
+    "art_107",
+    "art_108",
+    "art_109",
+    "art_110",
+    "art_111",
+    "art_112",
+    "art_113"
+   ]
+  }
+ ],
+ "annexes": [
+  "anx_I",
+  "anx_II",
+  "anx_III",
+  "anx_IV",
+  "anx_V",
+  "anx_VI",
+  "anx_VII",
+  "anx_VIII",
+  "anx_IX",
+  "anx_X",
+  "anx_XI",
+  "anx_XII",
+  "anx_XIII",
+  "anx_XIV"
+ ]
+}

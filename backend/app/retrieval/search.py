@@ -1,5 +1,7 @@
+import re
+
 from pydantic import BaseModel
-from sqlalchemy import select, text
+from sqlalchemy import or_, select, text
 from sqlalchemy.orm import Session, aliased
 
 from app.db.models import Chunk, Provision
@@ -61,6 +63,58 @@ def vector_search(
             )
         )
     return results[:top_k]
+
+
+def _citation_sort_key(citation_id: str) -> tuple:
+    """Natural order of a provision's parts: art_9 < art_9.par_1 < art_9.par_2
+    < art_9.par_10; letters after numbers."""
+    key = []
+    for seg in citation_id.split("."):
+        m = re.match(r"([a-z]+)_(\d+)?([a-z_()]*)", seg)
+        if m:
+            key.append((m.group(1), int(m.group(2) or 0), m.group(3) or ""))
+        else:
+            key.append((seg, 0, ""))
+    return tuple(key)
+
+
+def fetch_provision_chunks(
+    session: Session, corpus_version_id: int, roots: list[str]
+) -> dict[str, list[SearchResult]]:
+    """Every chunk under each provision root ("art_9" covers art_9 and
+    art_9.*), in natural citation order, as SearchResults shaped exactly like
+    vector_search's (similarity 0.0: these were not scored, they were
+    resolved). Used by the cross-reference expansion; no embedding call."""
+    if not roots:
+        return {}
+    Ancestor = aliased(Provision)
+    conds = [
+        (Provision.citation_id == r) | Provision.citation_id.like(f"{r}.%")
+        for r in roots
+    ]
+    stmt = (
+        select(Chunk, Provision, Ancestor)
+        .join(Provision, Chunk.provision_id == Provision.id)
+        .outerjoin(Ancestor, Chunk.parent_provision_id == Ancestor.id)
+        .where(Chunk.corpus_version_id == corpus_version_id, or_(*conds))
+    )
+    by_root: dict[str, list[SearchResult]] = {r: [] for r in roots}
+    for chunk, provision, ancestor in session.execute(stmt).all():
+        cid = provision.citation_id
+        root = next(r for r in roots if cid == r or cid.startswith(r + "."))
+        by_root[root].append(
+            SearchResult(
+                chunk_id=chunk.id,
+                citation_id=cid,
+                citation_label=citation_label(cid),
+                chunk_text=chunk.chunk_text,
+                similarity=0.0,
+                article_heading=ancestor.heading if ancestor is not None else None,
+            )
+        )
+    for rows in by_root.values():
+        rows.sort(key=lambda x: _citation_sort_key(x.citation_id))
+    return by_root
 
 
 _KEYWORD_SEARCH_SQL = text(

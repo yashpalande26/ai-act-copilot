@@ -73,7 +73,7 @@ from evals.metrics import (
 HERE = Path(__file__).resolve().parent
 SET_PATH = HERE / "agentic_set.json"
 CONTEXT = 15
-BUCKETS = ("single_hop", "multi_turn", "multi_hop", "unanswerable")
+BUCKETS = ("single_hop", "multi_turn", "multi_hop", "unanswerable", "reference")
 
 
 def summarise(traces: list[dict]) -> dict:

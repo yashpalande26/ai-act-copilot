@@ -379,7 +379,9 @@ def test_graph_has_no_loop_and_decompose_sits_between_rewrite_and_retrieve():
     )
 
 
-@pytest.mark.parametrize("bucket", ["single_hop", "multi_turn", "unanswerable"])
+@pytest.mark.parametrize(
+    "bucket", ["single_hop", "multi_turn", "unanswerable", "reference"]
+)
 def test_no_non_multi_hop_question_is_compositional(bucket):
     assert not any(
         is_compositional(i["question"]) for i in SET if i["bucket"] == bucket

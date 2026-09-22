@@ -502,5 +502,78 @@
   "gold_citation_ids": [],
   "expected_abstention": true,
   "note": "off-corpus follow-up inside an on-topic conversation"
+ },
+ {
+  "id": "ag_xr_01",
+  "bucket": "reference",
+  "source": "live failure 2026-09-22",
+  "question": "what are the requirements set out in Section 2?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_9",
+   "art_10",
+   "art_11",
+   "art_12",
+   "art_13",
+   "art_14",
+   "art_15"
+  ],
+  "expected_abstention": false,
+  "note": "Section 2 of Chapter III is Articles 8 to 15 per the source; Article 8 is the compliance clause, the requirements themselves are 9 to 15. Gold flagged: include art_8 if you read the section literally."
+ },
+ {
+  "id": "ag_xr_02",
+  "bucket": "reference",
+  "source": "authored 2026-09-22",
+  "question": "what does Chapter III require?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_6",
+   "art_8",
+   "art_16",
+   "art_28",
+   "art_40"
+  ],
+  "expected_abstention": false,
+  "note": "Chapter III has 44 articles; gold is a judgement: the first article of each of its five sections (classification, requirements, obligations, notified bodies, conformity). Flagged for confirmation."
+ },
+ {
+  "id": "ag_xr_03",
+  "bucket": "reference",
+  "source": "authored 2026-09-22",
+  "question": "what are the obligations referred to in Article 16?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_16"
+  ],
+  "expected_abstention": false,
+  "note": "Article 16 points (a) to (l); any point covers the gold"
+ },
+ {
+  "id": "ag_xr_04",
+  "bucket": "reference",
+  "source": "live failure 2026-09-22, as the follow-up it was",
+  "question": "what are the requirements set out in Section 2?",
+  "history": [
+   [
+    "user",
+    "What must providers of high-risk AI systems do?"
+   ],
+   [
+    "assistant",
+    "Providers of high-risk AI systems must ensure that their systems are compliant with the requirements set out in Section 2 (Article 16, point (a)), and must, upon a reasoned request of a national competent authority, demonstrate the conformity of the system with those requirements (Article 16, point (k))."
+   ]
+  ],
+  "gold_citation_ids": [
+   "art_9",
+   "art_10",
+   "art_11",
+   "art_12",
+   "art_13",
+   "art_14",
+   "art_15"
+  ],
+  "expected_abstention": false,
+  "note": "same question as a turn-2 follow-up after the providers answer that pointed at Section 2"
  }
 ]

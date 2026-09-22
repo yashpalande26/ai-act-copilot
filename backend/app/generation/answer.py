@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import agentic_rag_enabled, app_env
+from app.config import agentic_rag_enabled, app_env, xref_expansion_enabled
 from app.db.models import ChatSession, Citation, Message, QueryTrace, RetrievalTrace
 from app.ingestion.embedder import _get_client
 from app.retrieval.actor import (
@@ -20,8 +20,17 @@ from app.retrieval.search import (
     FusedResult,
     SearchResult,
     bm25_search,
+    fetch_provision_chunks,
     rrf_rank_and_fuse,
     vector_search,
+)
+from app.retrieval.xref import (
+    MAX_XREF_CHUNKS,
+    XREF_POINTER_CHUNKS,
+    XREF_POSITION,
+    apply_xref_expansion,
+    resolve_references,
+    select_chunks,
 )
 
 CHAT_MODEL = "gpt-4o"
@@ -381,9 +390,13 @@ def _rank_candidates(
     *,
     dense_anchor_floor: float | None | str,
     final_context_size: int,
+    session: Session | None = None,
+    corpus_version_id: int | None = None,
 ) -> tuple[list[FusedResult], str]:
-    """Actor prior, then dense anchor, on an already-fused candidate list.
-    `query` is the question the actor is detected on."""
+    """Actor prior, dense anchor, then cross-reference expansion, on an
+    already-fused candidate list. `query` is the question the actor is
+    detected on and the references are read from; `session` is needed only
+    by the expansion (chunks of the resolved provisions)."""
     # Advisory actor prior, applied over the FULL candidate list before the
     # slice: when the question names exactly one actor, chunks labelled with
     # a different actor sink. Recorded in retrieval_config either way, so a
@@ -408,6 +421,33 @@ def _rank_candidates(
         )
         if anchored:
             retrieval_config += "|anchor=dense"
+    # Cross-reference expansion (app.retrieval.xref): the provisions the
+    # question or the top passages point at, one hop, capped, after the
+    # fused top five and the anchor slot. Only fires when a reference is
+    # present, so a question without one is untouched by construction.
+    if xref_expansion_enabled() and session is not None:
+        res = resolve_references(query, [f.result for f in all_fused])
+        if res.from_query:
+            targets, cap, position, tag = (
+                list(res.from_query),
+                MAX_XREF_CHUNKS,
+                XREF_POSITION,
+                "xref",
+            )
+        else:
+            targets, cap, position, tag = (
+                list(res.from_pointers),
+                XREF_POINTER_CHUNKS,
+                max(0, final_context_size - XREF_POINTER_CHUNKS),
+                "xref=ptr:",
+            )
+        if targets:
+            by_root = fetch_provision_chunks(session, corpus_version_id, targets)
+            present = {f.result.chunk_id for f in all_fused}
+            extra = select_chunks(by_root, present, cap=cap)
+            all_fused, added = apply_xref_expansion(all_fused, extra, position=position)
+            if added:
+                retrieval_config += f"|{tag}{'=' if tag == 'xref' else ''}{added}"
     return all_fused, retrieval_config
 
 
@@ -438,6 +478,8 @@ def retrieve_candidates(
         query,
         dense_anchor_floor=dense_anchor_floor,
         final_context_size=final_context_size,
+        session=session,
+        corpus_version_id=corpus_version_id,
     )
 
 
@@ -519,6 +561,8 @@ def retrieve_candidates_dual(
         rewritten_query,
         dense_anchor_floor=dense_anchor_floor,
         final_context_size=final_context_size,
+        session=session,
+        corpus_version_id=corpus_version_id,
     )
 
 

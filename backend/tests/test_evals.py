@@ -89,7 +89,7 @@ def test_aggregate_average_recall_across_fixture():
 # --- agentic four-bucket set (evals/agentic_set.json) ------------------------
 
 AGENTIC_SET = Path(__file__).resolve().parents[1] / "evals" / "agentic_set.json"
-BUCKETS = {"single_hop", "multi_turn", "multi_hop", "unanswerable"}
+BUCKETS = {"single_hop", "multi_turn", "multi_hop", "unanswerable", "reference"}
 
 
 def _agentic_items():

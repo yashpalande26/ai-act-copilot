@@ -209,6 +209,26 @@ def agentic_decompose_enabled() -> bool:
     )
 
 
+# Cross-reference expansion default. "1" since the passing run of 22 Sep 2026
+# (evals/runs/stage5_xref_on_j2.json vs stage5_xref_off_j2.json, full agentic
+# pipeline both sides): reference-question recall 0.321 -> 1.000 and citation
+# accuracy 0.250 -> 0.750, "the requirements set out in Section 2" answered
+# with Articles 8 to 15 cited; single-hop, multi-turn and unanswerable
+# contexts byte-identical (the expansion fires only on a question that names
+# a container or an article); pooled context precision 0.750 -> 0.794.
+XREF_EXPANSION_DEFAULT = "1"
+
+
+def xref_expansion_enabled() -> bool:
+    """Cross-reference retrieval expansion (app.retrieval.xref): when the
+    question or the top retrieved provisions name a container ("Section 2",
+    "Chapter III", "Annex III") or an article ("Article 16", "Articles 9 to
+    15"), the target provisions are added to the candidate pool, one hop,
+    capped, deterministic. In the SHARED retriever, so the plain and the
+    agentic paths both get it. Not tied to AGENTIC_RAG."""
+    return os.environ.get("XREF_EXPANSION", XREF_EXPANSION_DEFAULT) == "1"
+
+
 # --- admin allowlist --------------------------------------------------------
 # Comma-separated e-mail addresses allowed to read the admin trace viewer
 # (/admin/*). Compared, lower-cased, against the e-mail asserted in the
