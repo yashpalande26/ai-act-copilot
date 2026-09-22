@@ -73,6 +73,24 @@ def extraction_model() -> str:
     return os.environ.get("EXTRACTION_MODEL", "openai:gpt-4o-mini")
 
 
+# --- follow-up rewriting (turn 2+ of a chat) --------------------------------
+# One small structured call that turns "and for deployers?" into a standalone
+# question BEFORE the unchanged retrieval + generation. Part of serving the
+# turn: no separate quota row, its tokens land on the turn's query_trace.
+def rewrite_model() -> str:
+    return os.environ.get("REWRITE_MODEL", "openai:gpt-4o-mini")
+
+
+def followup_rewrite_enabled() -> bool:
+    """OFF by default. The follow-up eval of 22 Sep 2026 passed every hard
+    gate (no regression, 0 hallucinated entities, off-corpus left alone) but
+    missed the value gate: +12 points of correct-citation over the no-rewrite
+    baseline pooled (69% -> 81%), against a required +30. The code stays so
+    the gate can be re-run; the live path makes no rewrite call until this
+    is set to 1 after a passing run."""
+    return os.environ.get("FOLLOWUP_REWRITE", "0") == "1"
+
+
 # --- admin allowlist --------------------------------------------------------
 # Comma-separated e-mail addresses allowed to read the admin trace viewer
 # (/admin/*). Compared, lower-cased, against the e-mail asserted in the

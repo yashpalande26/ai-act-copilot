@@ -1,0 +1,812 @@
+[
+ {
+  "id": "fu_01",
+  "category": "pronoun_ellipsis",
+  "history": [
+   [
+    "user",
+    "What marking must be affixed to a high-risk AI system to indicate conformity with the regulation?"
+   ],
+   [
+    "assistant",
+    "Article 16(h) requires providers to affix the CE marking to the high-risk AI system to indicate conformity with the Regulation."
+   ]
+  ],
+  "followup": "And what identifying information has to be on it or its packaging?",
+  "gold_standalone": "What information must be provided on a high-risk AI system, its packaging or accompanying documentation to identify the provider?",
+  "expected_citation_id": "art_16.pt_b",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_02",
+  "category": "pronoun_ellipsis",
+  "history": [
+   [
+    "user",
+    "What are high-risk AI systems intended to be used for in educational and vocational training institutions?"
+   ],
+   [
+    "assistant",
+    "Annex III point 3(b) covers AI systems intended to evaluate learning outcomes, including when used to steer the learning process."
+   ]
+  ],
+  "followup": "What about admission or access to those institutions?",
+  "gold_standalone": "What are AI systems intended to be used for in relation to access or admission to educational and vocational training institutions?",
+  "expected_citation_id": "anx_III.pt_3.sub_a",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_03",
+  "category": "pronoun_ellipsis",
+  "history": [
+   [
+    "user",
+    "What are the notification requirements for using a 'real-time' remote biometric identification system in publicly accessible spaces?"
+   ],
+   [
+    "assistant",
+    "Article 5(4) requires each use to be notified to the relevant market surveillance authority and the national data protection authority."
+   ]
+  ],
+  "followup": "For what specific purposes can it be deployed at all?",
+  "gold_standalone": "For what specific purposes can 'real-time' remote biometric identification systems be deployed in publicly accessible spaces?",
+  "expected_citation_id": "art_5.par_2",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_04",
+  "category": "pronoun_ellipsis",
+  "history": [
+   [
+    "user",
+    "What is the intended use of AI systems by law enforcement authorities that involves assessing the risk of a natural person offending?"
+   ],
+   [
+    "assistant",
+    "Annex III point 6(d) covers systems used by law enforcement to assess the risk of a natural person offending or re-offending."
+   ]
+  ],
+  "followup": "And when they profile people during investigations?",
+  "gold_standalone": "What is the intended use of AI systems by law enforcement authorities that involves profiling natural persons in the course of investigations?",
+  "expected_citation_id": "anx_III.pt_6.sub_e",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_05",
+  "category": "pronoun_ellipsis",
+  "history": [
+   [
+    "user",
+    "How long are the logs of personal data processing kept in the AI regulatory sandbox?"
+   ],
+   [
+    "assistant",
+    "Article 59(1)(h) provides that logs of the processing are kept for the duration of participation in the sandbox."
+   ]
+  ],
+  "followup": "Does that processing affect data subjects' rights?",
+  "gold_standalone": "Does the processing of personal data in the AI regulatory sandbox affect the rights of data subjects under Union law?",
+  "expected_citation_id": "art_59.par_1.pt_f",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_06",
+  "category": "pronoun_ellipsis",
+  "history": [
+   [
+    "user",
+    "What will the Commission evaluate regarding the AI Office by 2 August 2028?"
+   ],
+   [
+    "assistant",
+    "Article 112(5) asks the Commission to evaluate the functioning of the AI Office and whether it should be upgraded."
+   ]
+  ],
+  "followup": "And what aspect of AI development must it review by the same date?",
+  "gold_standalone": "What aspect of AI development is the Commission required to review and report on by 2 August 2028?",
+  "expected_citation_id": "art_112.par_6",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_07",
+  "category": "pronoun_ellipsis",
+  "history": [
+   [
+    "user",
+    "What is the sole purpose of AI systems used for biometric verification that are not included in remote biometric identification?"
+   ],
+   [
+    "assistant",
+    "Annex III point 1(a) excludes systems whose sole purpose is to confirm that a specific natural person is who they claim to be."
+   ]
+  ],
+  "followup": "What is the definition of a biometric categorisation system then?",
+  "gold_standalone": "What is the purpose of a biometric categorisation system in terms of assigning natural persons to categories?",
+  "expected_citation_id": "art_3.pt_40",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_08",
+  "category": "pronoun_ellipsis",
+  "history": [
+   [
+    "user",
+    "What must deployers do if they envisage using a high-risk AI system that has not been registered in the EU database?"
+   ],
+   [
+    "assistant",
+    "Article 26(8) requires deployers to register themselves or the system in the EU database, or not to use it."
+   ]
+  ],
+  "followup": "If they already meet those duties through other obligations, what can go into the fundamental rights impact assessment?",
+  "gold_standalone": "What can the deployer include in the fundamental rights impact assessment if the obligations are already met through other obligations?",
+  "expected_citation_id": "art_27.par_4",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_09",
+  "category": "pronoun_ellipsis",
+  "history": [
+   [
+    "user",
+    "When must the report be made after establishing a causal link between the AI system and a serious incident?"
+   ],
+   [
+    "assistant",
+    "Article 73(2) sets the deadline for reporting a serious incident once the causal link is established."
+   ]
+  ],
+  "followup": "How quickly must the market surveillance authority act after receiving it?",
+  "gold_standalone": "Within what time frame must the market surveillance authority take appropriate measures after receiving a serious incident report?",
+  "expected_citation_id": "art_73.par_8",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_10",
+  "category": "pronoun_ellipsis",
+  "history": [
+   [
+    "user",
+    "Who can submit applications for participation in AI regulatory sandboxes?"
+   ],
+   [
+    "assistant",
+    "Article 58(2)(b) sets who may apply to participate in an AI regulatory sandbox."
+   ]
+  ],
+  "followup": "Who is liable if something goes wrong during real-world testing?",
+  "gold_standalone": "Who is liable for any damage caused during testing of AI systems in real world conditions?",
+  "expected_citation_id": "art_60.par_9",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_11",
+  "category": "topic_continuation",
+  "history": [
+   [
+    "user",
+    "What are the obligations of providers of general-purpose AI models with systemic risk regarding model evaluation?"
+   ],
+   [
+    "assistant",
+    "Article 55(1)(a) requires providers of general-purpose AI models with systemic risk to perform model evaluation with standardised protocols and tools."
+   ]
+  ],
+  "followup": "What characteristics make a model general-purpose in the first place?",
+  "gold_standalone": "What characteristics must a general-purpose AI model display to be considered capable of performing a wide range of distinct tasks?",
+  "expected_citation_id": "art_3.pt_63",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_12",
+  "category": "topic_continuation",
+  "history": [
+   [
+    "user",
+    "What action should market surveillance authorities take if they have sufficient reason to consider a general-purpose AI system non-compliant?"
+   ],
+   [
+    "assistant",
+    "Article 75(2) directs market surveillance authorities to cooperate with the AI Office in that case."
+   ]
+  ],
+  "followup": "What must the AI Office do before prohibiting one on a national market?",
+  "gold_standalone": "What must the AI Office do before deciding to prohibit or restrict an AI system on a national market?",
+  "expected_citation_id": "art_75.par_1d",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_13",
+  "category": "topic_continuation",
+  "history": [
+   [
+    "user",
+    "What must the AI Office inform the provider of when conducting an inspection?"
+   ],
+   [
+    "assistant",
+    "Article 75a(4) sets what the AI Office must inform the provider of when it conducts an inspection."
+   ]
+  ],
+  "followup": "Who can the AI Office or the competent authorities address about compliance with this Regulation?",
+  "gold_standalone": "Who can be addressed by the AI Office or the competent authorities on issues related to ensuring compliance with this Regulation?",
+  "expected_citation_id": "art_54.par_4",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_14",
+  "category": "topic_continuation",
+  "history": [
+   [
+    "user",
+    "What authority does the Commission have to amend Annexes VI and VII in the conformity assessment process?"
+   ],
+   [
+    "assistant",
+    "Article 43(5) empowers the Commission to adopt delegated acts amending Annexes VI and VII."
+   ]
+  ],
+  "followup": "Can it also change the classification rules for high-risk AI systems?",
+  "gold_standalone": "What authority does the Commission have to amend the classification rules for high-risk AI systems?",
+  "expected_citation_id": "art_6.par_6",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_15",
+  "category": "topic_continuation",
+  "history": [
+   [
+    "user",
+    "What tasks does the Board have in facilitating a shared understanding among market operators and competent authorities?"
+   ],
+   [
+    "assistant",
+    "Article 66(g) tasks the Board with facilitating a shared understanding of the Regulation among operators and authorities."
+   ]
+  ],
+  "followup": "In which fields should it prioritise cooperation with Union institutions and expert groups?",
+  "gold_standalone": "In which fields should the Board prioritise cooperation with Union institutions, bodies and expert groups?",
+  "expected_citation_id": "art_66.pt_h",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_16",
+  "category": "topic_continuation",
+  "history": [
+   [
+    "user",
+    "Under what conditions can the exit report from an AI regulatory sandbox be made publicly available?"
+   ],
+   [
+    "assistant",
+    "Article 57(8) allows publication of the exit report through the single information platform under conditions."
+   ]
+  ],
+  "followup": "Who coordinates the sandbox activities and cooperates within the Board framework?",
+  "gold_standalone": "Who are the entities responsible for coordinating AI regulatory sandbox activities and cooperating within the framework of the Board?",
+  "expected_citation_id": "art_57.par_14",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_17",
+  "category": "entity_trap",
+  "history": [
+   [
+    "user",
+    "What marking must be affixed to a high-risk AI system to indicate conformity with the regulation?"
+   ],
+   [
+    "assistant",
+    "Article 16(h) requires providers to affix the CE marking to the high-risk AI system."
+   ]
+  ],
+  "followup": "And the penalties for not doing that?",
+  "gold_standalone": "What are the penalties for a provider's non-compliance with its obligations under Article 16 for a high-risk AI system?",
+  "expected_citation_id": "art_99.par_4",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_18",
+  "category": "entity_trap",
+  "history": [
+   [
+    "user",
+    "What is required for the use of an AI system that generates or manipulates realistic images, videos or audio of a person?"
+   ],
+   [
+    "assistant",
+    "Article 5(1)(ba) addresses systems that generate or manipulate such content of identifiable persons without consent."
+   ]
+  ],
+  "followup": "What about the one on exploiting vulnerabilities?",
+  "gold_standalone": "What is the objective or effect of using an AI system that exploits the vulnerabilities of a person or group of persons?",
+  "expected_citation_id": "art_5.par_1.pt_b",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_19",
+  "category": "already_standalone",
+  "history": [
+   [
+    "user",
+    "Who can submit applications for participation in AI regulatory sandboxes?"
+   ],
+   [
+    "assistant",
+    "Article 58(2)(b) sets who may apply."
+   ]
+  ],
+  "followup": "What measures are required for human oversight to safely interrupt a high-risk AI system?",
+  "gold_standalone": "What measures are required for human oversight to safely interrupt a high-risk AI system?",
+  "expected_citation_id": "art_14.par_4.pt_e",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_20",
+  "category": "already_standalone",
+  "history": [
+   [
+    "user",
+    "What marking must be affixed to a high-risk AI system to indicate conformity?"
+   ],
+   [
+    "assistant",
+    "Article 16(h): the CE marking."
+   ]
+  ],
+  "followup": "What is presumed about high-risk AI systems that have been trained and tested on data reflecting their intended geographical or functional setting?",
+  "gold_standalone": "What is presumed about high-risk AI systems that have been trained and tested on data reflecting their intended geographical or functional setting?",
+  "expected_citation_id": "art_42.par_1",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_21",
+  "category": "already_standalone",
+  "history": [
+   [
+    "user",
+    "How long are the logs kept in the AI regulatory sandbox?"
+   ],
+   [
+    "assistant",
+    "For the duration of participation, per Article 59(1)(h)."
+   ]
+  ],
+  "followup": "What is the goal of considering the effects and possible interaction resulting from the combined application of the requirements for high-risk AI systems?",
+  "gold_standalone": "What is the goal of considering the effects and possible interaction resulting from the combined application of the requirements for high-risk AI systems?",
+  "expected_citation_id": "art_9.par_4",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_22",
+  "category": "already_standalone",
+  "history": [
+   [
+    "user",
+    "What will the Commission evaluate regarding the AI Office by 2 August 2028?"
+   ],
+   [
+    "assistant",
+    "Its functioning and whether an upgrade is needed, per Article 112(5)."
+   ]
+  ],
+  "followup": "What does 'informed consent' require in terms of a subject's expression of willingness to participate in testing in real world conditions?",
+  "gold_standalone": "What does 'informed consent' require in terms of a subject's expression of willingness to participate in testing in real world conditions?",
+  "expected_citation_id": "art_3.pt_59",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_23",
+  "category": "already_standalone",
+  "history": [
+   [
+    "user",
+    "What tasks does the Board have in facilitating a shared understanding?"
+   ],
+   [
+    "assistant",
+    "Article 66(g)."
+   ]
+  ],
+  "followup": "What does this Regulation not affect regarding the liability of providers of intermediary services?",
+  "gold_standalone": "What does this Regulation not affect regarding the liability of providers of intermediary services?",
+  "expected_citation_id": "art_2.par_5",
+  "expected_abstention": false
+ },
+ {
+  "id": "fu_24",
+  "category": "off_corpus",
+  "history": [
+   [
+    "user",
+    "What marking must be affixed to a high-risk AI system to indicate conformity?"
+   ],
+   [
+    "assistant",
+    "Article 16(h): the CE marking."
+   ]
+  ],
+  "followup": "And what's the best pizza place in Dublin?",
+  "gold_standalone": "And what's the best pizza place in Dublin?",
+  "expected_citation_id": null,
+  "expected_abstention": true
+ },
+ {
+  "id": "fu_25",
+  "category": "off_corpus",
+  "history": [
+   [
+    "user",
+    "What measures are required for human oversight to safely interrupt a high-risk AI system?"
+   ],
+   [
+    "assistant",
+    "Article 14(4)(e) requires a stop button or similar procedure."
+   ]
+  ],
+  "followup": "Can you also tell me today's weather?",
+  "gold_standalone": "Can you also tell me today's weather?",
+  "expected_citation_id": null,
+  "expected_abstention": true
+ },
+ {
+  "id": "fu_26",
+  "category": "off_corpus",
+  "history": [
+   [
+    "user",
+    "What are the obligations of providers of general-purpose AI models with systemic risk regarding model evaluation?"
+   ],
+   [
+    "assistant",
+    "Article 55(1)(a): model evaluation with standardised protocols."
+   ]
+  ],
+  "followup": "How do I train my dog to sit?",
+  "gold_standalone": "How do I train my dog to sit?",
+  "expected_citation_id": null,
+  "expected_abstention": true
+ },
+ {
+  "id": "fu_27",
+  "category": "terse_pronoun",
+  "history": [
+   [
+    "user",
+    "What marking must be affixed to a high-risk AI system to indicate conformity with the regulation?"
+   ],
+   [
+    "assistant",
+    "Article 16(h) requires providers to affix the CE marking to the high-risk AI system to indicate conformity with the Regulation."
+   ]
+  ],
+  "followup": "And what else has to be on it?",
+  "gold_standalone": "What information must be provided on a high-risk AI system, its packaging or accompanying documentation to identify the provider?",
+  "expected_citation_id": "art_16.pt_b",
+  "expected_abstention": false,
+  "variant_of": "fu_01"
+ },
+ {
+  "id": "fu_28",
+  "category": "terse_pronoun",
+  "history": [
+   [
+    "user",
+    "What are high-risk AI systems intended to be used for in educational and vocational training institutions?"
+   ],
+   [
+    "assistant",
+    "Annex III point 3(b) covers AI systems intended to evaluate learning outcomes, including when used to steer the learning process."
+   ]
+  ],
+  "followup": "And for admissions?",
+  "gold_standalone": "What are AI systems intended to be used for in relation to access or admission to educational and vocational training institutions?",
+  "expected_citation_id": "anx_III.pt_3.sub_a",
+  "expected_abstention": false,
+  "variant_of": "fu_02"
+ },
+ {
+  "id": "fu_29",
+  "category": "terse_pronoun",
+  "history": [
+   [
+    "user",
+    "What are the notification requirements for using a 'real-time' remote biometric identification system in publicly accessible spaces?"
+   ],
+   [
+    "assistant",
+    "Article 5(4) requires each use to be notified to the relevant market surveillance authority and the national data protection authority."
+   ]
+  ],
+  "followup": "When is it allowed at all?",
+  "gold_standalone": "For what specific purposes can 'real-time' remote biometric identification systems be deployed in publicly accessible spaces?",
+  "expected_citation_id": "art_5.par_2",
+  "expected_abstention": false,
+  "variant_of": "fu_03"
+ },
+ {
+  "id": "fu_30",
+  "category": "terse_pronoun",
+  "history": [
+   [
+    "user",
+    "What is the intended use of AI systems by law enforcement authorities that involves assessing the risk of a natural person offending?"
+   ],
+   [
+    "assistant",
+    "Annex III point 6(d) covers systems used by law enforcement to assess the risk of a natural person offending or re-offending."
+   ]
+  ],
+  "followup": "And for profiling?",
+  "gold_standalone": "What is the intended use of AI systems by law enforcement authorities that involves profiling natural persons in the course of investigations?",
+  "expected_citation_id": "anx_III.pt_6.sub_e",
+  "expected_abstention": false,
+  "variant_of": "fu_04"
+ },
+ {
+  "id": "fu_31",
+  "category": "terse_pronoun",
+  "history": [
+   [
+    "user",
+    "How long are the logs of personal data processing kept in the AI regulatory sandbox?"
+   ],
+   [
+    "assistant",
+    "Article 59(1)(h) provides that logs of the processing are kept for the duration of participation in the sandbox."
+   ]
+  ],
+  "followup": "Does it affect their rights?",
+  "gold_standalone": "Does the processing of personal data in the AI regulatory sandbox affect the rights of data subjects under Union law?",
+  "expected_citation_id": "art_59.par_1.pt_f",
+  "expected_abstention": false,
+  "variant_of": "fu_05"
+ },
+ {
+  "id": "fu_32",
+  "category": "terse_pronoun",
+  "history": [
+   [
+    "user",
+    "What will the Commission evaluate regarding the AI Office by 2 August 2028?"
+   ],
+   [
+    "assistant",
+    "Article 112(5) asks the Commission to evaluate the functioning of the AI Office and whether it should be upgraded."
+   ]
+  ],
+  "followup": "And what else by the same date?",
+  "gold_standalone": "What aspect of AI development is the Commission required to review and report on by 2 August 2028?",
+  "expected_citation_id": "art_112.par_6",
+  "expected_abstention": false,
+  "variant_of": "fu_06"
+ },
+ {
+  "id": "fu_33",
+  "category": "terse_pronoun",
+  "history": [
+   [
+    "user",
+    "What is the sole purpose of AI systems used for biometric verification that are not included in remote biometric identification?"
+   ],
+   [
+    "assistant",
+    "Annex III point 1(a) excludes systems whose sole purpose is to confirm that a specific natural person is who they claim to be."
+   ]
+  ],
+  "followup": "How is categorisation defined?",
+  "gold_standalone": "What is the purpose of a biometric categorisation system in terms of assigning natural persons to categories?",
+  "expected_citation_id": "art_3.pt_40",
+  "expected_abstention": false,
+  "variant_of": "fu_07"
+ },
+ {
+  "id": "fu_34",
+  "category": "terse_pronoun",
+  "history": [
+   [
+    "user",
+    "What must deployers do if they envisage using a high-risk AI system that has not been registered in the EU database?"
+   ],
+   [
+    "assistant",
+    "Article 26(8) requires deployers to register themselves or the system in the EU database, or not to use it."
+   ]
+  ],
+  "followup": "And if they already comply through other duties?",
+  "gold_standalone": "What can the deployer include in the fundamental rights impact assessment if the obligations are already met through other obligations?",
+  "expected_citation_id": "art_27.par_4",
+  "expected_abstention": false,
+  "variant_of": "fu_08"
+ },
+ {
+  "id": "fu_35",
+  "category": "terse_pronoun",
+  "history": [
+   [
+    "user",
+    "When must the report be made after establishing a causal link between the AI system and a serious incident?"
+   ],
+   [
+    "assistant",
+    "Article 73(2) sets the deadline for reporting a serious incident once the causal link is established."
+   ]
+  ],
+  "followup": "How fast must the authority react?",
+  "gold_standalone": "Within what time frame must the market surveillance authority take appropriate measures after receiving a serious incident report?",
+  "expected_citation_id": "art_73.par_8",
+  "expected_abstention": false,
+  "variant_of": "fu_09"
+ },
+ {
+  "id": "fu_36",
+  "category": "terse_pronoun",
+  "history": [
+   [
+    "user",
+    "Who can submit applications for participation in AI regulatory sandboxes?"
+   ],
+   [
+    "assistant",
+    "Article 58(2)(b) sets who may apply to participate in an AI regulatory sandbox."
+   ]
+  ],
+  "followup": "Who pays if it breaks something during testing?",
+  "gold_standalone": "Who is liable for any damage caused during testing of AI systems in real world conditions?",
+  "expected_citation_id": "art_60.par_9",
+  "expected_abstention": false,
+  "variant_of": "fu_10"
+ },
+ {
+  "id": "fu_37",
+  "category": "terse_continuation",
+  "history": [
+   [
+    "user",
+    "What are the obligations of providers of general-purpose AI models with systemic risk regarding model evaluation?"
+   ],
+   [
+    "assistant",
+    "Article 55(1)(a) requires providers of general-purpose AI models with systemic risk to perform model evaluation with standardised protocols and tools."
+   ]
+  ],
+  "followup": "What makes a model count as one in the first place?",
+  "gold_standalone": "What characteristics must a general-purpose AI model display to be considered capable of performing a wide range of distinct tasks?",
+  "expected_citation_id": "art_3.pt_63",
+  "expected_abstention": false,
+  "variant_of": "fu_11"
+ },
+ {
+  "id": "fu_38",
+  "category": "terse_continuation",
+  "history": [
+   [
+    "user",
+    "What action should market surveillance authorities take if they have sufficient reason to consider a general-purpose AI system non-compliant?"
+   ],
+   [
+    "assistant",
+    "Article 75(2) directs market surveillance authorities to cooperate with the AI Office in that case."
+   ]
+  ],
+  "followup": "And before banning one nationally?",
+  "gold_standalone": "What must the AI Office do before deciding to prohibit or restrict an AI system on a national market?",
+  "expected_citation_id": "art_75.par_1d",
+  "expected_abstention": false,
+  "variant_of": "fu_12"
+ },
+ {
+  "id": "fu_39",
+  "category": "terse_continuation",
+  "history": [
+   [
+    "user",
+    "What must the AI Office inform the provider of when conducting an inspection?"
+   ],
+   [
+    "assistant",
+    "Article 75a(4) sets what the AI Office must inform the provider of when it conducts an inspection."
+   ]
+  ],
+  "followup": "Who do they go to about compliance?",
+  "gold_standalone": "Who can be addressed by the AI Office or the competent authorities on issues related to ensuring compliance with this Regulation?",
+  "expected_citation_id": "art_54.par_4",
+  "expected_abstention": false,
+  "variant_of": "fu_13"
+ },
+ {
+  "id": "fu_40",
+  "category": "terse_continuation",
+  "history": [
+   [
+    "user",
+    "What authority does the Commission have to amend Annexes VI and VII in the conformity assessment process?"
+   ],
+   [
+    "assistant",
+    "Article 43(5) empowers the Commission to adopt delegated acts amending Annexes VI and VII."
+   ]
+  ],
+  "followup": "Can it change the classification rules too?",
+  "gold_standalone": "What authority does the Commission have to amend the classification rules for high-risk AI systems?",
+  "expected_citation_id": "art_6.par_6",
+  "expected_abstention": false,
+  "variant_of": "fu_14"
+ },
+ {
+  "id": "fu_41",
+  "category": "terse_continuation",
+  "history": [
+   [
+    "user",
+    "What tasks does the Board have in facilitating a shared understanding among market operators and competent authorities?"
+   ],
+   [
+    "assistant",
+    "Article 66(g) tasks the Board with facilitating a shared understanding of the Regulation among operators and authorities."
+   ]
+  ],
+  "followup": "Where should it prioritise cooperation?",
+  "gold_standalone": "In which fields should the Board prioritise cooperation with Union institutions, bodies and expert groups?",
+  "expected_citation_id": "art_66.pt_h",
+  "expected_abstention": false,
+  "variant_of": "fu_15"
+ },
+ {
+  "id": "fu_42",
+  "category": "terse_continuation",
+  "history": [
+   [
+    "user",
+    "Under what conditions can the exit report from an AI regulatory sandbox be made publicly available?"
+   ],
+   [
+    "assistant",
+    "Article 57(8) allows publication of the exit report through the single information platform under conditions."
+   ]
+  ],
+  "followup": "Who coordinates it all?",
+  "gold_standalone": "Who are the entities responsible for coordinating AI regulatory sandbox activities and cooperating within the framework of the Board?",
+  "expected_citation_id": "art_57.par_14",
+  "expected_abstention": false,
+  "variant_of": "fu_16"
+ },
+ {
+  "id": "fu_43",
+  "category": "terse_entity_trap",
+  "history": [
+   [
+    "user",
+    "What marking must be affixed to a high-risk AI system to indicate conformity with the regulation?"
+   ],
+   [
+    "assistant",
+    "Article 16(h) requires providers to affix the CE marking to the high-risk AI system."
+   ]
+  ],
+  "followup": "And the fines for not doing it?",
+  "gold_standalone": "What are the penalties for a provider's non-compliance with its obligations under Article 16 for a high-risk AI system?",
+  "expected_citation_id": "art_99.par_4",
+  "expected_abstention": false,
+  "variant_of": "fu_17"
+ },
+ {
+  "id": "fu_44",
+  "category": "terse_entity_trap",
+  "history": [
+   [
+    "user",
+    "What is required for the use of an AI system that generates or manipulates realistic images, videos or audio of a person?"
+   ],
+   [
+    "assistant",
+    "Article 5(1)(ba) addresses systems that generate or manipulate such content of identifiable persons without consent."
+   ]
+  ],
+  "followup": "And the vulnerabilities one?",
+  "gold_standalone": "What is the objective or effect of using an AI system that exploits the vulnerabilities of a person or group of persons?",
+  "expected_citation_id": "art_5.par_1.pt_b",
+  "expected_abstention": false,
+  "variant_of": "fu_18"
+ }
+]

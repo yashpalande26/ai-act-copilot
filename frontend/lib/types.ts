@@ -10,6 +10,9 @@ export type AskResult = {
   citations: AskCitation[];
   abstained: boolean;
   session_id: string;
+  /** Turn 2+: the standalone question the answer was retrieved for, when the
+   *  follow-up was rewritten from the conversation. Null otherwise. */
+  rewritten_query?: string | null;
 };
 
 /** Mirrors GET /sessions. */
@@ -78,6 +81,7 @@ export type TraceCandidate = {
 
 /** Mirrors GET /admin/traces/{id}. */
 export type TraceDetail = TraceSummary & {
+  rewritten_query?: string | null;
   retrieval: TraceRetrieval;
   answer: string;
   citations: { citation_id: string; citation_label: string }[];

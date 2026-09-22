@@ -64,6 +64,22 @@ class GroundedAnswer(BaseModel):
     message_id: UUID
 
 
+class RewriteInfo(BaseModel):
+    """What a follow-up rewrite (app.generation.rewrite) did, for the trace.
+    Defaults describe a first turn: nothing attempted, nothing recorded."""
+
+    applied: bool = False
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+
+    def trace_fields(self, query: str) -> dict:
+        return {
+            "rewritten_query": query if self.applied else None,
+            "rewrite_prompt_tokens": self.prompt_tokens,
+            "rewrite_completion_tokens": self.completion_tokens,
+        }
+
+
 def _lexical_leg(
     session: Session, query: str, corpus_version_id: int
 ) -> tuple[list[SearchResult], str]:
@@ -169,6 +185,9 @@ def _write_trace_safe(
     all_fused: list[FusedResult],
     final_context_size: int,
     retrieval_config: str,
+    rewritten_query: str | None = None,
+    rewrite_prompt_tokens: int | None = None,
+    rewrite_completion_tokens: int | None = None,
 ) -> None:
     """Best-effort. Called strictly AFTER _persist_turn has already committed
     the product message/citations, as a fully independent transaction. Any
@@ -191,6 +210,12 @@ def _write_trace_safe(
             generation_latency_ms=generation_latency_ms,
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
+            # Follow-up rewriting (turn 2+): the standalone query retrieval
+            # actually ran on, and what the rewrite cost. NULL on a first
+            # turn or when the rewrite was not applied.
+            rewritten_query=rewritten_query,
+            rewrite_prompt_tokens=rewrite_prompt_tokens,
+            rewrite_completion_tokens=rewrite_completion_tokens,
         )
         session.add(trace)
         session.flush()
@@ -226,11 +251,21 @@ def generate_grounded_answer(
     min_similarity: float = 0.3,
     write_trace: bool = True,
     max_output_tokens: int | None = None,
+    user_text: str | None = None,
+    rewrite: "RewriteInfo | None" = None,
 ) -> GroundedAnswer:
     """max_output_tokens bounds the expensive half of a call (gpt-4o output is
     4x input cost). Default None preserves the previous unbounded behaviour
     exactly, so existing callers and eval runs are unaffected; the HTTP
-    surface passes an explicit ceiling."""
+    surface passes an explicit ceiling.
+
+    `query` is what retrieval and the prompt see. `user_text`, when given, is
+    what the user actually typed and is what gets persisted as their message
+    and as query_text on the trace; a follow-up rewrite (app.generation.rewrite)
+    passes the standalone question as `query` and the original as `user_text`.
+    Everything from retrieval onwards is identical either way."""
+    stored_text = user_text if user_text is not None else query
+    rw = rewrite or RewriteInfo()
     retrieval_start = time.monotonic()
     vector_results = vector_search(
         session,
@@ -274,7 +309,7 @@ def generate_grounded_answer(
 
     if not fused:
         message = _persist_turn(
-            session, chat_session_id, query, ABSTENTION_TEXT, fused=[]
+            session, chat_session_id, stored_text, ABSTENTION_TEXT, fused=[]
         )
         result = GroundedAnswer(
             answer=ABSTENTION_TEXT, citations=[], message_id=message.id
@@ -283,7 +318,7 @@ def generate_grounded_answer(
             _write_trace_safe(
                 session,
                 chat_session_id,
-                query,
+                stored_text,
                 result,
                 corpus_version_id,
                 retrieval_latency_ms,
@@ -293,6 +328,7 @@ def generate_grounded_answer(
                 all_fused=all_fused,
                 final_context_size=final_context_size,
                 retrieval_config=retrieval_config,
+                **rw.trace_fields(query),
             )
         return result
 
@@ -325,14 +361,14 @@ def generate_grounded_answer(
         # refusal text, zero citations - not citations for chunks the model
         # just told us were insufficient.
         message = _persist_turn(
-            session, chat_session_id, query, ABSTENTION_TEXT, fused=[]
+            session, chat_session_id, stored_text, ABSTENTION_TEXT, fused=[]
         )
         result = GroundedAnswer(
             answer=ABSTENTION_TEXT, citations=[], message_id=message.id
         )
     else:
         message = _persist_turn(
-            session, chat_session_id, query, answer_text, fused=fused
+            session, chat_session_id, stored_text, answer_text, fused=fused
         )
         result = GroundedAnswer(
             answer=answer_text,
@@ -344,7 +380,7 @@ def generate_grounded_answer(
         _write_trace_safe(
             session,
             chat_session_id,
-            query,
+            stored_text,
             result,
             corpus_version_id,
             retrieval_latency_ms,
@@ -354,5 +390,6 @@ def generate_grounded_answer(
             all_fused=all_fused,
             final_context_size=final_context_size,
             retrieval_config=retrieval_config,
+            **rw.trace_fields(query),
         )
     return result

@@ -55,6 +55,14 @@ class QueryTrace(Base):
     ]  # None on pre-LLM abstention (no LLM call made)
     prompt_tokens: Mapped[int | None]  # None for the same reason
     completion_tokens: Mapped[int | None]
+    # Follow-up rewriting (turn 2+ of a chat, app.generation.rewrite):
+    # query_text stays the user's own words; rewritten_query is the standalone
+    # question retrieval actually ran on, NULL when no rewrite was applied.
+    # The rewrite's tokens are recorded here because it is part of serving
+    # this turn, not a separate quota row.
+    rewritten_query: Mapped[str | None] = mapped_column(Text)
+    rewrite_prompt_tokens: Mapped[int | None]
+    rewrite_completion_tokens: Mapped[int | None]
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

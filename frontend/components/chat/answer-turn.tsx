@@ -100,6 +100,11 @@ export function AssistantTurn({ turn, question }: { turn: ChatTurn; question?: s
 
   return (
     <Bubble>
+      {turn.result.rewritten_query ? (
+        <p className="type-micro text-ink-faint" data-testid="rewritten-query">
+          Understood as: <span className="text-ink-soft">{turn.result.rewritten_query}</span>
+        </p>
+      ) : null}
       <div className="type-body whitespace-pre-wrap">{turn.result.answer}</div>
 
       <CitationsDisclosure citations={turn.result.citations} />

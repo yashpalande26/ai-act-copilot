@@ -104,6 +104,7 @@ class TraceCandidate(BaseModel):
 
 
 class TraceDetail(TraceSummary):
+    rewritten_query: str | None = None  # turn 2+: the standalone query retrieval ran on
     retrieval: RetrievalInfo
     answer: str
     citations: list[TraceCitation]
@@ -118,6 +119,7 @@ def _summary(qt: QueryTrace, user_id: UUID, user_email: str) -> dict:
         "user_id": user_id,
         "user_email": user_email,
         "question": qt.query_text,
+        "rewritten_query": qt.rewritten_query,
         "retrieval_config": qt.retrieval_config,
         "abstained": qt.abstained,
         "model": qt.model,

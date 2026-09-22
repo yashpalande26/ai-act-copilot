@@ -21,9 +21,19 @@ from app.api.deps import (
     resolve_user,
 )
 from app.api.history import derive_title
-from app.config import MAX_OUTPUT_TOKENS, MAX_QUESTION_CHARS, PER_MINUTE_LIMIT
+from app.config import (
+    MAX_OUTPUT_TOKENS,
+    MAX_QUESTION_CHARS,
+    PER_MINUTE_LIMIT,
+    followup_rewrite_enabled,
+)
 from app.db.models import ChatSession, CorpusVersion
-from app.generation.answer import ABSTENTION_TEXT, generate_grounded_answer
+from app.generation.answer import (
+    ABSTENTION_TEXT,
+    RewriteInfo,
+    generate_grounded_answer,
+)
+from app.generation.rewrite import load_history, rewrite_followup
 from app.rate_limit import limiter
 
 router = APIRouter()
@@ -47,6 +57,9 @@ class AskResponse(BaseModel):
     citations: list[AskCitation]
     abstained: bool
     session_id: UUID
+    # Turn 2+ only: the standalone question the answer was retrieved for,
+    # when the follow-up was rewritten. None on a first turn or a pass-through.
+    rewritten_query: str | None = None
 
 
 def _get_or_create_session(
@@ -100,15 +113,34 @@ def ask(
         session, user.id, corpus_version.id, payload.session_id, payload.question
     )
 
+    # Follow-up rewriting, turn 2+ only: an existing session with prior
+    # messages. The rewrite yields the query retrieval runs on; the user's own
+    # text is what gets stored. Grounding, citations and refusal are decided
+    # downstream exactly as for a first turn. Gated OFF by default: see
+    # config.followup_rewrite_enabled (value gate not met on 22 Sep 2026).
+    history = (
+        load_history(session, chat.id)
+        if payload.session_id is not None and followup_rewrite_enabled()
+        else []
+    )
+    rewrite = rewrite_followup(history, payload.question)
+
     result = generate_grounded_answer(
         session,
-        payload.question,
+        rewrite.query,
         corpus_version.id,
         chat.id,
         max_output_tokens=MAX_OUTPUT_TOKENS,
+        user_text=payload.question,
+        rewrite=RewriteInfo(
+            applied=rewrite.applied,
+            prompt_tokens=rewrite.prompt_tokens,
+            completion_tokens=rewrite.completion_tokens,
+        ),
     )
 
     return AskResponse(
+        rewritten_query=rewrite.query if rewrite.applied else None,
         answer=result.answer,
         citations=[
             AskCitation(

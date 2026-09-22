@@ -33,6 +33,12 @@ function TraceDetailView({ trace }: { trace: Trace }) {
           All traces
         </Link>
         <h1 className="type-h2 mt-3 text-balance">{trace.question}</h1>
+        {trace.rewritten_query ? (
+          <p className="type-micro text-ink-soft mt-2">
+            Retrieved for (rewritten follow-up):{" "}
+            <span className="text-ink">{trace.rewritten_query}</span>
+          </p>
+        ) : null}
         <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-7">
           <Stat label="When" value={new Date(trace.created_at).toLocaleString()} />
           <Stat label="User" value={trace.user_email} />
