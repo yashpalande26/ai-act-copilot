@@ -9,6 +9,12 @@ from sqlalchemy.orm import Session
 
 from app.config import agentic_rag_enabled, app_env, xref_expansion_enabled
 from app.db.models import ChatSession, Citation, Message, QueryTrace, RetrievalTrace
+from app.generation.provider import (
+    PROVIDER_ERRORS,
+    ProviderUnavailable,
+    describe,
+    log_provider_error,
+)
 from app.ingestion.embedder import _get_client
 from app.retrieval.actor import (
     ACTOR_MISMATCH_FACTOR,
@@ -390,6 +396,7 @@ def _hybrid_candidates(
     own label and a loud log, mirroring the lexical fallback; a vector leg that
     returns nothing is tagged, so the trace never shows an empty column
     without saying why."""
+    vector_error: BaseException | None = None
     try:
         vector_results = vector_search(
             session, query, corpus_version_id, top_k=breadth, min_similarity=0.0
@@ -397,13 +404,18 @@ def _hybrid_candidates(
         vector_failed = False
     except Exception as exc:  # noqa: BLE001 - uptime beats a hard failure when a correct fallback exists; the distinct banner keeps real bugs visible
         print(
-            f"UNEXPECTED vector leg failure, serving bm25-only: {exc!r}",
+            f"UNEXPECTED vector leg failure ({describe(exc)}), serving bm25-only",
             file=sys.stderr,
         )
-        vector_results, vector_failed = [], True
+        vector_results, vector_failed, vector_error = [], True, exc
     lexical_results, retrieval_config = _lexical_leg(
         session, query, corpus_version_id, breadth=breadth
     )
+    if vector_failed and not lexical_results:
+        # No leg can serve: the vector leg failed and BM25 has nothing
+        # (degraded index or no match). Not an abstention, an outage.
+        log_provider_error("retrieval", vector_error)  # type: ignore[arg-type]
+        raise ProviderUnavailable("retrieval", vector_error) from None
     if vector_failed:
         retrieval_config = "bm25_only_degraded"
     elif retrieval_config == "vector_only_degraded":
@@ -716,17 +728,24 @@ def generate_step(
     optional_kwargs = (
         {"max_tokens": max_output_tokens} if max_output_tokens is not None else {}
     )
-    response = _get_client().chat.completions.create(
-        model=CHAT_MODEL,
-        temperature=0,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            # The question is a SEPARATE user message; distinct API roles mean
-            # user text cannot structurally replace or edit SYSTEM_PROMPT.
-            {"role": "user", "content": prompt},
-        ],
-        **optional_kwargs,
-    )
+    try:
+        response = _get_client().chat.completions.create(
+            model=CHAT_MODEL,
+            temperature=0,
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                # The question is a SEPARATE user message; distinct API roles
+                # mean user text cannot structurally replace or edit
+                # SYSTEM_PROMPT.
+                {"role": "user", "content": prompt},
+            ],
+            **optional_kwargs,
+        )
+    except PROVIDER_ERRORS as exc:
+        # Generation is the one call a turn cannot proceed without: a clean
+        # 503 (app.main), the real error in the server log only.
+        log_provider_error("generation", exc)
+        raise ProviderUnavailable("generation", exc) from None
     generation_latency_ms = int((time.monotonic() - generation_start) * 1000)
     return GenerationStep(
         answer_text=response.choices[0].message.content,

@@ -3,6 +3,7 @@ import sys
 from contextlib import asynccontextmanager
 from uuid import uuid4
 
+import openai
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -16,6 +17,11 @@ from app.api.assessments import router as assessments_router
 from app.api.classify import router as classify_router
 from app.api.history import router as history_router
 from app.config import app_env
+from app.generation.provider import (
+    USER_MESSAGE,
+    ProviderUnavailable,
+    log_provider_error,
+)
 from app.rate_limit import limiter
 
 
@@ -68,6 +74,34 @@ def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse
         status.HTTP_429_TOO_MANY_REQUESTS,
         "rate_limited",
         "Too many requests. Please slow down.",
+        str(uuid4()),
+    )
+
+
+@app.exception_handler(ProviderUnavailable)
+def provider_unavailable_handler(
+    request: Request, exc: ProviderUnavailable
+) -> JSONResponse:
+    """A required model-provider call failed (credits exhausted, auth, timeout,
+    connection). The client gets a short notice and a 503; the stage and the
+    error type were logged where it was raised."""
+    return _error(
+        status.HTTP_503_SERVICE_UNAVAILABLE,
+        "provider_unavailable",
+        USER_MESSAGE,
+        str(uuid4()),
+    )
+
+
+@app.exception_handler(openai.APIError)
+def provider_error_handler(request: Request, exc: openai.APIError) -> JSONResponse:
+    """Any OpenAI error that escaped an unwrapped call. Same clean 503; the
+    real error is logged with its type and code, never returned."""
+    log_provider_error("unwrapped", exc)
+    return _error(
+        status.HTTP_503_SERVICE_UNAVAILABLE,
+        "provider_unavailable",
+        USER_MESSAGE,
         str(uuid4()),
     )
 
