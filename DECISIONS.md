@@ -1,6 +1,83 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-20: Agentic RAG as a flag-gated LangGraph pipeline, one measured node at a time (2026-09-22)
+Context: The grounded-answer path was a fixed sequence (retrieve, generate, abstain) that
+served single questions well and had three measured weaknesses: follow-ups lost their
+referent, compositional questions lost the half of their context that fusion crowded out,
+and nothing checked an answer's citations after generation. The research plan called for
+staged agentic retrieval (query rewriting, retrieval grading, citation verification,
+bounded decomposition), each gated against the simple baseline, with no web tools and no
+unbounded loops. The deterministic classification engine is not on this path and stays
+out of it.
+Decision: (1) Stage 0: app/generation/graph.py wraps the SAME three step functions the
+plain path calls (retrieve_step, generate_step, decide_step in answer.py) as LangGraph
+nodes, behind AGENTIC_RAG (config.agentic_rag_enabled, default off in every environment).
+Flag off is the untouched plain path; flag on reproduced it on every deterministic
+metric of every trace and on the easy golden set end to end. An eval harness
+(evals/run_agentic_eval.py, metrics.py, gate.py) reports per trace context recall,
+context precision (average precision over the 15-chunk slice), citation accuracy,
+inline mention, abstention F1_ans and F1_ref, and judged faithfulness and relevance, over
+a 35-item four-bucket set (evals/agentic_set.json: 12 single-hop, 8 multi-turn, 8
+multi-hop authored and reviewed, 7 unanswerable) with a NON-COMPENSATORY gate: a node
+ships only if faithfulness, context recall and abstention F1 improve or hold at ceiling
+AND citation accuracy does not regress, per bucket. (2) Five nodes, each behind its own
+flag effective only inside the graph, each on by default there after a passing run:
+rewrite (AGENTIC_REWRITE, ADR-19's module reused: gpt-4o-mini, turn 2+ only, idempotent,
+entity drift guard, actor-conflict abstention, and since Stage 1b DUAL retrieval: the raw
+follow-up and the rewrite each retrieve and their RRF lists are summed before the actor
+prior, because replacing the query lost Article 99(4) to "CE marking" saturating BM25);
+grade (AGENTIC_GRADE: one gpt-4o-mini relevance grade over the slice, proceed with
+relevant passages first and nothing dropped, ONE in-corpus widen at breadth 50 and slice
+30, then abstain before any gpt-4o call); verify (AGENTIC_VERIFY: every provision the
+answer names must resolve to a context passage or a passage's own cross-reference,
+deterministic, and every cited claim must be entailed by its passage per a gpt-4o-mini
+structured check with a deterministic backstop; misgrounded means ONE regeneration under
+a grounding instruction appended to the user message, then abstain; both drafts' spend
+stays on the trace); decompose (AGENTIC_DECOMPOSE: deterministic detection of a second
+ask, a gpt-4o-mini planner capped at 3 standalone sub-questions screened by the entity
+guard with a deterministic split as fallback, per-part retrieval and grading in parallel
+form with one widen per part, a part left with nothing relevant abstains the turn, and
+ONE strong-model compose call whose prompt groups the passages by part). No node adds
+content or an outside source; the graph has no edge back to retrieval; every outcome is
+tagged on query_trace.retrieval_config (path, rewrite, grade, verify, decompose). (3) The
+faithfulness judge (evals/judge.py) now sees each context chunk with its citation label,
+because without labels it scored correct references such as "Article 6, paragraph 6"
+as unsupported; criteria unchanged, validity up. Every run file is re-baselined under it
+(evals/runs/*_j2.json).
+Evidence: Quality, Stage 0 baseline to the full pipeline, same set, label-aware judge:
+pooled context recall 0.964 to 1.000, citation accuracy 0.893 to 1.000, abstention F1
+0.883 to 1.000, faithfulness 0.992 to 1.000, context precision 0.717 to 0.794; multi-turn
+F1_ans 0.933 to 1.000 with the coreference follow-up now citing Article 99(4)(a);
+multi-hop recall 0.875 to 1.000 and citation accuracy 0.750 to 1.000 with both
+definition-half refusals answered; single-hop identical throughout; unanswerable 7/7
+refused at every stage, six of them now stopped at the grader with no gpt-4o call.
+Verifier probe set (24 authored probes): gpt-4o 12/12 true positives, 0 false positives;
+gpt-4o-mini 11/12 and 0. Per stage the gate and its verdict are in the run files.
+Latency and cost (evals/profile_pipeline.py, 35 items, no judge, tokens as returned by
+the API, dollars at list prices gpt-4o 2.50/10.00, gpt-4o-mini 0.15/0.60, embeddings
+0.13 per 1M): p50 turn latency 2.3 s to 7.4 s pooled, p95 3.3 s to 14.3 s; single-hop
+2.0 to 5.6 s (grader +2.0 s, verifier +1.8 s); multi-turn 2.7 to 10.3 s (rewrite +1.2 s,
+grader +2.4 s, verifier +3.4 s); off-topic 1.3 to 6.5 s (the grader's widen before
+abstaining, +5.3 s) but 3.1 to 1.1 tenths of a cent, the gpt-4o call saved; compositional
+2.7 to 13.3 s (planner +1.1 s, two or three grades +4.4 s, verifier +4.5 s). Cost per turn
+0.42 to 0.50 cents pooled (+19%), 0.48 to 0.78 cents on compositional turns.
+Consequences: Correctness moved on every weakness the plan named, at a latency cost that
+is real: an agentic turn is three times slower at the median and four times at p95, most
+of it the grader and the verifier, which are serial gpt-4o-mini calls around the gpt-4o
+call. The pipeline is one flag from production and off until the UI shows progress for
+slow turns. Open, honestly: with gpt-4o as verifier a faithful paraphrase of Article
+66(h) was rejected twice and a correct answer withheld (the reason gpt-4o-mini is the
+default; VERIFY_MODEL selects the stricter one); the grader's widen fires on every
+off-topic question before abstaining and could be skipped on a low top similarity, an
+unswept constant; the reorder inside the grader moved multi-turn faithfulness by one judge
+point until the judge fix showed it was the judge; DSPy or any prompt tuning of the
+sub-steps has not been done, every prompt is hand-written and measured once; the
+compositional bucket's gold is authored by the same person as the prompts and two items
+are flagged for confirmation in PROJECT_BRIEF.md; verifier and grader tokens are not yet
+columns on query_trace, only the trace tags are.
+Status: Accepted; AGENTIC_RAG off in production pending the progress affordance.
+
 ## ADR-19: Chat scope handling: greeting short-circuit shipped, follow-up rewrite built but off (2026-09-22)
 Context: Two chat behaviours were measured this week. (1) Greetings and off-topic input
 ("hey", "thanks", "???") hit the generic retrieval refusal after a paid call. (2) Follow-ups

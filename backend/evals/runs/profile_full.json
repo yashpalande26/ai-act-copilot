@@ -1,0 +1,2165 @@
+{
+ "flags": {
+  "AGENTIC_RAG": true,
+  "rewrite": true,
+  "grade": true,
+  "verify": true,
+  "decompose": true
+ },
+ "prices": {
+  "gpt-4o": [
+   2.5,
+   10.0
+  ],
+  "gpt-4o-mini": [
+   0.15,
+   0.6
+  ],
+  "text-embedding-3-large": [
+   0.13,
+   0.0
+  ]
+ },
+ "turns": [
+  {
+   "id": "ag_sh_01",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 5405,
+   "usd": 0.00479398,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 795,
+     "tokens": 16,
+     "usd": 2.08e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 1980,
+     "tokens": 1421,
+     "usd": 0.00027614999999999996
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1073,
+     "tokens": 1548,
+     "usd": 0.0042375
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 1438,
+     "tokens": 1591,
+     "usd": 0.00027825
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 2784,
+     "completion": 228,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 16,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1499,
+     "completion": 49,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_sh_02",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 5650,
+   "usd": 0.00386353,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 406,
+     "tokens": 16,
+     "usd": 2.08e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 2251,
+     "tokens": 1194,
+     "usd": 0.0002421
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1008,
+     "tokens": 1149,
+     "usd": 0.0033525
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 1887,
+     "tokens": 1413,
+     "usd": 0.00026685
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 2345,
+     "completion": 262,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 16,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1085,
+     "completion": 64,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_sh_03",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 5780,
+   "usd": 0.00602711,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 431,
+     "tokens": 27,
+     "usd": 3.5100000000000003e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 2103,
+     "tokens": 1918,
+     "usd": 0.0003507
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1076,
+     "tokens": 1964,
+     "usd": 0.0053075
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 2062,
+     "tokens": 2103,
+     "usd": 0.0003654
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3770,
+     "completion": 251,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 27,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1911,
+     "completion": 53,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_sh_04",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 5836,
+   "usd": 0.00374238,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 440,
+     "tokens": 16,
+     "usd": 2.08e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 1864,
+     "tokens": 1159,
+     "usd": 0.00023684999999999998
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1411,
+     "tokens": 1139,
+     "usd": 0.0032525
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 2009,
+     "tokens": 1352,
+     "usd": 0.00025095
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 2264,
+     "completion": 247,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 16,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1085,
+     "completion": 54,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_sh_05",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 5098,
+   "usd": 0.00503285,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 386,
+     "tokens": 20,
+     "usd": 2.6e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 1826,
+     "tokens": 1617,
+     "usd": 0.00030555
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1330,
+     "tokens": 1635,
+     "usd": 0.004425
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 1457,
+     "tokens": 1767,
+     "usd": 0.00029969999999999997
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3167,
+     "completion": 217,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 20,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1590,
+     "completion": 45,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_sh_06",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 5004,
+   "usd": 0.00453497,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 374,
+     "tokens": 14,
+     "usd": 1.8200000000000002e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 1941,
+     "tokens": 1440,
+     "usd": 0.000279
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 950,
+     "tokens": 1458,
+     "usd": 0.00396
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 1644,
+     "tokens": 1628,
+     "usd": 0.00029414999999999997
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 2817,
+     "completion": 251,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 14,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1416,
+     "completion": 42,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_sh_07",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 5508,
+   "usd": 0.00512262,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 442,
+     "tokens": 19,
+     "usd": 2.47e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 1916,
+     "tokens": 1432,
+     "usd": 0.0002778
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1575,
+     "tokens": 1589,
+     "usd": 0.0045575
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 1488,
+     "tokens": 1629,
+     "usd": 0.00028485
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 2831,
+     "completion": 230,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 19,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1511,
+     "completion": 78,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_sh_08",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 7414,
+   "usd": 0.0078103700000000005,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 363,
+     "tokens": 29,
+     "usd": 3.77e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 2209,
+     "tokens": 2134,
+     "usd": 0.0003831
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 2047,
+     "tokens": 2229,
+     "usd": 0.0069375
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 2687,
+     "tokens": 2562,
+     "usd": 0.000486
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 4330,
+     "completion": 366,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 29,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 2047,
+     "completion": 182,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_sh_09",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 4462,
+   "usd": 0.00422408,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 375,
+     "tokens": 21,
+     "usd": 2.73e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 1630,
+     "tokens": 1339,
+     "usd": 0.00026385000000000004
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 945,
+     "tokens": 1328,
+     "usd": 0.0036875
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 1414,
+     "tokens": 1512,
+     "usd": 0.00027
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 2615,
+     "completion": 236,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 21,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1279,
+     "completion": 49,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_sh_10",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 5620,
+   "usd": 0.0050620199999999995,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 393,
+     "tokens": 24,
+     "usd": 3.12e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 2260,
+     "tokens": 1541,
+     "usd": 0.00029414999999999997
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1121,
+     "tokens": 1572,
+     "usd": 0.0044475
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 1745,
+     "tokens": 1755,
+     "usd": 0.00031725
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3036,
+     "completion": 260,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 24,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1503,
+     "completion": 69,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_sh_11",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 5223,
+   "usd": 0.0050396,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 407,
+     "tokens": 5,
+     "usd": 6.5e-07
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 1742,
+     "tokens": 1490,
+     "usd": 0.0002865
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1418,
+     "tokens": 1533,
+     "usd": 0.00444
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 1544,
+     "tokens": 1732,
+     "usd": 0.00031245
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 2965,
+     "completion": 257,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 5,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1452,
+     "completion": 81,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_sh_12",
+   "bucket": "single_hop",
+   "abstained": false,
+   "total_ms": 6011,
+   "usd": 0.0050954799999999995,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 352,
+     "tokens": 6,
+     "usd": 7.8e-07
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 1778,
+     "tokens": 1547,
+     "usd": 0.00029504999999999993
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1441,
+     "tokens": 1555,
+     "usd": 0.004465
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 2345,
+     "tokens": 1808,
+     "usd": 0.00033465
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3074,
+     "completion": 281,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 6,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1478,
+     "completion": 77,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mt_01",
+   "bucket": "multi_turn",
+   "abstained": false,
+   "total_ms": 11960,
+   "usd": 0.006104190000000001,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 1679,
+     "tokens": 375,
+     "usd": 6.975e-05
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 1873,
+     "tokens": 33,
+     "usd": 4.2900000000000004e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 2015,
+     "tokens": 1827,
+     "usd": 0.00033705
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 2608,
+     "tokens": 1830,
+     "usd": 0.0052125
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 3675,
+     "tokens": 2256,
+     "usd": 0.0004806
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3972,
+     "completion": 486,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 33,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1745,
+     "completion": 85,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mt_02",
+   "bucket": "multi_turn",
+   "abstained": false,
+   "total_ms": 6840,
+   "usd": 0.004347329999999999,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 998,
+     "tokens": 371,
+     "usd": 7.005e-05
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 735,
+     "tokens": 31,
+     "usd": 4.03e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 2092,
+     "tokens": 1270,
+     "usd": 0.0002535
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1323,
+     "tokens": 1355,
+     "usd": 0.0037625
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 1588,
+     "tokens": 1439,
+     "usd": 0.00025725
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 2816,
+     "completion": 264,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 31,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1305,
+     "completion": 50,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mt_03",
+   "bucket": "multi_turn",
+   "abstained": false,
+   "total_ms": 12242,
+   "usd": 0.007363870000000001,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 1930,
+     "tokens": 371,
+     "usd": 6.78e-05
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 650,
+     "tokens": 29,
+     "usd": 3.77e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 1767,
+     "tokens": 1935,
+     "usd": 0.00035325
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 3107,
+     "tokens": 2015,
+     "usd": 0.0064025
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 4698,
+     "tokens": 2506,
+     "usd": 0.00053655
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 4288,
+     "completion": 524,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 29,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1833,
+     "completion": 182,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mt_04",
+   "bucket": "multi_turn",
+   "abstained": false,
+   "total_ms": 9847,
+   "usd": 0.00473891,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 1245,
+     "tokens": 364,
+     "usd": 6.269999999999999e-05
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 409,
+     "tokens": 12,
+     "usd": 1.56e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 3281,
+     "tokens": 1262,
+     "usd": 0.0002523
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1890,
+     "tokens": 1346,
+     "usd": 0.00407
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 2930,
+     "tokens": 1632,
+     "usd": 0.00035235
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 2861,
+     "completion": 397,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 12,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1252,
+     "completion": 94,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mt_05",
+   "bucket": "multi_turn",
+   "abstained": false,
+   "total_ms": 9150,
+   "usd": 0.004525209999999999,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 1020,
+     "tokens": 362,
+     "usd": 6.69e-05
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 746,
+     "tokens": 27,
+     "usd": 3.5100000000000003e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 2136,
+     "tokens": 1253,
+     "usd": 0.00025095
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1667,
+     "tokens": 1261,
+     "usd": 0.0038575
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 3471,
+     "tokens": 1610,
+     "usd": 0.00034635
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 2824,
+     "completion": 401,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 27,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1167,
+     "completion": 94,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mt_06",
+   "bucket": "multi_turn",
+   "abstained": false,
+   "total_ms": 7569,
+   "usd": 0.00499751,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 1035,
+     "tokens": 366,
+     "usd": 6.569999999999998e-05
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 728,
+     "tokens": 22,
+     "usd": 2.86e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 1714,
+     "tokens": 1438,
+     "usd": 0.0002787
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1397,
+     "tokens": 1483,
+     "usd": 0.0043375
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 2596,
+     "tokens": 1689,
+     "usd": 0.00031275
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3197,
+     "completion": 296,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 22,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1399,
+     "completion": 84,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mt_07",
+   "bucket": "multi_turn",
+   "abstained": false,
+   "total_ms": 11605,
+   "usd": 0.006630339999999999,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 1145,
+     "tokens": 370,
+     "usd": 6.855e-05
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 730,
+     "tokens": 23,
+     "usd": 2.99e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 3247,
+     "tokens": 1761,
+     "usd": 0.00032714999999999996
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 2263,
+     "tokens": 1877,
+     "usd": 0.0057575
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 4114,
+     "tokens": 2240,
+     "usd": 0.00047414999999999995
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3895,
+     "completion": 476,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 23,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1735,
+     "completion": 142,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mt_08",
+   "bucket": "multi_turn",
+   "abstained": false,
+   "total_ms": 10813,
+   "usd": 0.00541573,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 927,
+     "tokens": 353,
+     "usd": 6.104999999999999e-05
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 809,
+     "tokens": 16,
+     "usd": 2.08e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 2792,
+     "tokens": 1343,
+     "usd": 0.00026445
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 2242,
+     "tokens": 1425,
+     "usd": 0.0046425
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 3946,
+     "tokens": 1888,
+     "usd": 0.00044564999999999996
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3065,
+     "completion": 519,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 16,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1281,
+     "completion": 144,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mh_01",
+   "bucket": "multi_hop",
+   "abstained": false,
+   "total_ms": 13796,
+   "usd": 0.0071513900000000005,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 1295,
+     "tokens": 263,
+     "usd": 5.294999999999999e-05
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 841,
+     "tokens": 23,
+     "usd": 2.99e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 4295,
+     "tokens": 2620,
+     "usd": 0.000519
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 2855,
+     "tokens": 1674,
+     "usd": 0.0060825
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 4396,
+     "tokens": 2015,
+     "usd": 0.0004939499999999999
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 4162,
+     "completion": 736,
+     "calls": 5
+    },
+    "text-embedding-3-large": {
+     "prompt": 23,
+     "completion": 0,
+     "calls": 2
+    },
+    "gpt-4o": {
+     "prompt": 1421,
+     "completion": 253,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mh_02",
+   "bucket": "multi_hop",
+   "abstained": false,
+   "total_ms": 12686,
+   "usd": 0.0077792799999999995,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 1063,
+     "tokens": 265,
+     "usd": 5.459999999999999e-05
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 808,
+     "tokens": 26,
+     "usd": 3.38e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 3834,
+     "tokens": 2606,
+     "usd": 0.0005169
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 2636,
+     "tokens": 1994,
+     "usd": 0.0067325
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 4243,
+     "tokens": 1946,
+     "usd": 0.0004719
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 4104,
+     "completion": 713,
+     "calls": 5
+    },
+    "text-embedding-3-large": {
+     "prompt": 26,
+     "completion": 0,
+     "calls": 2
+    },
+    "gpt-4o": {
+     "prompt": 1761,
+     "completion": 233,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mh_03",
+   "bucket": "multi_hop",
+   "abstained": false,
+   "total_ms": 15577,
+   "usd": 0.009957990000000002,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 1730,
+     "tokens": 286,
+     "usd": 6.584999999999999e-05
+    },
+    "retrieve": {
+     "calls": 3,
+     "ms": 1202,
+     "tokens": 43,
+     "usd": 5.590000000000001e-06
+    },
+    "grade": {
+     "calls": 3,
+     "ms": 6291,
+     "tokens": 5069,
+     "usd": 0.0009493500000000001
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 2348,
+     "tokens": 2879,
+     "usd": 0.0084725
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 3900,
+     "tokens": 2165,
+     "usd": 0.0004646999999999999
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 6738,
+     "completion": 782,
+     "calls": 6
+    },
+    "text-embedding-3-large": {
+     "prompt": 43,
+     "completion": 0,
+     "calls": 3
+    },
+    "gpt-4o": {
+     "prompt": 2709,
+     "completion": 170,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mh_04",
+   "bucket": "multi_hop",
+   "abstained": false,
+   "total_ms": 11976,
+   "usd": 0.00894232,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 1237,
+     "tokens": 259,
+     "usd": 5.2799999999999996e-05
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 845,
+     "tokens": 24,
+     "usd": 3.12e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 4111,
+     "tokens": 2956,
+     "usd": 0.0005694000000000001
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 2329,
+     "tokens": 2539,
+     "usd": 0.0078625
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 3346,
+     "tokens": 2082,
+     "usd": 0.0004545
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 4670,
+     "completion": 627,
+     "calls": 5
+    },
+    "text-embedding-3-large": {
+     "prompt": 24,
+     "completion": 0,
+     "calls": 2
+    },
+    "gpt-4o": {
+     "prompt": 2337,
+     "completion": 202,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mh_05",
+   "bucket": "multi_hop",
+   "abstained": false,
+   "total_ms": 13333,
+   "usd": 0.006477339999999999,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 864,
+     "tokens": 261,
+     "usd": 5.2199999999999995e-05
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 1248,
+     "tokens": 23,
+     "usd": 2.99e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 5010,
+     "tokens": 2504,
+     "usd": 0.0005015999999999999
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 2731,
+     "tokens": 1631,
+     "usd": 0.0055025
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 3359,
+     "tokens": 1941,
+     "usd": 0.00041804999999999994
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 4115,
+     "completion": 591,
+     "calls": 5
+    },
+    "text-embedding-3-large": {
+     "prompt": 23,
+     "completion": 0,
+     "calls": 2
+    },
+    "gpt-4o": {
+     "prompt": 1441,
+     "completion": 190,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mh_06",
+   "bucket": "multi_hop",
+   "abstained": false,
+   "total_ms": 9697,
+   "usd": 0.00520276,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 834,
+     "tokens": 271,
+     "usd": 5.595e-05
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 769,
+     "tokens": 27,
+     "usd": 3.5100000000000003e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 3497,
+     "tokens": 2520,
+     "usd": 0.0005039999999999999
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 1957,
+     "tokens": 1429,
+     "usd": 0.0043225
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 2538,
+     "tokens": 1521,
+     "usd": 0.00031679999999999995
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3801,
+     "completion": 511,
+     "calls": 5
+    },
+    "text-embedding-3-large": {
+     "prompt": 27,
+     "completion": 0,
+     "calls": 2
+    },
+    "gpt-4o": {
+     "prompt": 1329,
+     "completion": 100,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mh_07",
+   "bucket": "multi_hop",
+   "abstained": false,
+   "total_ms": 13247,
+   "usd": 0.00685302,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 1077,
+     "tokens": 272,
+     "usd": 5.7e-05
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 1256,
+     "tokens": 29,
+     "usd": 3.7700000000000003e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 3713,
+     "tokens": 3315,
+     "usd": 0.00062325
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 2625,
+     "tokens": 1762,
+     "usd": 0.0057025
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 4466,
+     "tokens": 2081,
+     "usd": 0.0004665
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 5009,
+     "completion": 659,
+     "calls": 5
+    },
+    "text-embedding-3-large": {
+     "prompt": 29,
+     "completion": 0,
+     "calls": 2
+    },
+    "gpt-4o": {
+     "prompt": 1589,
+     "completion": 173,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_mh_08",
+   "bucket": "multi_hop",
+   "abstained": false,
+   "total_ms": 20605,
+   "usd": 0.010049900000000002,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 885,
+     "tokens": 264,
+     "usd": 5.4e-05
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 946,
+     "tokens": 25,
+     "usd": 3.2500000000000002e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 4801,
+     "tokens": 2857,
+     "usd": 0.00055455
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 4500,
+     "tokens": 2362,
+     "usd": 0.00871
+    },
+    "verify": {
+     "calls": 1,
+     "ms": 9360,
+     "tokens": 2592,
+     "usd": 0.0007280999999999999
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 4647,
+     "completion": 1066,
+     "calls": 5
+    },
+    "text-embedding-3-large": {
+     "prompt": 25,
+     "completion": 0,
+     "calls": 2
+    },
+    "gpt-4o": {
+     "prompt": 1988,
+     "completion": 374,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_un_01",
+   "bucket": "unanswerable",
+   "abstained": true,
+   "total_ms": 7226,
+   "usd": 0.0008371700000000001,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 833,
+     "tokens": 14,
+     "usd": 1.8200000000000002e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 6313,
+     "tokens": 4324,
+     "usd": 0.0008353500000000001
+    },
+    "generate": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    },
+    "verify": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3909,
+     "completion": 415,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 14,
+     "completion": 0,
+     "calls": 2
+    }
+   }
+  },
+  {
+   "id": "ag_un_02",
+   "bucket": "unanswerable",
+   "abstained": true,
+   "total_ms": 6402,
+   "usd": 0.0007145399999999999,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 857,
+     "tokens": 18,
+     "usd": 2.34e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 5209,
+     "tokens": 3503,
+     "usd": 0.0007122
+    },
+    "generate": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    },
+    "verify": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3088,
+     "completion": 415,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 18,
+     "completion": 0,
+     "calls": 2
+    }
+   }
+  },
+  {
+   "id": "ag_un_03",
+   "bucket": "unanswerable",
+   "abstained": true,
+   "total_ms": 10421,
+   "usd": 0.00076922,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 1198,
+     "tokens": 14,
+     "usd": 1.8200000000000002e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 8884,
+     "tokens": 3871,
+     "usd": 0.0007674
+    },
+    "generate": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    },
+    "verify": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3456,
+     "completion": 415,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 14,
+     "completion": 0,
+     "calls": 2
+    }
+   }
+  },
+  {
+   "id": "ag_un_04",
+   "bucket": "unanswerable",
+   "abstained": true,
+   "total_ms": 6104,
+   "usd": 0.00078756,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 1095,
+     "tokens": 12,
+     "usd": 1.56e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 4923,
+     "tokens": 3995,
+     "usd": 0.000786
+    },
+    "generate": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    },
+    "verify": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3580,
+     "completion": 415,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 12,
+     "completion": 0,
+     "calls": 2
+    }
+   }
+  },
+  {
+   "id": "ag_un_05",
+   "bucket": "unanswerable",
+   "abstained": true,
+   "total_ms": 3233,
+   "usd": 0.0033267699999999997,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 1,
+     "ms": 522,
+     "tokens": 9,
+     "usd": 1.17e-06
+    },
+    "grade": {
+     "calls": 1,
+     "ms": 1942,
+     "tokens": 1234,
+     "usd": 0.0002481
+    },
+    "generate": {
+     "calls": 1,
+     "ms": 687,
+     "tokens": 1180,
+     "usd": 0.0030775
+    },
+    "verify": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 1094,
+     "completion": 140,
+     "calls": 3
+    },
+    "text-embedding-3-large": {
+     "prompt": 9,
+     "completion": 0,
+     "calls": 1
+    },
+    "gpt-4o": {
+     "prompt": 1163,
+     "completion": 17,
+     "calls": 1
+    }
+   }
+  },
+  {
+   "id": "ag_un_06",
+   "bucket": "unanswerable",
+   "abstained": true,
+   "total_ms": 7601,
+   "usd": 0.00077465,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 1181,
+     "tokens": 340,
+     "usd": 5.955e-05
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 1167,
+     "tokens": 20,
+     "usd": 2.6e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 5171,
+     "tokens": 3505,
+     "usd": 0.0007125
+    },
+    "generate": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    },
+    "verify": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3411,
+     "completion": 434,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 20,
+     "completion": 0,
+     "calls": 2
+    }
+   }
+  },
+  {
+   "id": "ag_un_07",
+   "bucket": "unanswerable",
+   "abstained": true,
+   "total_ms": 6544,
+   "usd": 0.00074364,
+   "nodes": {
+    "rewrite": {
+     "calls": 1,
+     "ms": 939,
+     "tokens": 345,
+     "usd": 5.984999999999999e-05
+    },
+    "plan": {
+     "calls": 1,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0.0
+    },
+    "retrieve": {
+     "calls": 2,
+     "ms": 867,
+     "tokens": 18,
+     "usd": 2.34e-06
+    },
+    "grade": {
+     "calls": 2,
+     "ms": 4638,
+     "tokens": 3298,
+     "usd": 0.00068145
+    },
+    "generate": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    },
+    "verify": {
+     "calls": 0,
+     "ms": 0,
+     "tokens": 0,
+     "usd": 0
+    }
+   },
+   "by_model": {
+    "gpt-4o-mini": {
+     "prompt": 3210,
+     "completion": 433,
+     "calls": 4
+    },
+    "text-embedding-3-large": {
+     "prompt": 18,
+     "completion": 0,
+     "calls": 2
+    }
+   }
+  }
+ ]
+}
