@@ -33,7 +33,10 @@ for (const [w, width, height] of VIEWPORTS) {
         scopeHasAssessRoute: !!s?.querySelector('a[href^="/app/assess"]'),
         scopeNotLegalAdvice: /not legal advice/i.test(t(s)),
         refusalKeepsRetrievalLead: /retrieved provisions did not contain enough/.test(t(r)),
-        refusalHasExamplesAndRoute: /You can ask/.test(t(r)) && !!r?.querySelector('a[href^="/app/assess"]'),
+        refusalNeutralNoChatbotFraming: !/general chatbot|search engine|general assistant/i.test(t(r)),
+        refusalSuggestsSpecifics: /specific article, obligation, or system type/.test(t(r)),
+        refusalHasRoute: !!r?.querySelector('a[href^="/app/assess"]'),
+        refusalNotLegalAdvice: /not legal advice/i.test(t(r)),
         emDash: document.body.innerText.includes("\u2014"),
         pageScrollsX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
       };

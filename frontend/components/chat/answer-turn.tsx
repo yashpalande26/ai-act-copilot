@@ -14,6 +14,7 @@ import { AssessCta } from "@/components/chat/assess-cta";
 import { CitationsDisclosure } from "@/components/chat/citations-disclosure";
 import {
   REFUSAL_LEAD,
+  REFUSAL_MESSAGE,
   REFUSAL_TITLE,
   SCOPE_EXAMPLES,
   SCOPE_MESSAGE,
@@ -69,17 +70,25 @@ function AbstentionTurn({ question, scope }: { question?: string; scope: boolean
           )}
           <h3 className="type-h3">{scope ? SCOPE_TITLE : REFUSAL_TITLE}</h3>
         </div>
-        {scope ? null : <p className="type-body text-ink-soft mt-3">{REFUSAL_LEAD}</p>}
-        <p className={`type-body text-ink-soft ${scope ? "mt-3" : "mt-2"}`}>{SCOPE_MESSAGE}</p>
-        <p className="type-eyebrow text-ink-faint mt-5">You can ask, for example</p>
-        <ul className="mt-2 space-y-1.5">
-          {SCOPE_EXAMPLES.map((q) => (
-            <li key={q} className="type-meta text-ink flex items-start gap-2">
-              <span className="bg-accent-solid mt-2.5 size-1 shrink-0 rounded-full" aria-hidden />
-              {q}
-            </li>
-          ))}
-        </ul>
+        {scope ? (
+          <>
+            <p className="type-body text-ink-soft mt-3">{SCOPE_MESSAGE}</p>
+            <p className="type-eyebrow text-ink-faint mt-5">You can ask, for example</p>
+            <ul className="mt-2 space-y-1.5">
+              {SCOPE_EXAMPLES.map((q) => (
+                <li key={q} className="type-meta text-ink flex items-start gap-2">
+                  <span className="bg-accent-solid mt-2.5 size-1 shrink-0 rounded-full" aria-hidden />
+                  {q}
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <>
+            <p className="type-body text-ink-soft mt-3">{REFUSAL_LEAD}</p>
+            <p className="type-body text-ink-soft mt-2">{REFUSAL_MESSAGE}</p>
+          </>
+        )}
         <AssessCta text={question} variant="refusal" />
         <p className="type-micro text-ink-faint mt-4">Informational, not legal advice.</p>
       </div>
