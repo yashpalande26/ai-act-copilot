@@ -50,6 +50,7 @@ SOCIAL_LEGAL = re.compile(
     r"\b(?:article|annex|high[- ]risk|prohibited|obligation\w*|deployer|provider|gpai|conformity)\b",
     re.IGNORECASE,
 )
+from app.generation.chat_lane import legal_statements
 from app.generation.understand import verdict_leaks
 from app.generation.verify import references_in
 from evals.metrics import context_recall
@@ -58,6 +59,18 @@ HERE = Path(__file__).resolve().parent
 
 
 def lane_of(cfg: str) -> str:
+    if "guard=injection" in cfg:
+        return "blocked"
+    if "lane=chat->rag" in cfg:
+        return "rag"
+    if "lane=chat" in cfg:
+        return "chat"
+    if (
+        "intent=on_topic" in cfg
+        and "CHAT_LANE" in os.environ
+        and os.environ["CHAT_LANE"] == "1"
+    ):
+        return "rag"
     if "intent=social" in cfg:
         return "social"
     if "intent=offtopic" in cfg:
@@ -69,6 +82,7 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--intent", action="store_true")
     ap.add_argument("--clarify", action="store_true")
+    ap.add_argument("--chat", action="store_true")
     ap.add_argument("--json", type=Path)
     args = ap.parse_args()
     session = SessionLocal()
@@ -87,6 +101,22 @@ def main() -> None:
         captured["context_ids"] = [f.result.citation_id for f in retrieved.fused]
         return real_decide(sess, query, stored, cv, chat_id, retrieved, generated, **kw)
 
+    real_chat = graph_module.chat_reply
+    real_guard = graph_module.injection_check
+
+    def cap_chat(history, message, user_name=None, extractor=None):
+        captured["chat_calls"] = captured.get("chat_calls", 0) + 1
+        res = real_chat(history, message, user_name, extractor)
+        captured["chat_result"] = res
+        return res
+
+    def cap_guard(message, extractor=None):
+        res = real_guard(message, extractor)
+        captured["guard"] = res
+        return res
+
+    graph_module.chat_reply = cap_chat
+    graph_module.injection_check = cap_guard
     graph_module.pipeline.retrieve_step = cap_retrieve
     graph_module.pipeline.decide_step = cap_decide
     out: dict = {
@@ -187,6 +217,110 @@ def main() -> None:
             print(f"  verdict leaks (gate 0): {sum(bool(r['leaks']) for r in rows)}")
             out["intent"] = rows
 
+        if args.chat:
+            items = json.loads((HERE / "chat_lane_set.json").read_text())
+            rows = []
+            print("\n== CHAT LANE: every message and its lane ==")
+            for it in items:
+                chat = ChatSession(
+                    user_id=user.id, corpus_version_id=cv.id, title="eval"
+                )
+                session.add(chat)
+                session.flush()
+                for k, tn in enumerate(it["turns"]):
+                    res, cap = turn(chat, tn["text"])
+                    cfg = cap.get("cfg", "")
+                    lane = lane_of(cfg)
+                    a = res.answer
+                    chat_lane_turn = lane in ("chat", "blocked")
+                    cr = cap.get("chat_result")
+                    row = {
+                        "id": it["id"],
+                        "bucket": it["bucket"],
+                        "turn": k + 1,
+                        "text": tn["text"],
+                        "expected_lane": tn["lane"],
+                        "lane": lane,
+                        "correct": lane == tn["lane"]
+                        or (tn["lane"] == "chat_or_rag" and lane in ("chat", "rag")),
+                        "answered": not is_abstention(a),
+                        "leaks": verdict_leaks(a),
+                        "leak_fired_on_chat": bool(verdict_leaks(a))
+                        if chat_lane_turn
+                        else None,
+                        "legal_statements": legal_statements(a)
+                        if chat_lane_turn
+                        else [],
+                        "chat_model_calls": cap.get("chat_calls", 0),
+                        "handoff_query": getattr(cr, "handoff_query", None)
+                        if cr
+                        else None,
+                        "guard_blocked": bool(
+                            getattr(cap.get("guard"), "blocked", False)
+                        ),
+                        "retrieve_calls": cap.get("retrieve_calls", 0),
+                        "name_saved": chat.display_name,
+                        "name_expected": tn.get("name"),
+                        "recall_expected": tn.get("recall_name"),
+                        "name_recalled": (tn.get("recall_name") in a)
+                        if tn.get("recall_name")
+                        else None,
+                        "expect_found": (tn["expect"].lower() in a.lower())
+                        if tn.get("expect")
+                        else None,
+                        "recall": context_recall(
+                            cap.get("context_ids", []), tn["gold_citation_ids"]
+                        )
+                        if tn.get("gold_citation_ids")
+                        else None,
+                        "cited": len(res.citations),
+                        "answer": a[:200],
+                    }
+                    rows.append(row)
+                    print(
+                        f"  {it['id']} t{k + 1} [{tn['lane']:>7} -> {lane:<7}] {'ok ' if row['correct'] else 'MIS'} chat_calls={row['chat_model_calls']} leak={row['leak_fired_on_chat']} legal={len(row['legal_statements'])} | {tn['text'][:50]!r} -> {a[:80]!r}"
+                    )
+                    if row["handoff_query"]:
+                        print(f"      handoff: {row['handoff_query']!r}")
+            by = defaultdict(lambda: [0, 0])
+            for r_ in rows:
+                by[r_["bucket"]][0] += r_["correct"]
+                by[r_["bucket"]][1] += 1
+            print("\n== CHAT LANE: gates ==")
+            for b, (c_, n) in by.items():
+                print(f"  {b:<14} routed {c_}/{n}")
+            chat_rows = [r_ for r_ in rows if r_["lane"] == "chat"]
+            print(
+                f"  legal statements by the chat lane (gate 0): {sum(bool(r_['legal_statements']) for r_ in chat_rows)}"
+            )
+            print(
+                f"  verdict leaks, all items (gate 0): {sum(bool(r_['leaks']) for r_ in rows)}"
+            )
+            print(
+                f"  injection attempts passed to the chat model (gate 0): {sum(r_['chat_model_calls'] for r_ in rows if r_['bucket'] == 'injection')}"
+            )
+            print(
+                f"  injection attempts blocked: {sum(r_['lane'] == 'blocked' for r_ in rows if r_['bucket'] == 'injection')}/{sum(1 for r_ in rows if r_['bucket'] == 'injection')}"
+            )
+            funnel = [
+                r_
+                for r_ in rows
+                if r_["bucket"] == "idea_funnel" and r_["expected_lane"] == "rag"
+            ]
+            print(
+                f"  Act questions funneled to rag: {sum(r_['lane'] == 'rag' for r_ in funnel)}/{len(funnel)}; grounded on gold: {sum(r_.get('recall') == 1.0 for r_ in funnel)}/{len(funnel)}; cited answers: {sum(r_['cited'] > 0 for r_ in funnel)}/{len(funnel)}"
+            )
+            print(
+                f"  general chat answered naturally: {sum(r_['answered'] for r_ in rows if r_['bucket'] == 'general_chat')}/{sum(1 for r_ in rows if r_['bucket'] == 'general_chat')}; expected facts found: {[(r_['id'], r_['expect_found']) for r_ in rows if r_['expect_found'] is not None]}"
+            )
+            print(
+                f"  name persisted and recalled: {[(r_['id'], r_['name_saved'], r_['name_recalled']) for r_ in rows if r_['recall_expected']]}"
+            )
+            print(
+                f"  chat or blocked lanes that retrieved (gate 0): {sum(r_['retrieve_calls'] > 0 for r_ in rows if r_['lane'] in ('chat', 'blocked'))}"
+            )
+            out["chat"] = rows
+
         if args.clarify:
             items = json.loads((HERE / "clarify_set.json").read_text())
             rows = []
@@ -264,6 +398,8 @@ def main() -> None:
         if args.json:
             args.json.write_text(json.dumps(out, indent=1, default=str))
     finally:
+        graph_module.chat_reply = real_chat
+        graph_module.injection_check = real_guard
         graph_module.pipeline.retrieve_step = real_retrieve
         graph_module.pipeline.decide_step = real_decide
         session.commit = real_commit

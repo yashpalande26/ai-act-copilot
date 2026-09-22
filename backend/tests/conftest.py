@@ -48,6 +48,7 @@ def _lane_flags_off(monkeypatch):
     later setenv in the test body wins)."""
     monkeypatch.setenv("INTENT_GATE", "0")
     monkeypatch.setenv("CLARIFY_FOLLOWUP", "0")
+    monkeypatch.setenv("CHAT_LANE", "0")
 
 
 @pytest.fixture(autouse=True)

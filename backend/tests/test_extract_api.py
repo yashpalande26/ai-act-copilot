@@ -151,7 +151,7 @@ def test_refusal_is_422_and_still_counted(seeded, monkeypatch):
 
 def test_extraction_counts_against_the_shared_daily_quota(seeded, monkeypatch):
     c, alice, bob = seeded["client"], seeded["alice"], seeded["bob"]
-    monkeypatch.setattr(deps_module, "DAILY_LIMIT_PER_USER", 1)
+    monkeypatch.setenv("DAILY_LIMIT_PER_USER", "1")
     assert (
         c.post("/assess/extract", json={"description": DESC}, headers=alice).status_code
         == 201
@@ -161,7 +161,7 @@ def test_extraction_counts_against_the_shared_daily_quota(seeded, monkeypatch):
     assert over.json()["error"]["code"] == "daily_quota_exceeded"
     assert _runs(seeded["session"], seeded["alice_id"]) == 1  # nothing spent on the 429
     # Per-user: bob is unaffected by alice's usage...
-    monkeypatch.setattr(deps_module, "DAILY_LIMIT_GLOBAL", 1)
+    monkeypatch.setenv("DAILY_LIMIT_GLOBAL", "1")
     # ...but the global circuit breaker counts everyone in this environment.
     blocked = c.post("/assess/extract", json={"description": DESC}, headers=bob)
     assert blocked.status_code == 429

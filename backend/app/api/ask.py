@@ -25,6 +25,7 @@ from app.config import (
     MAX_OUTPUT_TOKENS,
     MAX_QUESTION_CHARS,
     PER_MINUTE_LIMIT,
+    chat_lane_enabled,
     followup_rewrite_enabled,
     intent_gate_enabled,
 )
@@ -117,7 +118,9 @@ def ask(
     # thanks goes to the graph's social lane (a gpt-4o-mini classification,
     # no retrieval) so the reply can use the name kept on the conversation.
     # A first-turn greeting stays free: no session, no name to recall.
-    let_through = intent_gate_enabled() and payload.session_id is not None
+    let_through = chat_lane_enabled() or (
+        intent_gate_enabled() and payload.session_id is not None
+    )
     if is_trivial_input(payload.question) and not let_through:
         # "hey", "thanks", "???": say what the copilot is for instead of
         # spending a call to retrieve nothing. No quota, no session, no trace.

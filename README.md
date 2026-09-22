@@ -41,6 +41,7 @@ Backend (Railway → Variables). Nothing else is read by the code.
 
 | variable | value |
 |---|---|
+| `DAILY_LIMIT_PER_USER`, `DAILY_LIMIT_GLOBAL` | optional; the daily caps, default 20 and 100 (ADR-23). Set on the service to raise a testing account without a deploy; read at request time. |
 | `DATABASE_URL` | the Supabase **session pooler** URL (`...pooler.supabase.com:5432`, user `postgres.<ref>`). The direct host is IPv6-only and unreachable from Railway. |
 | `OPENAI_API_KEY` | |
 | `INTERNAL_API_SECRET` | byte-identical to the Vercel value |

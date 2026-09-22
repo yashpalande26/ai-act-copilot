@@ -11,12 +11,12 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import (
-    DAILY_LIMIT_GLOBAL,
-    DAILY_LIMIT_PER_USER,
     SERVICE_TOKEN_ALGORITHM,
     SERVICE_TOKEN_LEEWAY_SECONDS,
     admin_emails,
     app_env,
+    daily_limit_global,
+    daily_limit_per_user,
     internal_api_secret,
 )
 from app.db.models import (
@@ -194,12 +194,12 @@ def calls_today(session: Session, user_id: UUID | None = None) -> int:
 def enforce_daily_quota(session: Session, user: AppUser) -> None:
     """Per-user cap, then a global circuit breaker - the global one covers
     many-accounts abuse, which per-user limits structurally cannot."""
-    if calls_today(session, user.id) >= DAILY_LIMIT_PER_USER:
+    if calls_today(session, user.id) >= daily_limit_per_user():
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="daily_quota_exceeded",
         )
-    if calls_today(session) >= DAILY_LIMIT_GLOBAL:
+    if calls_today(session) >= daily_limit_global():
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="service_daily_quota_exceeded",

@@ -27,3 +27,14 @@ def test_unknown_value_is_refused(monkeypatch):
 
 def test_vocabulary_is_closed():
     assert set(config.APP_ENVIRONMENTS) == {"production", "dev", "test"}
+
+
+def test_daily_limits_default_to_the_measured_constants_and_read_env(monkeypatch):
+    from app.config import daily_limit_global, daily_limit_per_user
+
+    monkeypatch.delenv("DAILY_LIMIT_PER_USER", raising=False)
+    monkeypatch.delenv("DAILY_LIMIT_GLOBAL", raising=False)
+    assert daily_limit_per_user() == 20 and daily_limit_global() == 100
+    monkeypatch.setenv("DAILY_LIMIT_PER_USER", "200")
+    monkeypatch.setenv("DAILY_LIMIT_GLOBAL", "500")
+    assert daily_limit_per_user() == 200 and daily_limit_global() == 500

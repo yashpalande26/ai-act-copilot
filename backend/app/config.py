@@ -30,8 +30,22 @@ MAX_QUESTION_CHARS = 2000  # ~500 tokens; rejected by Pydantic before any spend
 MAX_OUTPUT_TOKENS = 800
 
 PER_MINUTE_LIMIT = "10/minute"  # slowapi burst guard (in-memory)
-DAILY_LIMIT_PER_USER = 20  # ~$0.23/day/user worst case at slice 15 (21 Sep 2026)
-DAILY_LIMIT_GLOBAL = 100  # circuit breaker: ~$1.15/day total exposure
+DAILY_LIMIT_PER_USER_DEFAULT = (
+    20  # ~$0.23/day/user worst case at slice 15 (21 Sep 2026)
+)
+DAILY_LIMIT_GLOBAL_DEFAULT = 100  # circuit breaker: ~$1.15/day total exposure
+
+
+def daily_limit_per_user() -> int:
+    """Per-user daily cap. Env-switchable (22 Sep 2026) so a testing account
+    can be raised without a deploy; unset means the measured default."""
+    return int(os.environ.get("DAILY_LIMIT_PER_USER", DAILY_LIMIT_PER_USER_DEFAULT))
+
+
+def daily_limit_global() -> int:
+    """Global daily circuit breaker; env-switchable, default as measured."""
+    return int(os.environ.get("DAILY_LIMIT_GLOBAL", DAILY_LIMIT_GLOBAL_DEFAULT))
+
 
 # A 60s token with 10s leeway. The leeway absorbs ordinary NTP drift between
 # the Next.js and FastAPI hosts, which would otherwise cause intermittent 401s
@@ -315,6 +329,40 @@ def clarify_followup_enabled() -> bool:
     return (
         agentic_rag_enabled()
         and os.environ.get("CLARIFY_FOLLOWUP", CLARIFY_FOLLOWUP_DEFAULT) == "1"
+    )
+
+
+def chat_model() -> str:
+    return os.environ.get("CHAT_LANE_MODEL", "openai:gpt-4o-mini")
+
+
+def guard_model() -> str:
+    return os.environ.get("GUARD_MODEL", "openai:gpt-4o-mini")
+
+
+# Chat lane default. "1" since the passing run of 22 Sep 2026
+# (evals/runs/chat_lane_j2.json and chat_lane_on_agentic_j2.json): general chat
+# 7/7 natural with the name recalled, legal statements by the chat lane 0,
+# verdict leaks 0 on 64 items, injections blocked 4/4 with 0 passed to the
+# chat model and 0 false blocks on 41 on-topic items, the three Act questions
+# answered by the rag lane (2 cited, 1 abstained), 40/41 on-topic items
+# identical to baseline and the 41st a known generation coin flip (answered
+# 5/6 with the lane off, 3/6 on, identical trace path). Only effective when
+# AGENTIC_RAG=1, which stays off in production.
+CHAT_LANE_DEFAULT = "1"
+
+
+def chat_lane_enabled() -> bool:
+    """ADR-23: the intent gate routes to two lanes, chat and rag. The chat lane
+    is gpt-4o-mini with the conversation history: greetings, light
+    conversation, common knowledge, the user's idea, clarifying questions, the
+    persisted name. It may never state what the Act says; a formed Act
+    question is handed to the rag lane as a query. An injection check runs
+    before it; the verdict-leak and legal-statement detectors run after it.
+    Supersedes the intent gate's templates and offtopic refusal. Effective
+    inside the graph only."""
+    return (
+        agentic_rag_enabled() and os.environ.get("CHAT_LANE", CHAT_LANE_DEFAULT) == "1"
     )
 
 
