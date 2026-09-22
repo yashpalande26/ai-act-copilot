@@ -17,9 +17,9 @@ Two facts about the stored rows shape the code here:
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Query, Request, Response, status
 from pydantic import BaseModel
-from sqlalchemy import case, func, select
+from sqlalchemy import case, delete, func, select, update
 from sqlalchemy.orm import Session
 
 from app.api.deps import (
@@ -30,7 +30,7 @@ from app.api.deps import (
     resolve_user,
 )
 from app.config import PER_MINUTE_LIMIT
-from app.db.models import ChatSession, Citation, Message
+from app.db.models import ChatSession, Citation, Message, QueryTrace
 from app.generation.answer import ABSTENTION_TEXT
 from app.ingestion.chunker import citation_label
 from app.rate_limit import limiter
@@ -201,3 +201,35 @@ def get_session(
             for m in messages
         ],
     )
+
+
+@router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(PER_MINUTE_LIMIT)
+def delete_session(
+    request: Request,  # required by slowapi to key the limiter
+    session_id: UUID,
+    caller: Caller = ServiceToken,
+    session: Session = DbSession,
+) -> Response:
+    """Hard-delete a chat the caller owns: its citations, messages and the
+    session row. Same 404 for a foreign id and an unknown id.
+
+    query_trace is the daily quota and the audit log, so it is never deleted
+    and never cascaded: its rows are detached (chat_session_id set to NULL)
+    and keep their own user_id, so the user's count for today is unchanged and
+    the operator can still see the turn. Saved assessments are separate
+    records and are not touched.
+    """
+    user = resolve_user(session, caller)
+    chat = get_owned_session(session, user.id, session_id)
+    session.execute(
+        update(QueryTrace)
+        .where(QueryTrace.chat_session_id == chat.id)
+        .values(chat_session_id=None)
+    )
+    message_ids = select(Message.id).where(Message.session_id == chat.id)
+    session.execute(delete(Citation).where(Citation.message_id.in_(message_ids)))
+    session.execute(delete(Message).where(Message.session_id == chat.id))
+    session.delete(chat)
+    session.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -165,6 +165,33 @@ async function getBackend<T>(path: string, identity: Identity): Promise<HistoryO
   return { kind: "error" };
 }
 
+/** DELETE against the backend. Same token, same closed set of outcomes. */
+async function deleteBackend(path: string, identity: Identity): Promise<HistoryOutcome<null>> {
+  const base = requireEnv("FASTAPI_URL").replace(/\/$/, "");
+  const token = await mintServiceToken(identity.subject, identity.email);
+  let response: Response;
+  try {
+    response = await fetch(`${base}${path}`, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch {
+    return { kind: "unavailable" };
+  }
+  if (response.ok) return { kind: "ok", data: null };
+  if (response.status === 404) return { kind: "not_found" };
+  if (response.status === 401) return { kind: "unauthorized" };
+  if (response.status === 503) return { kind: "unavailable" };
+  return { kind: "error" };
+}
+
+/** Hard-deletes a chat the user owns (the backend keeps its query_trace rows). */
+export function deleteSession(identity: Identity, id: string) {
+  return deleteBackend(`/sessions/${encodeURIComponent(id)}`, identity);
+}
+
 export function listSessions(identity: Identity) {
   return getBackend<{ sessions: SessionSummary[] }>("/sessions", identity);
 }

@@ -52,7 +52,7 @@ function FakeAccount({ compact = false }: { compact?: boolean }) {
 }
 
 export function HistoryHarness() {
-  const [sessions] = useState(fixture);
+  const [sessions, setSessions] = useState(fixture);
   const [current, setCurrent] = useState<string | undefined>("a2");
   const rail = (
     <HistoryList
@@ -61,6 +61,12 @@ export function HistoryHarness() {
       currentId={current}
       onSelect={setCurrent}
       onNew={() => setCurrent(undefined)}
+      onDelete={async (id) => {
+        // No backend in the harness: the row disappears as it would after a 204.
+        setSessions((rows) => rows.filter((r) => r.id !== id));
+        if (id === current) setCurrent(undefined);
+        return true;
+      }}
       showAssessments={false} // no session in the harness; the block would 401
     />
   );

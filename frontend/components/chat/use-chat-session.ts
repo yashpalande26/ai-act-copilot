@@ -129,9 +129,11 @@ export function useChatSession(initialSessionId?: string) {
 
         if (response.ok) {
           // Carry the session id forward so the backend threads the conversation.
-          setSessionId(body.session_id);
+          // A scope notice (greeting, empty input) carries none: nothing was
+          // created, so the current thread, if any, stays as it is.
+          if (body.session_id) setSessionId(body.session_id);
           setTurns((t) => [...t, { role: "assistant", id: nextId(), result: body }]);
-          setHistoryVersion((v) => v + 1);
+          if (!body.scope_notice) setHistoryVersion((v) => v + 1);
         } else {
           const kind =
             response.status === 429
@@ -163,6 +165,26 @@ export function useChatSession(initialSessionId?: string) {
     [pending, sessionId],
   );
 
+  /** Deletes a chat; resolves true when it is gone (a 404 counts: it is gone).
+   *  Clears the thread if it was the open one, then refetches the list. */
+  const deleteSession = useCallback(
+    async (id: string) => {
+      let ok = false;
+      try {
+        const r = await fetch(`/api/sessions/${encodeURIComponent(id)}`, { method: "DELETE" });
+        ok = r.ok || r.status === 404;
+      } catch {
+        ok = false;
+      }
+      if (ok) {
+        if (id === sessionId) startNewChat();
+        setHistoryVersion((v) => v + 1);
+      }
+      return ok;
+    },
+    [sessionId, startNewChat],
+  );
+
   return {
     turns,
     sessionId,
@@ -173,6 +195,7 @@ export function useChatSession(initialSessionId?: string) {
     submit,
     openSession,
     startNewChat,
+    deleteSession,
   };
 }
 

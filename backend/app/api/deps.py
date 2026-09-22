@@ -148,8 +148,8 @@ def _utc_day_start() -> datetime:
 
 
 def calls_today(session: Session, user_id: UUID | None = None) -> int:
-    """Authoritative daily usage from query_trace, attributed via
-    query_trace -> chat_session -> app_user.
+    """Authoritative daily usage from query_trace and extraction_run,
+    attributed by each row's own user_id.
 
     DB-backed rather than in-memory because slowapi counters reset on every
     restart/deploy - for a money control that means a user could reset their
@@ -166,8 +166,9 @@ def calls_today(session: Session, user_id: UUID | None = None) -> int:
     was deployed without APP_ENV still counts (and protects) its own rows.
 
     One budget, two tables: a free-text extraction (extraction_run) spends the
-    same daily allowance as a chat turn. The extraction row is attributed by
-    its own user_id and, unlike query_trace, is written fail-closed.
+    same daily allowance as a chat turn. Both rows carry their own user_id, so
+    deleting a chat (which nulls query_trace.chat_session_id) cannot reset
+    anyone's count.
     """
     day, env = _utc_day_start(), app_env()
     chat = (
@@ -183,9 +184,7 @@ def calls_today(session: Session, user_id: UUID | None = None) -> int:
         .where(ExtractionRun.environment == env)
     )
     if user_id is not None:
-        chat = chat.join(
-            ChatSession, ChatSession.id == QueryTrace.chat_session_id
-        ).where(ChatSession.user_id == user_id)
+        chat = chat.where(QueryTrace.user_id == user_id)
         extraction = extraction.where(ExtractionRun.user_id == user_id)
     return (session.execute(chat).scalar() or 0) + (
         session.execute(extraction).scalar() or 0

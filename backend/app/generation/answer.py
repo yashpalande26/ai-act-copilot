@@ -3,10 +3,11 @@ import time
 from uuid import UUID
 
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import app_env
-from app.db.models import Citation, Message, QueryTrace, RetrievalTrace
+from app.db.models import ChatSession, Citation, Message, QueryTrace, RetrievalTrace
 from app.ingestion.embedder import _get_client
 from app.retrieval.actor import (
     ACTOR_MISMATCH_FACTOR,
@@ -194,7 +195,13 @@ def _write_trace_safe(
     failure here is caught, logged, and swallowed - never re-raised - so it
     can never undo or block the user's already-saved answer."""
     try:
+        # The user is stored on the trace itself (not only via the session) so
+        # the quota and audit rows outlive a deleted chat.
+        user_id = session.execute(
+            select(ChatSession.user_id).where(ChatSession.id == chat_session_id)
+        ).scalar_one()
         trace = QueryTrace(
+            user_id=user_id,
             chat_session_id=chat_session_id,
             corpus_version_id=corpus_version_id,
             query_text=query_text,

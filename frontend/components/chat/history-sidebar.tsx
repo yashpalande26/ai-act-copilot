@@ -1,9 +1,17 @@
 "use client";
 
-import { MessageSquareDashedIcon, PlusIcon } from "lucide-react";
+import { useState } from "react";
+import { MessageSquareDashedIcon, MoreHorizontalIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { AlertDialog } from "radix-ui";
 
 import { AssessmentsRail } from "@/components/chat/assessments-rail";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SessionSummary } from "@/lib/types";
 
@@ -14,9 +22,76 @@ export type HistoryProps = {
   currentId?: string;
   onSelect: (id: string) => void;
   onNew: () => void;
+  /** Deletes a chat; resolves true when it is gone. Absent: no menu is shown. */
+  onDelete?: (id: string) => Promise<boolean>;
   /** Render the "Your assessments" block (off in the dev harness, which has no session). */
   showAssessments?: boolean;
 };
+
+/**
+ * Confirmation before a hard delete. Radix AlertDialog: focus is trapped,
+ * Escape and the backdrop cancel, focus returns to the trigger on close.
+ */
+function DeleteChatDialog({
+  title,
+  open,
+  busy,
+  error,
+  onOpenChange,
+  onConfirm,
+}: {
+  title: string;
+  open: boolean;
+  busy: boolean;
+  error: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
+      <AlertDialog.Portal>
+        <AlertDialog.Overlay className="bg-ink/40 fixed inset-0 z-50 backdrop-blur-[2px]" />
+        <AlertDialog.Content
+          className="card-raised fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl p-6 shadow-[var(--shadow-xl)] focus:outline-none sm:p-7"
+          data-testid="delete-chat-dialog"
+        >
+          <AlertDialog.Title className="type-h3 text-ink">Delete this chat?</AlertDialog.Title>
+          <AlertDialog.Description className="type-meta text-ink-soft mt-2">
+            &ldquo;{title}&rdquo; and its messages will be deleted. This cannot be undone. Saved
+            assessments are not affected.
+          </AlertDialog.Description>
+          {error ? (
+            <p className="type-micro text-destructive mt-3" role="alert">
+              The chat could not be deleted. Please try again.
+            </p>
+          ) : null}
+          <div className="mt-6 flex justify-end gap-2">
+            <AlertDialog.Cancel asChild>
+              <Button type="button" variant="outline" disabled={busy}>
+                Cancel
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action asChild>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={busy}
+                onClick={(e) => {
+                  e.preventDefault(); // stay open until the delete resolves
+                  onConfirm();
+                }}
+                data-testid="confirm-delete"
+              >
+                <Trash2Icon className="size-4" aria-hidden />
+                {busy ? "Deleting" : "Delete chat"}
+              </Button>
+            </AlertDialog.Action>
+          </div>
+        </AlertDialog.Content>
+      </AlertDialog.Portal>
+    </AlertDialog.Root>
+  );
+}
 
 /** "Today", "Yesterday", "3 days ago", else a short date. */
 export function formatWhen(iso: string, now: Date = new Date()): string {
@@ -49,8 +124,23 @@ export function HistoryList({
   currentId,
   onSelect,
   onNew,
+  onDelete,
   showAssessments = true,
 }: HistoryProps) {
+  const [pendingDelete, setPendingDelete] = useState<SessionSummary | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState(false);
+
+  async function confirmDelete() {
+    if (!pendingDelete || !onDelete) return;
+    setDeleting(true);
+    setDeleteError(false);
+    const ok = await onDelete(pendingDelete.id);
+    setDeleting(false);
+    if (ok) setPendingDelete(null);
+    else setDeleteError(true);
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="min-h-0 flex-1">
@@ -95,15 +185,20 @@ export function HistoryList({
             {sessions.map((s) => {
               const current = s.id === currentId;
               return (
-                <li key={s.id}>
+                <li
+                  key={s.id}
+                  className={`group/row relative rounded-lg transition-colors ${
+                    current
+                      ? "bg-sidebar-accent ring-hairline shadow-[var(--shadow-xs)] ring-1"
+                      : "hover:bg-sidebar-accent/70"
+                  }`}
+                >
                   <button
                     type="button"
                     onClick={() => onSelect(s.id)}
                     aria-current={current ? "page" : undefined}
-                    className={`focus-visible:ring-ring relative w-full rounded-lg px-3 py-2 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none ${
-                      current
-                        ? "bg-sidebar-accent text-ink ring-hairline shadow-[var(--shadow-xs)] ring-1"
-                        : "text-ink-soft hover:bg-sidebar-accent/70 hover:text-ink"
+                    className={`focus-visible:ring-ring w-full rounded-lg py-2 pr-9 pl-3 text-left focus-visible:ring-2 focus-visible:outline-none ${
+                      current ? "text-ink" : "text-ink-soft hover:text-ink"
                     }`}
                   >
                     <span className="type-micro line-clamp-2 leading-snug">{s.title}</span>
@@ -112,6 +207,33 @@ export function HistoryList({
                       {turnsLabel(s.message_count)}
                     </span>
                   </button>
+                  {onDelete ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label={`Options for chat: ${s.title}`}
+                          className="text-ink-faint hover:text-ink absolute top-1.5 right-1.5 opacity-60 group-hover/row:opacity-100 focus-visible:opacity-100 data-[state=open]:opacity-100"
+                        >
+                          <MoreHorizontalIcon className="size-3.5" aria-hidden />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem
+                          variant="destructive"
+                          onSelect={() => {
+                            setDeleteError(false);
+                            setPendingDelete(s);
+                          }}
+                        >
+                          <Trash2Icon className="size-4" aria-hidden />
+                          Delete chat
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : null}
                 </li>
               );
             })}
@@ -121,6 +243,16 @@ export function HistoryList({
 
       {showAssessments ? <AssessmentsRail /> : null}
       </div>
+      <DeleteChatDialog
+        title={pendingDelete?.title ?? ""}
+        open={pendingDelete !== null}
+        busy={deleting}
+        error={deleteError}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setPendingDelete(null);
+        }}
+        onConfirm={() => void confirmDelete()}
+      />
     </div>
   );
 }

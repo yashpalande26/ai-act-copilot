@@ -135,7 +135,13 @@ export function AppShell({
     const trigger = triggerRef.current;
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      // A nested dialog (e.g. "Delete this chat?") owns its own Escape; the
+      // drawer must not close underneath it.
+      if (e.key !== "Escape" || e.defaultPrevented) return;
+      // Radix dialogs dismiss in the capture phase and mark the event; if one
+      // is still mounted here the key was theirs.
+      if (document.querySelector('[role="alertdialog"], [data-testid="delete-chat-dialog"]')) return;
+      setOpen(false);
     };
     document.addEventListener("keydown", onKey);
     return () => {

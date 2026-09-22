@@ -24,7 +24,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import Admin, Caller, DbSession
 from app.config import PER_MINUTE_LIMIT
-from app.db.models import AppUser, ChatSession, Chunk, QueryTrace, RetrievalTrace
+from app.db.models import AppUser, Chunk, QueryTrace, RetrievalTrace
 from app.ingestion.chunker import citation_label
 from app.rate_limit import limiter
 from app.retrieval.actor import actor_for
@@ -131,11 +131,10 @@ def _summary(qt: QueryTrace, user_id: UUID, user_email: str) -> dict:
 
 
 def _traces_with_user():
-    """query_trace joined to the user who asked, via chat_session."""
-    return (
-        select(QueryTrace, AppUser.id, AppUser.email)
-        .join(ChatSession, ChatSession.id == QueryTrace.chat_session_id)
-        .join(AppUser, AppUser.id == ChatSession.user_id)
+    """query_trace joined to the user who asked. Direct, so traces whose chat
+    was later deleted (chat_session_id NULL) stay visible to the operator."""
+    return select(QueryTrace, AppUser.id, AppUser.email).join(
+        AppUser, AppUser.id == QueryTrace.user_id
     )
 
 

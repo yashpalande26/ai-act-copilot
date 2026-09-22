@@ -8,6 +8,13 @@ import {
 
 import { AssessCta } from "@/components/chat/assess-cta";
 import { CitationsDisclosure } from "@/components/chat/citations-disclosure";
+import {
+  REFUSAL_LEAD,
+  REFUSAL_TITLE,
+  SCOPE_EXAMPLES,
+  SCOPE_MESSAGE,
+  SCOPE_TITLE,
+} from "@/lib/scope-copy";
 import type { ChatTurn } from "@/lib/types";
 
 function Bubble({ children }: { children: React.ReactNode }) {
@@ -32,30 +39,45 @@ export function UserTurn({ question }: { question: string }) {
 }
 
 /**
- * The abstention state, deliberately distinct from a normal answer.
- *
- * For a compliance tool "I do not know" is a feature, so it gets its own
- * treatment (caution colour, its own icon, an explanation of why) rather than
- * rendering as prose a user might skim past.
+ * Nothing to answer, said purposefully. Two cases share the copy:
+ *   scope  a greeting or empty input, answered before any paid call (no
+ *          retrieval happened); title says what the copilot is for.
+ *   refusal the retrieved provisions did not answer the question; the lead
+ *          says so, and the same scope copy follows. The refusal itself is
+ *          unchanged upstream; this is presentation.
+ * Both show what CAN be asked and the route to an assessment. Caution tone
+ * stays reserved for the genuine refusal.
  */
-function AbstentionTurn({ question }: { question?: string }) {
+function AbstentionTurn({ question, scope }: { question?: string; scope: boolean }) {
   return (
     <Bubble>
-      <div className="border-caution/35 bg-caution/[0.07] rounded-2xl border p-5 sm:p-6">
+      <div
+        className={`rounded-2xl border p-5 sm:p-6 ${
+          scope ? "card-raised" : "border-caution/35 bg-caution/[0.07]"
+        }`}
+        data-testid={scope ? "scope-notice" : "refusal"}
+      >
         <div className="flex items-center gap-2.5">
-          <CircleSlashIcon className="text-caution size-[18px]" aria-hidden />
-          <h3 className="type-h3">The copilot declined to answer</h3>
+          {scope ? (
+            <ScaleIcon className="text-accent-solid size-[18px]" aria-hidden />
+          ) : (
+            <CircleSlashIcon className="text-caution size-[18px]" aria-hidden />
+          )}
+          <h3 className="type-h3">{scope ? SCOPE_TITLE : REFUSAL_TITLE}</h3>
         </div>
-        <p className="type-body text-ink-soft mt-3">
-          The retrieved provisions did not contain enough to answer that
-          question, so it stopped rather than guessing. Try rephrasing, or ask
-          about a specific obligation, actor, or system type.
-        </p>
-        <p className="type-meta text-ink-soft mt-4">
-          This is intended behaviour. An unanswered question is safer than a
-          confident wrong one.
-        </p>
+        {scope ? null : <p className="type-body text-ink-soft mt-3">{REFUSAL_LEAD}</p>}
+        <p className={`type-body text-ink-soft ${scope ? "mt-3" : "mt-2"}`}>{SCOPE_MESSAGE}</p>
+        <p className="type-eyebrow text-ink-faint mt-5">You can ask, for example</p>
+        <ul className="mt-2 space-y-1.5">
+          {SCOPE_EXAMPLES.map((q) => (
+            <li key={q} className="type-meta text-ink flex items-start gap-2">
+              <span className="bg-accent-solid mt-2.5 size-1 shrink-0 rounded-full" aria-hidden />
+              {q}
+            </li>
+          ))}
+        </ul>
         <AssessCta text={question} variant="refusal" />
+        <p className="type-micro text-ink-faint mt-4">Informational, not legal advice.</p>
       </div>
     </Bubble>
   );
@@ -96,7 +118,9 @@ function ErrorTurn({ kind, message }: Extract<ChatTurn, { role: "error" }>) {
 export function AssistantTurn({ turn, question }: { turn: ChatTurn; question?: string }) {
   if (turn.role === "error") return <ErrorTurn {...turn} />;
   if (turn.role !== "assistant") return null;
-  if (turn.result.abstained) return <AbstentionTurn question={question} />;
+  if (turn.result.abstained) {
+    return <AbstentionTurn question={question} scope={Boolean(turn.result.scope_notice)} />;
+  }
 
   return (
     <Bubble>

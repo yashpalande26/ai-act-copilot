@@ -9,7 +9,10 @@ export type AskResult = {
   answer: string;
   citations: AskCitation[];
   abstained: boolean;
-  session_id: string;
+  /** Null for a scope notice: no session was created or touched. */
+  session_id: string | null;
+  /** A greeting or empty input answered with the scope message, no paid call. */
+  scope_notice?: boolean;
   /** Turn 2+: the standalone question the answer was retrieved for, when the
    *  follow-up was rewritten from the conversation. Null otherwise. */
   rewritten_query?: string | null;

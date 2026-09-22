@@ -34,6 +34,7 @@ from app.generation.answer import (
     generate_grounded_answer,
 )
 from app.generation.rewrite import load_history, rewrite_followup
+from app.generation.scope import SCOPE_MESSAGE, is_trivial_input
 from app.rate_limit import limiter
 
 router = APIRouter()
@@ -56,7 +57,12 @@ class AskResponse(BaseModel):
     answer: str
     citations: list[AskCitation]
     abstained: bool
-    session_id: UUID
+    # None only for a scope notice: nothing was retrieved, no session was
+    # created or touched, so there is no thread to carry forward.
+    session_id: UUID | None
+    # A greeting or empty input answered with the scope message before any
+    # embedding or model call. Deterministic, free, not a retrieval refusal.
+    scope_notice: bool = False
     # Turn 2+ only: the standalone question the answer was retrieved for,
     # when the follow-up was rewritten. None on a first turn or a pass-through.
     rewritten_query: str | None = None
@@ -97,6 +103,16 @@ def ask(
     session: Session = DbSession,
 ) -> AskResponse:
     user = resolve_user(session, caller)
+    if is_trivial_input(payload.question):
+        # "hey", "thanks", "???": say what the copilot is for instead of
+        # spending a call to retrieve nothing. No quota, no session, no trace.
+        return AskResponse(
+            answer=SCOPE_MESSAGE,
+            citations=[],
+            abstained=True,
+            session_id=None,
+            scope_notice=True,
+        )
     enforce_daily_quota(session, user)
 
     corpus_version = (

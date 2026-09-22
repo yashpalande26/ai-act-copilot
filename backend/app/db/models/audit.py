@@ -37,7 +37,11 @@ class QueryTrace(Base):
     __table_args__ = (Index("ix_query_trace_created_at", "created_at"),)
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    chat_session_id: Mapped[UUID] = mapped_column(ForeignKey("chat_session.id"))
+    # The user is recorded directly so the quota and the audit trail survive
+    # the deletion of a chat: deleting a session sets chat_session_id to NULL
+    # and leaves the row (and its retrieval_trace children) untouched.
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("app_user.id"))
+    chat_session_id: Mapped[UUID | None] = mapped_column(ForeignKey("chat_session.id"))
     corpus_version_id: Mapped[int] = mapped_column(ForeignKey("corpus_version.id"))
     query_text: Mapped[str] = mapped_column(Text)
     answer_text: Mapped[str] = mapped_column(Text)

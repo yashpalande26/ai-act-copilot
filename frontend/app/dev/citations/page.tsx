@@ -34,6 +34,11 @@ export default function CitationsPreview() {
     id: "preview-abstention",
     result: { answer: "", citations: [], abstained: true, session_id: "preview" },
   };
+  const scope: ChatTurn = {
+    role: "assistant",
+    id: "preview-scope",
+    result: { answer: "", citations: [], abstained: true, session_id: null, scope_notice: true },
+  };
   const error: ChatTurn = {
     role: "error",
     id: "preview-error",
@@ -48,6 +53,8 @@ export default function CitationsPreview() {
         <UserTurn question={question} />
         <AssistantTurn turn={answer} question={question} />
         <AssistantTurn turn={abstention} question={question} />
+        <UserTurn question="hey" />
+        <AssistantTurn turn={scope} question="hey" />
         <AssistantTurn turn={error} question={question} />
       </div>
     </main>

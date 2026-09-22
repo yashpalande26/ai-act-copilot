@@ -202,7 +202,7 @@ def test_daily_quota_exceeded_returns_429(client, monkeypatch):
 
     monkeypatch.setattr(ask_module, "enforce_daily_quota", _over_quota)
 
-    r = client.post("/ask", json={"question": "hi"}, headers=_auth())
+    r = client.post("/ask", json={"question": "What must providers do?"}, headers=_auth())
 
     assert r.status_code == 429
     assert r.json()["error"]["code"] == "daily_quota_exceeded"
@@ -220,7 +220,7 @@ def test_internal_error_leaks_nothing(client, monkeypatch):
 
     monkeypatch.setattr(ask_module, "generate_grounded_answer", _boom)
 
-    r = client.post("/ask", json={"question": "hi"}, headers=_auth())
+    r = client.post("/ask", json={"question": "What must providers do?"}, headers=_auth())
 
     assert r.status_code == 500
     raw = r.text
@@ -274,6 +274,7 @@ def test_calls_today_counts_only_current_environment(monkeypatch):
 
         session.add(
             QueryTrace(
+                user_id=user.id,
                 chat_session_id=chat.id,
                 corpus_version_id=cv.id,
                 query_text="q",

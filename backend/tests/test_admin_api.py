@@ -106,6 +106,7 @@ def seeded(monkeypatch):
 
         t0 = datetime.now(UTC) - timedelta(hours=3)
         older = QueryTrace(
+            user_id=owner.id,
             chat_session_id=chat.id,
             corpus_version_id=cv.id,
             query_text="Who won the World Cup?",
@@ -121,6 +122,7 @@ def seeded(monkeypatch):
             created_at=t0,
         )
         newer = QueryTrace(
+            user_id=owner.id,
             chat_session_id=chat.id,
             corpus_version_id=cv.id,
             query_text="What obligations apply to providers of high-risk AI systems?",

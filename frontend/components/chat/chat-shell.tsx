@@ -49,6 +49,7 @@ export function ChatShell({
         if (id !== chat.sessionId) void chat.openSession(id);
       }}
       onNew={chat.startNewChat}
+      onDelete={chat.deleteSession}
     />
   );
 
