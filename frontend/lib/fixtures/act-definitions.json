@@ -1,0 +1,50 @@
+[
+ {
+  "citation_id": "art_3.pt_1",
+  "citation_label": "Article 3, point (1)",
+  "term": "AI system",
+  "text": "‘AI system’ means a machine-based system that is designed to operate with varying levels of autonomy and that may exhibit adaptiveness after deployment, and that, for explicit or implicit objectives, infers, from the input it receives, how to generate outputs such as predictions, content, recommendations, or decisions that can influence physical or virtual environments;"
+ },
+ {
+  "citation_id": "art_3.pt_3",
+  "citation_label": "Article 3, point (3)",
+  "term": "provider",
+  "text": "‘provider’ means a natural or legal person, public authority, agency or other body that develops an AI system or a general-purpose AI model or that has an AI system or a general-purpose AI model developed and places it on the market or puts the AI system into service under its own name or trademark, whether for payment or free of charge;"
+ },
+ {
+  "citation_id": "art_3.pt_4",
+  "citation_label": "Article 3, point (4)",
+  "term": "deployer",
+  "text": "‘deployer’ means a natural or legal person, public authority, agency or other body using an AI system under its authority except where the AI system is used in the course of a personal non-professional activity;"
+ },
+ {
+  "citation_id": "art_3.pt_6",
+  "citation_label": "Article 3, point (6)",
+  "term": "importer",
+  "text": "‘importer’ means a natural or legal person located or established in the Union that places on the market an AI system that bears the name or trademark of a natural or legal person established in a third country;"
+ },
+ {
+  "citation_id": "art_3.pt_55",
+  "citation_label": "Article 3, point (55)",
+  "term": "AI regulatory sandbox",
+  "text": "‘AI regulatory sandbox’ means a controlled framework set up by a competent authority which offers providers or prospective providers of AI systems the possibility to develop, train, validate and test, where appropriate in real-world conditions, an innovative AI system, pursuant to a sandbox plan for a limited time under regulatory supervision;"
+ },
+ {
+  "citation_id": "art_3.pt_60",
+  "citation_label": "Article 3, point (60)",
+  "term": "deep fake",
+  "text": "‘deep fake’ means AI-generated or manipulated image, audio or video content that resembles existing persons, objects, places, entities or events and would falsely appear to a person to be authentic or truthful;"
+ },
+ {
+  "citation_id": "art_3.pt_63",
+  "citation_label": "Article 3, point (63)",
+  "term": "general-purpose AI model",
+  "text": "‘general-purpose AI model’ means an AI model, including where such an AI model is trained with a large amount of data using self-supervision at scale, that displays significant generality and is capable of competently performing a wide range of distinct tasks regardless of the way the model is placed on the market and that can be integrated into a variety of downstream systems or applications, except AI models that are used for research, development or prototyping activities before they are placed on the market;"
+ },
+ {
+  "citation_id": "art_3.pt_40",
+  "citation_label": "Article 3, point (40)",
+  "term": "biometric categorisation system",
+  "text": "‘biometric categorisation system’ means an AI system for the purpose of assigning natural persons to specific categories on the basis of their biometric data, unless it is ancillary to another commercial service and strictly necessary for objective technical reasons;"
+ }
+]

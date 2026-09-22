@@ -338,3 +338,27 @@ export async function fetchAssessmentExport(
   if (response.status === 503) return { kind: "unavailable" };
   return { kind: "error" };
 }
+
+// --- PROTOTYPE: Act navigator (read-only, deterministic, free) ---------------
+
+export type ActDefinition = { citation_id: string; citation_label: string; term: string; text: string };
+export type ActReference = { citation_id: string; citation_label: string; snippet: string };
+export type ActProvisionView = {
+  provision: import("@/lib/types").ProvisionText;
+  parent: import("@/lib/types").ProvisionText | null;
+  references: ActReference[];
+  referenced_by: ActReference[];
+  corpus_consolidated_date: string;
+};
+
+export function getDefinitions(identity: Identity, q: string) {
+  const qs = q ? `?q=${encodeURIComponent(q)}` : "";
+  return getBackend<{ corpus_consolidated_date: string; total: number; definitions: ActDefinition[] }>(
+    `/act/definitions${qs}`,
+    identity,
+  );
+}
+
+export function getProvision(identity: Identity, citationId: string) {
+  return getBackend<ActProvisionView>(`/act/provisions/${encodeURIComponent(citationId)}`, identity);
+}

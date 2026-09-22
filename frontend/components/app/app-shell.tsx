@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ActivityIcon,
+  BookOpenTextIcon,
   ClipboardCheckIcon,
   MenuIcon,
   MessageSquareTextIcon,
@@ -20,6 +21,11 @@ const NAV: NavItem[] = [
   { href: "/app", label: "Ask the copilot", icon: MessageSquareTextIcon, match: (p) => p === "/app" },
   { href: "/app/assess", label: "Assessment", icon: ClipboardCheckIcon, match: (p) => p.startsWith("/app/assess") },
 ];
+// PROTOTYPE routes appear only when NEXT_PUBLIC_PROTOTYPES=1 (inlined at build).
+const PROTOTYPE_NAV: NavItem[] =
+  process.env.NEXT_PUBLIC_PROTOTYPES === "1"
+    ? [{ href: "/app/act", label: "The Act", icon: BookOpenTextIcon, match: (p) => p.startsWith("/app/act") }]
+    : [];
 const ADMIN_NAV: NavItem = {
   href: "/app/admin/traces",
   label: "Query traces",
@@ -52,7 +58,7 @@ const WIDTHS = { reading: "max-w-[54rem]", form: "max-w-[50rem]", wide: "max-w-[
 
 function NavLinks({ isAdmin, onNavigate }: { isAdmin: boolean; onNavigate?: () => void }) {
   const pathname = usePathname() ?? "";
-  const items = isAdmin ? [...NAV, ADMIN_NAV] : NAV;
+  const items = [...NAV, ...PROTOTYPE_NAV, ...(isAdmin ? [ADMIN_NAV] : [])];
   return (
     <nav aria-label="Primary" className="px-3">
       <ul className="space-y-0.5">
