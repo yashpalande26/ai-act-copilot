@@ -183,6 +183,32 @@ def agentic_verify_enabled() -> bool:
     )
 
 
+def decompose_model() -> str:
+    """The Stage 4 planner's model: splits a compositional question into
+    sub-questions. Planning only; the composed answer uses CHAT_MODEL."""
+    return os.environ.get("DECOMPOSE_MODEL", "openai:gpt-4o-mini")
+
+
+# Stage 4 node default. "1" since the passing run of 22 Sep 2026
+# (evals/runs/stage4_decompose_j2.json vs stage3_verify_mini_j2.json):
+# multi-hop context recall 0.875 -> 1.000, citation accuracy 0.750 -> 1.000,
+# F1_ans 0.857 -> 1.000 with the two definition-half refusals now answered;
+# single-hop, multi-turn and unanswerable identical; decomposition fired on
+# the 8 compositional questions only, at most 2 retrievals per part. Only
+# effective when AGENTIC_RAG=1, which stays off.
+AGENTIC_DECOMPOSE_DEFAULT = "1"
+
+
+def agentic_decompose_enabled() -> bool:
+    """Stage 4: bounded decomposition of compositional questions
+    (app.generation.decompose). Effective only inside the graph
+    (AGENTIC_RAG=1). Single-part questions bypass it entirely."""
+    return (
+        agentic_rag_enabled()
+        and os.environ.get("AGENTIC_DECOMPOSE", AGENTIC_DECOMPOSE_DEFAULT) == "1"
+    )
+
+
 # --- admin allowlist --------------------------------------------------------
 # Comma-separated e-mail addresses allowed to read the admin trace viewer
 # (/admin/*). Compared, lower-cased, against the e-mail asserted in the

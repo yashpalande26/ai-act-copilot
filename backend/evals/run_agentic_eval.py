@@ -38,6 +38,7 @@ deterministic fields are what evals/gate.py --equivalence asserts.
 import argparse
 import json
 import os
+import re
 import sys
 import time
 from collections import defaultdict
@@ -232,6 +233,11 @@ def main() -> None:
                 ),
                 None,
             )
+            dm = re.search(r"decompose=(applied:(\d+)|skipped)", tag + cfg)
+            decompose_outcome = (
+                None if dm is None else ("applied" if dm.group(2) else "skipped")
+            )
+            sub_queries = int(dm.group(2)) if dm and dm.group(2) else 0
             verifies = captured.get("verifies", [])
             verify_outcome = next(
                 (
@@ -283,6 +289,8 @@ def main() -> None:
                     (g.prompt_tokens or 0) + (g.completion_tokens or 0) for g in grades
                 ),
                 "retrieve_calls": captured.get("retrieve_calls", 0),
+                "decompose_outcome": decompose_outcome,
+                "sub_queries": sub_queries,
                 "verify_outcome": verify_outcome,
                 "verify_unsupported": [list(v.unsupported_claims) for v in verifies],
                 "verify_missing_refs": [list(v.missing_references) for v in verifies],
@@ -389,7 +397,7 @@ def main() -> None:
             print(
                 f"\n== GRADE NODE ==  graded {len(graded)}  "
                 + "  ".join(f"{k} {v}" for k, v in counts.items())
-                + f"  max retrieve calls per turn {max(t['retrieve_calls'] for t in traces)} (bound 2)"
+                + f"  max retrieve calls per turn {max(t['retrieve_calls'] for t in traces)} (bound 2 per part)"
                 + f"  gpt-4o calls avoided by grader abstention {counts['abstain']}"
                 + f"  grader tokens total {sum(t['grade_tokens'] for t in traces)}"
             )
@@ -400,6 +408,23 @@ def main() -> None:
             ]
             print(
                 f"  answerable items the grader abstained on (must be 0): {len(wrong)} {wrong}"
+            )
+        decomposed = [t for t in traces if t["decompose_outcome"] == "applied"]
+        planned = [t for t in traces if t["decompose_outcome"]]
+        if planned:
+            over = [
+                t["id"]
+                for t in decomposed
+                if t["retrieve_calls"] > 2 * t["sub_queries"]
+            ]
+            print(
+                f"\n== DECOMPOSE NODE ==  seen {len(planned)}  applied {len(decomposed)}  skipped {len(planned) - len(decomposed)}"
+                f"  sub-queries per applied item {[t['sub_queries'] for t in decomposed]}"
+                f"  items exceeding 2 retrievals per part (must be 0): {len(over)} {over}"
+            )
+            fired_outside = [t["id"] for t in decomposed if t["bucket"] != "multi_hop"]
+            print(
+                f"  applied outside multi_hop (must be 0): {len(fired_outside)} {fired_outside}"
             )
         verified = [t for t in traces if t["verify_outcome"]]
         if verified:

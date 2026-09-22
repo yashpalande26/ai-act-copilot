@@ -1,7 +1,7 @@
 """The grounded-answer pipeline as a LangGraph graph, behind AGENTIC_RAG=1
 (default off).
 
-    START -> rewrite -> retrieve -> grade -> generate -> verify -> decide -> END
+    START -> rewrite -> decompose -> retrieve -> grade -> generate -> verify -> decide -> END
     (retrieve -> decide directly when there is no context: the model is not
     called and decide abstains, exactly as the plain path does;
     rewrite -> decide directly on an actor conflict; grade -> decide when
@@ -60,6 +60,17 @@ retrieval_config carries |verify=passed, |verify=regenerated,
 |verify=abstained or |verify=skipped (verifier failure, answer served as
 generated). Bounded: one regeneration, no loop; the verifier adds nothing.
 
+Stage 4 (22 Sep 2026): the decompose node between rewrite and retrieve,
+active only when config.agentic_decompose_enabled() (AGENTIC_DECOMPOSE,
+effective inside the graph only). See app.generation.decompose: a
+compositional question is planned into 2 to 3 standalone sub-questions,
+each retrieved and graded on its own (parallel form, one widen each at
+most), their passages interleaved into one context, and one strong-model
+call answers every part from its own passages. A part with nothing relevant
+after its widen abstains the turn. The grade node does not re-grade a
+context the parts already graded; the verifier checks the composed answer.
+retrieval_config carries |decompose=applied:N or |decompose=skipped.
+
 Grounding, citations and the refusal sentence are decided downstream by the
 unchanged decide step.
 
@@ -75,6 +86,7 @@ from uuid import UUID
 from langgraph.graph import END, START, StateGraph
 
 from app.config import (
+    agentic_decompose_enabled,
     agentic_grade_enabled,
     agentic_rewrite_enabled,
     agentic_verify_enabled,
@@ -86,6 +98,8 @@ from app.generation.answer import (
     RetrievalStep,
     RewriteInfo,
 )
+from app.generation.decompose import Plan, interleave
+from app.generation.decompose import plan as plan_decomposition
 from app.generation.grade import (
     WIDEN_BREADTH,
     WIDEN_SLICE,
@@ -100,6 +114,7 @@ from app.generation.verify import (
     verify_answer,
 )
 from app.retrieval.actor import detect_query_actor
+from app.retrieval.search import FusedResult
 
 PATH_TAG = "|path=graph"
 REWRITE_TAGS = {
@@ -113,6 +128,7 @@ GRADE_TAGS = {
     "abstain": "|grade=abstain",
     "skipped": "|grade=skipped",
 }
+DECOMPOSE_SKIPPED_TAG = "|decompose=skipped"
 VERIFY_TAGS = {
     "passed": "|verify=passed",
     "regenerated": "|verify=regenerated",
@@ -135,6 +151,11 @@ class GraphState(TypedDict, total=False):
     max_output_tokens: int | None
     rewrite: RewriteInfo | None
     # produced by nodes
+    plan: Plan | None
+    parts: (
+        list[tuple[str, list[FusedResult]]] | None
+    )  # sub-question, its graded passages
+    part_retrieve_calls: int
     raw_query: str | None  # the follow-up as typed, when a rewrite was served
     rewrite_result: RewriteResult | None
     rewrite_outcome: str | None  # applied | guarded | ambiguous | None
@@ -193,19 +214,112 @@ def rewrite(state: GraphState) -> dict:
     }
 
 
+def decompose(state: GraphState) -> dict:
+    if not agentic_decompose_enabled():
+        return {}
+    p = plan_decomposition(state["query"])
+    return {"plan": p}
+
+
+def _retrieve_part(
+    state: GraphState, sub_query: str
+) -> tuple[RetrievalStep | None, int]:
+    """One sub-question: retrieve, grade, widen once if nothing relevant.
+    Returns (graded step or None when exhausted, retrieval calls made)."""
+    context_size = state["final_context_size"]
+    step = pipeline.retrieve_step(
+        state["session"],
+        sub_query,
+        state["corpus_version_id"],
+        min_similarity=state["min_similarity"],
+        final_context_size=context_size,
+    )
+    calls = 1
+    if not step.fused:
+        return None, calls
+    graded = grade_context(sub_query, step.fused)
+    if not graded.ok:
+        return step, calls  # grader failure: the part is served as retrieved
+    if graded.relevant:
+        return _graded_step(step, graded, context_size), calls
+    wider = pipeline.retrieve_step(
+        state["session"],
+        sub_query,
+        state["corpus_version_id"],
+        min_similarity=state["min_similarity"],
+        final_context_size=WIDEN_SLICE,
+        breadth=WIDEN_BREADTH,
+    )
+    calls = 2
+    if not wider.fused:
+        return None, calls
+    regraded = grade_context(sub_query, wider.fused)
+    if not regraded.ok:
+        return step, calls
+    if regraded.relevant:
+        return _graded_step(wider, regraded, context_size), calls
+    return None, calls
+
+
 def retrieve(state: GraphState) -> dict:
+    p = state.get("plan")
+    if p is not None and p.sub_queries:
+        # Stage 4: every sub-question on its own (parallel form: none sees
+        # another's result), then one interleaved context.
+        parts: list[tuple[str, list[FusedResult]]] = []
+        steps: list[RetrievalStep] = []
+        calls = 0
+        exhausted = False
+        for sq in p.sub_queries:
+            step, n = _retrieve_part(state, sq)
+            calls += n
+            if step is None:
+                exhausted = True
+                continue
+            steps.append(step)
+            parts.append((sq, step.fused))
+        config = steps[0].retrieval_config.split("|")[0] if steps else "none"
+        config += f"|decompose=applied:{len(p.sub_queries)}"
+        if exhausted:
+            # A part with nothing relevant after its widen: abstain rather
+            # than answer one part and guess the other.
+            empty = RetrievalStep(
+                all_fused=[f for s in steps for f in s.all_fused],
+                fused=[],
+                retrieval_config=config + "|abstain=part_exhausted",
+                latency_ms=sum(s.latency_ms for s in steps),
+            )
+            return {"retrieved": empty, "parts": parts, "part_retrieve_calls": calls}
+        size = state["final_context_size"]
+        fused = interleave([f for _, f in parts], size)
+        kept = {f.result.chunk_id for f in fused}
+        parts = [(sq, [f for f in fs if f.result.chunk_id in kept]) for sq, fs in parts]
+        rest = [f for s in steps for f in s.all_fused if f.result.chunk_id not in kept]
+        merged = RetrievalStep(
+            all_fused=[*fused, *rest],
+            fused=fused,
+            retrieval_config=config,
+            latency_ms=sum(s.latency_ms for s in steps),
+        )
+        return {"retrieved": merged, "parts": parts, "part_retrieve_calls": calls}
     # Stage 1b: a served rewrite retrieves on the raw follow-up AND the
     # rewrite, fused (answer.retrieve_candidates_dual). Otherwise Stage 0.
-    return {
-        "retrieved": pipeline.retrieve_step(
-            state["session"],
-            state["query"],
-            state["corpus_version_id"],
-            min_similarity=state["min_similarity"],
-            final_context_size=state["final_context_size"],
-            raw_query=state.get("raw_query"),
+    step = pipeline.retrieve_step(
+        state["session"],
+        state["query"],
+        state["corpus_version_id"],
+        min_similarity=state["min_similarity"],
+        final_context_size=state["final_context_size"],
+        raw_query=state.get("raw_query"),
+    )
+    if p is not None:
+        step = RetrievalStep(
+            all_fused=step.all_fused,
+            fused=step.fused,
+            retrieval_config=step.retrieval_config + DECOMPOSE_SKIPPED_TAG,
+            latency_ms=step.latency_ms,
         )
-    }
+    return {"retrieved": step}
 
 
 def _graded_step(
@@ -227,6 +341,11 @@ def grade(state: GraphState) -> dict:
     """proceed / widen once / abstain. Bounded: exactly one possible
     re-retrieval, no loop, no fetch outside the corpus."""
     if not agentic_grade_enabled():
+        return {}
+    if state.get("parts"):
+        # Stage 4: every part was graded (and widened once at most) on its
+        # own; grading the union again would be a third pass on the same
+        # passages. The parts' outcome is recorded by decompose=applied.
         return {}
     step = state["retrieved"]
     context_size = state["final_context_size"]
@@ -282,6 +401,7 @@ def generate(state: GraphState) -> dict:
             state["query"],
             state["retrieved"].fused,
             max_output_tokens=state["max_output_tokens"],
+            parts=state.get("parts") or None,
         )
     }
 
@@ -322,6 +442,7 @@ def verify(state: GraphState) -> dict:
         fused,
         max_output_tokens=state["max_output_tokens"],
         extra_instruction=regeneration_instruction(first),
+        parts=state.get("parts") or None,
     )
     merged = GenerationStep(
         answer_text=redo.answer_text,
@@ -389,7 +510,7 @@ def decide(state: GraphState) -> dict:
 
 
 def route_after_rewrite(state: GraphState) -> str:
-    return "decide" if state.get("rewrite_outcome") == "ambiguous" else "retrieve"
+    return "decide" if state.get("rewrite_outcome") == "ambiguous" else "decompose"
 
 
 def route_after_retrieve(state: GraphState) -> str:
@@ -405,6 +526,7 @@ def route_after_grade(state: GraphState) -> str:
 def build_graph() -> StateGraph:
     g = StateGraph(GraphState)
     g.add_node("rewrite", rewrite)
+    g.add_node("decompose", decompose)
     g.add_node("retrieve", retrieve)
     g.add_node("grade", grade)
     g.add_node("generate", generate)
@@ -412,8 +534,9 @@ def build_graph() -> StateGraph:
     g.add_node("decide", decide)
     g.add_edge(START, "rewrite")
     g.add_conditional_edges(
-        "rewrite", route_after_rewrite, {"retrieve": "retrieve", "decide": "decide"}
+        "rewrite", route_after_rewrite, {"decompose": "decompose", "decide": "decide"}
     )
+    g.add_edge("decompose", "retrieve")
     g.add_conditional_edges(
         "retrieve", route_after_retrieve, {"grade": "grade", "decide": "decide"}
     )

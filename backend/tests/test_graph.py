@@ -77,6 +77,7 @@ def _run(monkeypatch, *, flag: bool, fused, llm_text):
     monkeypatch.setenv("AGENTIC_REWRITE", "0")  # Stage 0 equivalence: nodes off
     monkeypatch.setenv("AGENTIC_GRADE", "0")
     monkeypatch.setenv("AGENTIC_VERIFY", "0")
+    monkeypatch.setenv("AGENTIC_DECOMPOSE", "0")
     _patch_retrieval(monkeypatch, fused)
     client = MagicMock()
     client.chat.completions.create.return_value = _llm(llm_text)
@@ -212,6 +213,7 @@ def test_graph_shape_is_rewrite_retrieve_grade_generate_decide():
     g = graph_module.GRAPH.get_graph()
     assert sorted(n for n in g.nodes if not n.startswith("__")) == [
         "decide",
+        "decompose",
         "generate",
         "grade",
         "retrieve",
@@ -221,8 +223,9 @@ def test_graph_shape_is_rewrite_retrieve_grade_generate_decide():
     edges = {(e.source, e.target) for e in g.edges}
     assert edges == {
         ("__start__", "rewrite"),
-        ("rewrite", "retrieve"),
+        ("rewrite", "decompose"),
         ("rewrite", "decide"),
+        ("decompose", "retrieve"),
         ("retrieve", "grade"),
         ("retrieve", "decide"),
         ("grade", "generate"),
@@ -262,6 +265,7 @@ def _stage1(monkeypatch, *, history, rewrite_result, fused, llm_text, upstream=N
     monkeypatch.setenv("AGENTIC_REWRITE", "1")
     monkeypatch.setenv("AGENTIC_GRADE", "0")
     monkeypatch.setenv("AGENTIC_VERIFY", "0")
+    monkeypatch.setenv("AGENTIC_DECOMPOSE", "0")
     monkeypatch.setattr(graph_module, "load_history", lambda s, cid: history)
     calls = {"rewrite": [], "retrieve": []}
 

@@ -171,14 +171,34 @@ def _lexical_leg(
         return [], "vector_only_degraded"
 
 
-def _build_user_prompt(query: str, fused: list[FusedResult]) -> str:
+def _context_blocks(fused: list[FusedResult]) -> str:
     blocks = []
     for f in fused:
         r = f.result
         heading = f" — {r.article_heading}" if r.article_heading else ""
         blocks.append(f"[{r.citation_label}{heading}]\n{r.chunk_text}")
-    context_block = "\n\n".join(blocks)
-    return f"Context:\n{context_block}\n\nQuestion: {query}"
+    return "\n\n".join(blocks)
+
+
+def _build_user_prompt(query: str, fused: list[FusedResult]) -> str:
+    return f"Context:\n{_context_blocks(fused)}\n\nQuestion: {query}"
+
+
+def _build_parts_prompt(query: str, parts: list[tuple[str, list[FusedResult]]]) -> str:
+    """Stage 4: one context per sub-question, so each part of the answer is
+    grounded in its own passages; the question itself is asked once, whole.
+    The grounding rule is the system prompt's, unchanged."""
+    sections = [
+        f"Context for part {i} ({sub_query}):\n{_context_blocks(fused)}"
+        for i, (sub_query, fused) in enumerate(parts, start=1)
+    ]
+    return (
+        "\n\n".join(sections)
+        + "\n\nAnswer every part of the question below from the context given "
+        "for that part, citing the provisions you rely on. If the context for "
+        "a part does not answer it, say so for that part instead of guessing.\n\n"
+        f"Question: {query}"
+    )
 
 
 def _persist_turn(
@@ -584,14 +604,19 @@ def generate_step(
     *,
     max_output_tokens: int | None = None,
     extra_instruction: str | None = None,
+    parts: list[tuple[str, list[FusedResult]]] | None = None,
 ) -> GenerationStep:
     """`extra_instruction`, when given, is appended to the user message (never
     to the system prompt, which is the grounding contract). Only the Stage 3
-    verifier's single regeneration passes one; the plain path never does."""
+    verifier's single regeneration passes one; the plain path never does.
+    `parts` (Stage 4) groups the context by sub-question; `fused` is then
+    their union in prompt order and remains what gets cited."""
     if not fused:
         # Pre-LLM abstention: nothing to ground on, so no call is made.
         return GenerationStep(None, None, None, None)
-    prompt = _build_user_prompt(query, fused)
+    prompt = (
+        _build_parts_prompt(query, parts) if parts else _build_user_prompt(query, fused)
+    )
     if extra_instruction:
         prompt = f"{prompt}\n\n{extra_instruction}"
     generation_start = time.monotonic()

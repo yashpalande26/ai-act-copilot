@@ -210,6 +210,7 @@ def _run(monkeypatch, *, verdicts, drafts, on=True):
     monkeypatch.setenv("AGENTIC_REWRITE", "0")
     monkeypatch.setenv("AGENTIC_GRADE", "0")
     monkeypatch.setenv("AGENTIC_VERIFY", "1" if on else "0")
+    monkeypatch.setenv("AGENTIC_DECOMPOSE", "0")
     outputs = iter(verdicts)
     verify_calls = []
 
