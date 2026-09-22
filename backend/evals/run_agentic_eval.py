@@ -48,7 +48,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from sqlalchemy import select
 
-from app.config import agentic_rag_enabled, agentic_rewrite_enabled
+from app.config import (
+    agentic_grade_enabled,
+    agentic_rag_enabled,
+    agentic_rewrite_enabled,
+)
 from app.db.models import AppUser, ChatSession, CorpusVersion, Message
 from app.db.session import SessionLocal
 from app.generation import answer as answer_module
@@ -122,16 +126,36 @@ def main() -> None:
 
     flag = agentic_rag_enabled()
     node = agentic_rewrite_enabled()
-    # Capture what the pipeline served: the context slice and the rewrite.
+    grader = agentic_grade_enabled()
+    # Capture what the pipeline served: the context slice that reached decide
+    # (after any grading), the rewrite, the grade outcomes and how many times
+    # retrieval ran (the bounded widen allows at most two).
     captured: dict = {}
     real_retrieve = answer_module.retrieve_step
+    real_decide = answer_module.decide_step
     real_rewrite = graph_module.rewrite_followup
+    real_grade = graph_module.grade_context
 
     def capturing_retrieve(sess, query, cv_id, **kw):
         step = real_retrieve(sess, query, cv_id, **kw)
-        captured["retrieved"] = step
+        captured.setdefault("retrieve_calls", 0)
+        captured["retrieve_calls"] += 1
         captured["retrieval_query"] = query
         return step
+
+    def capturing_decide(
+        sess, query, stored, cv_id, chat_id, retrieved, generated, **kw
+    ):
+        captured["retrieved"] = retrieved
+        captured["path_tag"] = kw.get("path_tag", "")
+        return real_decide(
+            sess, query, stored, cv_id, chat_id, retrieved, generated, **kw
+        )
+
+    def capturing_grade(query, fused, extractor=None):
+        res = real_grade(query, fused, extractor)
+        captured.setdefault("grades", []).append(res)
+        return res
 
     def capturing_rewrite(history, question, extractor=None):
         res = real_rewrite(history, question, extractor)
@@ -140,7 +164,9 @@ def main() -> None:
         return res
 
     answer_module.retrieve_step = capturing_retrieve
+    answer_module.decide_step = capturing_decide
     graph_module.rewrite_followup = capturing_rewrite
+    graph_module.grade_context = capturing_grade
     session = SessionLocal()
     real_commit = session.commit
     session.commit = session.flush  # nothing persists
@@ -156,6 +182,7 @@ def main() -> None:
         print(
             f"set {args.set.name} ({len(items)} items)  corpus {cv.consolidated_date}"
             f"  AGENTIC_RAG={'1' if flag else '0'}  AGENTIC_REWRITE={'1' if node else '0'}"
+            f"  AGENTIC_GRADE={'1' if grader else '0'}"
             f"  judge={'off' if args.no_judge else 'on'}"
             f"  env {os.environ.get('APP_ENV', 'dev')}"
         )
@@ -179,7 +206,19 @@ def main() -> None:
             cited = [c.citation_id for c in res.citations]
             step = captured.get("retrieved")
             context_ids = [f.result.citation_id for f in step.fused] if step else []
-            cfg = step.retrieval_config if step else "none"
+            cfg = (step.retrieval_config if step else "none") + captured.get(
+                "path_tag", ""
+            )
+            grades = captured.get("grades", [])
+            tag = captured.get("path_tag", "")
+            grade_outcome = next(
+                (
+                    k
+                    for k in ("proceed", "widened", "abstain", "skipped")
+                    if f"grade={k}" in tag
+                ),
+                None,
+            )
             rw = captured.get("rewrite")
             served_rewrite = (
                 rw.query
@@ -216,6 +255,12 @@ def main() -> None:
                 "context_ids": context_ids,
                 "retrieval_config": cfg,
                 "rewrite_outcome": outcome,
+                "grade_outcome": grade_outcome,
+                "grade_relevant_counts": [len(g.relevant) for g in grades],
+                "grade_tokens": sum(
+                    (g.prompt_tokens or 0) + (g.completion_tokens or 0) for g in grades
+                ),
+                "retrieve_calls": captured.get("retrieve_calls", 0),
                 "rewritten_query": served_rewrite,
                 "rewrite_introduced": list(rw.introduced) if rw is not None else [],
                 "served_introduced": served_introduced,
@@ -230,7 +275,9 @@ def main() -> None:
             }
             if not args.no_judge and not abstained:
                 f = judge_faithfulness(
-                    res.answer, [c.chunk_text for c in res.citations]
+                    res.answer,
+                    [c.chunk_text for c in res.citations],
+                    [c.citation_label for c in res.citations],
                 )
                 r = judge_answer_relevance(q, res.answer)
                 row["faithfulness"] = f.score or None
@@ -244,6 +291,11 @@ def main() -> None:
                 f" cite={fmt(row['citation_accuracy'])} inline={row['inline_mention']}"
                 f" faith={row.get('faithfulness')} rel={row.get('answer_relevance')}"
                 f" {latency_ms}ms | {q[:70]}"
+                + (
+                    f" grade={grade_outcome} rel={[len(g.relevant) for g in grades]} retrieves={captured.get('retrieve_calls', 0)}"
+                    if grade_outcome
+                    else ""
+                )
                 + (
                     f"\n      rewrite[{outcome}]: {served_rewrite or rw.query if rw else ''}"
                     + (
@@ -298,6 +350,27 @@ def main() -> None:
         print(
             "abstention F1 is macro(F1_ans, F1_ref); n/a means the class had no expected and no predicted members."
         )
+        graded = [t for t in traces if t["grade_outcome"]]
+        if graded:
+            counts = {
+                k: sum(t["grade_outcome"] == k for t in graded)
+                for k in ("proceed", "widened", "abstain", "skipped")
+            }
+            print(
+                f"\n== GRADE NODE ==  graded {len(graded)}  "
+                + "  ".join(f"{k} {v}" for k, v in counts.items())
+                + f"  max retrieve calls per turn {max(t['retrieve_calls'] for t in traces)} (bound 2)"
+                + f"  gpt-4o calls avoided by grader abstention {counts['abstain']}"
+                + f"  grader tokens total {sum(t['grade_tokens'] for t in traces)}"
+            )
+            wrong = [
+                t["id"]
+                for t in graded
+                if t["grade_outcome"] == "abstain" and not t["expected_abstention"]
+            ]
+            print(
+                f"  answerable items the grader abstained on (must be 0): {len(wrong)} {wrong}"
+            )
         attempted = [t for t in traces if t["rewrite_outcome"]]
         if attempted:
             outcomes = {
@@ -333,7 +406,9 @@ def main() -> None:
             print(f"wrote {args.json}")
     finally:
         answer_module.retrieve_step = real_retrieve
+        answer_module.decide_step = real_decide
         graph_module.rewrite_followup = real_rewrite
+        graph_module.grade_context = real_grade
         session.commit = real_commit
         session.rollback()
         session.close()

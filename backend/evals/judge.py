@@ -16,6 +16,14 @@ You will be given the ANSWER and the CONTEXT it was supposed to be grounded
 in. You do not have access to the original question - judge faithfulness to
 the context only, not correctness or relevance.
 
+Each context passage is prefixed with its citation label in square brackets,
+for example [Article 6, paragraph 6]. When the answer refers to a provision by
+such a label, that reference is supported only if a passage carrying that
+label is present in the context AND that passage's text supports the claim
+attached to it. A label that appears in the context is never by itself an
+unsupported detail. A label that does not appear in the context is an
+unsupported claim.
+
 Score from 1 to 5:
 5 = every claim in the answer is directly supported by the context
 4 = nearly all claims are supported, with at most one minor unsupported detail
@@ -87,9 +95,26 @@ def _call_judge(system_prompt: str, user_prompt: str) -> JudgeResult:
         )
 
 
-def judge_faithfulness(answer: str, context_chunks: list[str]) -> JudgeResult:
-    """Judge sees ONLY the answer + the retrieved context - never the question."""
-    context_block = "\n\n".join(context_chunks)
+def judge_faithfulness(
+    answer: str, context_chunks: list[str], labels: list[str] | None = None
+) -> JudgeResult:
+    """Judge sees ONLY the answer + the retrieved context - never the question.
+
+    `labels` (22 Sep 2026): the citation label of each chunk, aligned with
+    `context_chunks`. The answer cites provisions by label ("Article 6,
+    paragraph 6") and the chunks are provisions, so without the labels the
+    judge cannot tell a correct reference from an invented one; it was
+    scoring correct references as unsupported. Passing the labels makes the
+    check possible; the criteria are otherwise unchanged. Without labels the
+    old plain format is used (kept for old callers and for comparison)."""
+    if labels is not None:
+        if len(labels) != len(context_chunks):
+            raise ValueError("labels must align with context_chunks")
+        context_block = "\n\n".join(
+            f"[{label}]\n{chunk}" for label, chunk in zip(labels, context_chunks)
+        )
+    else:
+        context_block = "\n\n".join(context_chunks)
     user_prompt = f"ANSWER:\n{answer}\n\nCONTEXT:\n{context_block}"
     return _call_judge(FAITHFULNESS_SYSTEM_PROMPT, user_prompt)
 

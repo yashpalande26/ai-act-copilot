@@ -164,6 +164,9 @@ def test_flag_on_and_off_write_identical_rows(monkeypatch, db, answers):
         else answer_module.ABSTENTION_TEXT
     )
     shapes = {}
+    # Stage 0 equivalence: the graph alone, both agentic nodes pinned off.
+    monkeypatch.setenv("AGENTIC_REWRITE", "0")
+    monkeypatch.setenv("AGENTIC_GRADE", "0")
     for flag in ("0", "1"):
         monkeypatch.setenv("AGENTIC_RAG", flag)
         chat = ChatSession(user_id=user.id, corpus_version_id=cv.id, title="t")

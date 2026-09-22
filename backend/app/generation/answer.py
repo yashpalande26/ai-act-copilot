@@ -122,7 +122,10 @@ class RewriteInfo(BaseModel):
 
 
 def _lexical_leg(
-    session: Session, query: str, corpus_version_id: int
+    session: Session,
+    query: str,
+    corpus_version_id: int,
+    breadth: int = RETRIEVAL_CANDIDATE_BREADTH,
 ) -> tuple[list[SearchResult], str]:
     """BM25 retrieval with a safe fallback. Returns (results, retrieval_config).
 
@@ -151,9 +154,7 @@ def _lexical_leg(
                 file=sys.stderr,
             )
             return [], "vector_only_degraded"
-        results = bm25_search(
-            session, query, corpus_version_id, top_k=RETRIEVAL_CANDIDATE_BREADTH
-        )
+        results = bm25_search(session, query, corpus_version_id, top_k=breadth)
         return results, "hybrid_bm25"
     except StaleIndexError as exc:
         print(
@@ -322,17 +323,22 @@ def _hybrid_candidates(
     corpus_version_id: int,
     *,
     min_similarity: float,
+    breadth: int = RETRIEVAL_CANDIDATE_BREADTH,
 ) -> tuple[list[FusedResult], list[SearchResult], str]:
     """The two legs and their RRF fusion for ONE query, before the actor prior
-    and the dense anchor. Returns (fused, vector_results, retrieval_config)."""
+    and the dense anchor. Returns (fused, vector_results, retrieval_config).
+    `breadth` is the per-leg depth and the fused list length; only the Stage 2
+    grader's single bounded widen passes anything but the default."""
     vector_results = vector_search(
         session,
         query,
         corpus_version_id,
-        top_k=RETRIEVAL_CANDIDATE_BREADTH,
+        top_k=breadth,
         min_similarity=min_similarity,
     )
-    lexical_results, retrieval_config = _lexical_leg(session, query, corpus_version_id)
+    lexical_results, retrieval_config = _lexical_leg(
+        session, query, corpus_version_id, breadth=breadth
+    )
     # With an empty lexical list every candidate scores
     # RETRIEVAL_VECTOR_WEIGHT * 1/(k + rank + 1), a strictly decreasing
     # function of the vector rank - so a degraded turn reproduces
@@ -342,7 +348,7 @@ def _hybrid_candidates(
         lexical_results,
         vector_weight=RETRIEVAL_VECTOR_WEIGHT,
         lexical_weight=RETRIEVAL_LEXICAL_WEIGHT,
-        top_k=RETRIEVAL_CANDIDATE_BREADTH,
+        top_k=breadth,
     )
     return all_fused, vector_results, retrieval_config
 
@@ -393,12 +399,17 @@ def retrieve_candidates(
     min_similarity: float = 0.3,
     dense_anchor_floor: float | None | str = "default",
     final_context_size: int = 15,
+    breadth: int = RETRIEVAL_CANDIDATE_BREADTH,
 ) -> tuple[list[FusedResult], str]:
     """The production candidate list: vector + BM25, RRF, actor prior, dense
     anchor. One function so the evals measure exactly what /ask serves.
     Returns (fused candidates, retrieval_config string)."""
     all_fused, vector_results, retrieval_config = _hybrid_candidates(
-        session, query, corpus_version_id, min_similarity=min_similarity
+        session,
+        query,
+        corpus_version_id,
+        min_similarity=min_similarity,
+        breadth=breadth,
     )
     return _rank_candidates(
         all_fused,
@@ -448,6 +459,7 @@ def retrieve_candidates_dual(
     min_similarity: float = 0.3,
     dense_anchor_floor: float | None | str = "default",
     final_context_size: int = 15,
+    breadth: int = RETRIEVAL_CANDIDATE_BREADTH,
 ) -> tuple[list[FusedResult], str]:
     """Stage 1b (22 Sep 2026): a rewritten follow-up retrieves on BOTH the
     user's raw follow-up and the standalone rewrite. Each query runs the
@@ -461,14 +473,20 @@ def retrieve_candidates_dual(
     the raw one). The dense anchor uses whichever query's top vector hit is
     the more similar. retrieval_config carries |dual."""
     raw_fused, raw_vec, raw_cfg = _hybrid_candidates(
-        session, raw_query, corpus_version_id, min_similarity=min_similarity
+        session,
+        raw_query,
+        corpus_version_id,
+        min_similarity=min_similarity,
+        breadth=breadth,
     )
     rw_fused, rw_vec, rw_cfg = _hybrid_candidates(
-        session, rewritten_query, corpus_version_id, min_similarity=min_similarity
+        session,
+        rewritten_query,
+        corpus_version_id,
+        min_similarity=min_similarity,
+        breadth=breadth,
     )
-    all_fused = fuse_query_candidates(
-        raw_fused, rw_fused, top_k=RETRIEVAL_CANDIDATE_BREADTH
-    )
+    all_fused = fuse_query_candidates(raw_fused, rw_fused, top_k=breadth)
     # A degraded leg on either query is a degraded turn.
     config = raw_cfg if raw_cfg == rw_cfg else "vector_only_degraded"
     best_vec = max(
@@ -520,19 +538,29 @@ def retrieve_step(
     min_similarity: float = 0.3,
     final_context_size: int = 15,
     raw_query: str | None = None,
+    breadth: int = RETRIEVAL_CANDIDATE_BREADTH,
 ) -> RetrievalStep:
     """`raw_query`, when given and different from `query`, is the user's
     follow-up as typed while `query` is its standalone rewrite: retrieval then
     runs on both and fuses (retrieve_candidates_dual). The plain path never
-    passes it."""
+    passes it, nor a non-default `breadth` (the grader's single widen does)."""
     retrieval_start = time.monotonic()
     if raw_query is not None and raw_query != query:
         all_fused, retrieval_config = retrieve_candidates_dual(
-            session, raw_query, query, corpus_version_id, min_similarity=min_similarity
+            session,
+            raw_query,
+            query,
+            corpus_version_id,
+            min_similarity=min_similarity,
+            breadth=breadth,
         )
     else:
         all_fused, retrieval_config = retrieve_candidates(
-            session, query, corpus_version_id, min_similarity=min_similarity
+            session,
+            query,
+            corpus_version_id,
+            min_similarity=min_similarity,
+            breadth=breadth,
         )
     retrieval_latency_ms = int((time.monotonic() - retrieval_start) * 1000)
     # Equivalent to the old rrf_rank_and_fuse(..., top_k=final_context_size):

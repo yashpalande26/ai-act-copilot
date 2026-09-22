@@ -235,7 +235,8 @@ def run_judge_eval(judgeable: list[tuple[dict, GroundedAnswer]]):
 
     for item, result in judgeable:
         context_chunks = [c.chunk_text for c in result.citations]
-        faithfulness = judge_faithfulness(result.answer, context_chunks)
+        labels = [c.citation_label for c in result.citations]
+        faithfulness = judge_faithfulness(result.answer, context_chunks, labels)
         relevance = judge_answer_relevance(item["question"], result.answer)
         faithfulness_results.append(faithfulness)
         relevance_results.append(relevance)

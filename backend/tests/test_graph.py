@@ -74,7 +74,8 @@ def _patch_retrieval(monkeypatch, fused):
 def _run(monkeypatch, *, flag: bool, fused, llm_text):
     """One turn under one flag state. Returns (result, session, llm client)."""
     monkeypatch.setenv("AGENTIC_RAG", "1" if flag else "0")
-    monkeypatch.setenv("AGENTIC_REWRITE", "0")  # Stage 0 equivalence: node off
+    monkeypatch.setenv("AGENTIC_REWRITE", "0")  # Stage 0 equivalence: nodes off
+    monkeypatch.setenv("AGENTIC_GRADE", "0")
     _patch_retrieval(monkeypatch, fused)
     client = MagicMock()
     client.chat.completions.create.return_value = _llm(llm_text)
@@ -206,11 +207,12 @@ def test_flag_on_routes_through_run_graph(monkeypatch):
     assert seen["corpus_version_id"] == 7
 
 
-def test_graph_shape_is_rewrite_retrieve_generate_decide():
+def test_graph_shape_is_rewrite_retrieve_grade_generate_decide():
     g = graph_module.GRAPH.get_graph()
     assert sorted(n for n in g.nodes if not n.startswith("__")) == [
         "decide",
         "generate",
+        "grade",
         "retrieve",
         "rewrite",
     ]
@@ -219,8 +221,10 @@ def test_graph_shape_is_rewrite_retrieve_generate_decide():
         ("__start__", "rewrite"),
         ("rewrite", "retrieve"),
         ("rewrite", "decide"),
-        ("retrieve", "generate"),
+        ("retrieve", "grade"),
         ("retrieve", "decide"),
+        ("grade", "generate"),
+        ("grade", "decide"),
         ("generate", "decide"),
         ("decide", "__end__"),
     }
@@ -234,7 +238,9 @@ def test_route_skips_generation_without_context():
         all_fused=[_fr(1)], fused=[_fr(1)], retrieval_config="x", latency_ms=0
     )
     assert graph_module.route_after_retrieve({"retrieved": empty}) == "decide"
-    assert graph_module.route_after_retrieve({"retrieved": full}) == "generate"
+    assert graph_module.route_after_retrieve({"retrieved": full}) == "grade"
+    assert graph_module.route_after_grade({"grade_outcome": None}) == "generate"
+    assert graph_module.route_after_grade({"grade_outcome": "abstain"}) == "decide"
 
 
 # --- Stage 1: the rewrite node -----------------------------------------------
@@ -251,6 +257,7 @@ def _stage1(monkeypatch, *, history, rewrite_result, fused, llm_text, upstream=N
     which query retrieval ran on."""
     monkeypatch.setenv("AGENTIC_RAG", "1")
     monkeypatch.setenv("AGENTIC_REWRITE", "1")
+    monkeypatch.setenv("AGENTIC_GRADE", "0")
     monkeypatch.setattr(graph_module, "load_history", lambda s, cid: history)
     calls = {"rewrite": [], "retrieve": []}
 

@@ -125,6 +125,33 @@ def agentic_rewrite_enabled() -> bool:
     )
 
 
+def grade_model() -> str:
+    """The retrieval grader's model (Stage 2). Same pluggable interface as
+    extraction and rewriting; gpt-4o-mini by default."""
+    return os.environ.get("GRADE_MODEL", "openai:gpt-4o-mini")
+
+
+# Stage 2 node default. "1" since the passing re-gate of 22 Sep 2026 under
+# the label-aware faithfulness judge (evals/runs/stage2_grade_j2.json vs
+# stage1b_dual_j2.json): pooled context precision 0.713 -> 0.806, single-hop
+# and multi-turn recall, citation accuracy, faithfulness and F1_ans unchanged,
+# unanswerable 7/7 refused with 6 of them stopped before the gpt-4o call,
+# 0 answerable items abstained on. Only effective when AGENTIC_RAG=1, which
+# stays off; AGENTIC_GRADE=0 restores Stage 1b inside the graph.
+AGENTIC_GRADE_DEFAULT = "1"
+
+
+def agentic_grade_enabled() -> bool:
+    """Stage 2: the retrieval grading node between retrieve and generate
+    (app.generation.grade). Effective only inside the graph (AGENTIC_RAG=1).
+    The grader gates evidence: proceed, widen once in-corpus, or abstain. It
+    never fetches anything outside the corpus and never writes content."""
+    return (
+        agentic_rag_enabled()
+        and os.environ.get("AGENTIC_GRADE", AGENTIC_GRADE_DEFAULT) == "1"
+    )
+
+
 # --- admin allowlist --------------------------------------------------------
 # Comma-separated e-mail addresses allowed to read the admin trace viewer
 # (/admin/*). Compared, lower-cased, against the e-mail asserted in the

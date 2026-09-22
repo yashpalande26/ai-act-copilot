@@ -29,6 +29,31 @@ def test_well_formed_response_parses_correctly(monkeypatch):
     assert result == JudgeResult(score=4, rationale="All claims are supported.")
 
 
+def test_faithfulness_prompt_carries_each_chunk_label(monkeypatch):
+    fake_client = MagicMock()
+    fake_client.chat.completions.create.return_value = _make_llm_response(
+        '{"rationale": "ok", "score": 5}'
+    )
+    monkeypatch.setattr(judge_module, "_get_client", lambda: fake_client)
+
+    judge_module.judge_faithfulness(
+        "See Article 6, paragraph 6.",
+        ["text six", "text seven"],
+        ["Article 6, paragraph 6", "Article 6, paragraph 7"],
+    )
+    messages = fake_client.chat.completions.create.call_args.kwargs["messages"]
+    assert "[Article 6, paragraph 6]\ntext six" in messages[1]["content"]
+    assert "[Article 6, paragraph 7]\ntext seven" in messages[1]["content"]
+    assert "citation label in square brackets" in messages[0]["content"]
+    # the criteria stay: the scale and the "context only" rule are untouched
+    assert (
+        "5 = every claim in the answer is directly supported" in messages[0]["content"]
+    )
+    assert "judge faithfulness to\nthe context only" in messages[0]["content"]
+    with pytest.raises(ValueError):
+        judge_module.judge_faithfulness("a", ["one"], ["l1", "l2"])
+
+
 def test_malformed_response_is_a_parse_failure_not_a_crash(monkeypatch):
     fake_client = MagicMock()
     fake_client.chat.completions.create.return_value = _make_llm_response(
