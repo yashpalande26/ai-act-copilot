@@ -112,6 +112,18 @@
   --input: var(--hairline-strong);
   --ring: var(--accent);
 
+  /* --- app chrome ------------------------------------------------------- */
+  /* The signed-in shell: a rail one step below the page, hairline-separated,
+     so content reads as the raised layer without shadows doing the work. */
+  --sidebar: oklch(0.974 0.004 85);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--navy);
+  --sidebar-primary-foreground: oklch(0.985 0.004 85);
+  --sidebar-accent: var(--surface);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--hairline);
+  --sidebar-ring: var(--accent);
+
   /* --- radii (1.4 ramp) ------------------------------------------------ */
   --radius: 0.75rem;
 
@@ -168,6 +180,15 @@
   --border: var(--hairline);
   --input: var(--hairline-strong);
   --ring: var(--accent);
+
+  --sidebar: oklch(0.152 0.013 258);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--navy);
+  --sidebar-primary-foreground: oklch(0.169 0.014 258);
+  --sidebar-accent: var(--surface);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--hairline);
+  --sidebar-ring: var(--accent);
 
   --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.28);
   --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.3), 0 2px 6px -2px oklch(0 0 0 / 0.32);
@@ -239,6 +260,15 @@
     font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
     line-height: 1.08;
     letter-spacing: -0.018em;
+    font-weight: 400;
+  }
+  /* In-app page titles: the editorial face at a working size, so a signed-in
+     screen shares the landing page's voice without its scale. */
+  .type-title {
+    font-family: var(--font-display), ui-serif, Georgia, serif;
+    font-size: clamp(1.75rem, 1.45rem + 1.1vw, 2.25rem);
+    line-height: 1.12;
+    letter-spacing: -0.016em;
     font-weight: 400;
   }
   .type-h2 {

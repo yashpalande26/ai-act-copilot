@@ -38,7 +38,7 @@ export function AssessmentsRail() {
 
   return (
     <nav aria-label="Your assessments" className="px-2 pb-4">
-      <p className="type-eyebrow text-ink-faint px-3 pt-3 pb-1.5">Your assessments</p>
+      <p className="type-eyebrow text-ink-faint px-3 pt-4 pb-1.5">Your assessments</p>
       {error ? (
         <p className="type-micro text-ink-soft px-3 py-2">Could not load your assessments.</p>
       ) : rows === null ? (
@@ -58,15 +58,15 @@ export function AssessmentsRail() {
             <li key={a.id}>
               <Link
                 href={`/app/assess/${a.id}`}
-                className="text-ink-soft hover:bg-muted/60 hover:text-ink focus-visible:ring-ring block rounded-lg px-3 py-2.5 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                className="text-ink-soft hover:bg-sidebar-accent/70 hover:text-ink focus-visible:ring-ring block rounded-lg px-3 py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none"
               >
-                <span className="type-meta block leading-snug">
+                <span className="type-micro block leading-snug">
                   {HEADLINE_SHORT[a.headline] ?? a.headline}
                   {a.high_risk_basis ? (
                     <span className="type-micro text-ink-faint ml-2 font-mono">{a.high_risk_basis}</span>
                   ) : null}
                 </span>
-                <span className="type-micro text-ink-faint mt-1 block">
+                <span className="text-ink-faint mt-0.5 block text-[0.75rem] leading-snug">
                   {new Date(a.created_at).toLocaleDateString()} <span aria-hidden>&middot;</span>{" "}
                   {a.roles.join(", ") || "no role"}
                 </span>

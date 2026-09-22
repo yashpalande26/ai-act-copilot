@@ -111,12 +111,8 @@ export default async function LandingPage() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="relative overflow-hidden">
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-[40rem] bg-[radial-gradient(60rem_28rem_at_50%_-8rem,var(--accent-soft),transparent_70%)]"
-          />
-          <div className="relative mx-auto max-w-6xl px-6 pt-16 pb-20 sm:pt-24 lg:grid lg:grid-cols-12 lg:items-center lg:gap-14 lg:pt-24 lg:pb-28">
+        <section className="border-hairline border-b">
+          <div className="mx-auto max-w-6xl px-6 pt-16 pb-20 sm:pt-24 lg:grid lg:grid-cols-12 lg:items-center lg:gap-16 lg:pt-28 lg:pb-32">
             <div className="lg:col-span-6">
               <p className="type-eyebrow text-ink-faint flex items-center gap-2">
                 <ShieldCheckIcon className="text-accent-solid size-4" aria-hidden />
@@ -157,8 +153,8 @@ export default async function LandingPage() {
         </section>
 
         {/* The problem */}
-        <section className="border-hairline bg-surface-sunken/40 border-y">
-          <div className="reveal mx-auto max-w-6xl px-6 py-20 lg:py-24">
+        <section className="border-hairline bg-surface-sunken/40 border-b">
+          <div className="reveal mx-auto max-w-6xl px-6 py-20 lg:py-28">
             <div className="lg:grid lg:grid-cols-12 lg:gap-14">
               <div className="lg:col-span-5">
                 <p className="type-eyebrow text-ink-faint">The problem</p>
@@ -220,7 +216,7 @@ export default async function LandingPage() {
 
         {/* Ask a question (secondary) */}
         <section className="border-hairline bg-surface-sunken/40 border-b" data-chat-section>
-          <div className="reveal mx-auto max-w-6xl px-6 py-20 lg:grid lg:grid-cols-12 lg:items-center lg:gap-14 lg:py-24">
+          <div className="reveal mx-auto max-w-6xl px-6 py-20 lg:grid lg:grid-cols-12 lg:items-center lg:gap-16 lg:py-28">
             <div className="lg:col-span-5">
               <p className="type-eyebrow text-ink-faint">Also available</p>
               <h2 className="type-h2 text-ink mt-4 text-balance">
@@ -298,12 +294,8 @@ export default async function LandingPage() {
         {/* CTA */}
         <section>
           <div className="mx-auto max-w-6xl px-6 py-20 lg:py-28">
-            <div className="reveal bg-brand-solid border-hairline relative overflow-hidden rounded-3xl border px-6 py-16 sm:px-14 lg:py-20">
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0 bg-[radial-gradient(40rem_20rem_at_80%_-20%,oklch(1_0_0/0.10),transparent_70%)]"
-              />
-              <div className="relative max-w-[34rem]">
+            <div className="reveal bg-brand-solid rounded-3xl px-6 py-16 shadow-[var(--shadow-lg)] sm:px-14 lg:py-20">
+              <div className="max-w-[34rem]">
                 <h2 className="type-display-sm text-brand-on text-balance">
                   Find out where you stand.
                 </h2>
@@ -330,9 +322,48 @@ export default async function LandingPage() {
       </main>
 
       <footer className="border-hairline border-t">
-        <div className="text-ink-faint type-meta mx-auto flex max-w-6xl flex-col gap-5 px-6 py-12 sm:flex-row sm:items-center sm:justify-between">
-          <Wordmark />
-          <p>Informational tool. Not legal advice.</p>
+        <div className="mx-auto max-w-6xl px-6 py-14">
+          <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-[22rem]">
+              <Wordmark />
+              <p className="type-meta text-ink-soft mt-4">
+                Where an AI system sits under the EU AI Act, with the provisions quoted from the
+                consolidated text.
+              </p>
+            </div>
+            <nav aria-label="Footer" className="grid grid-cols-2 gap-x-12 gap-y-3 sm:grid-cols-3">
+              <div className="space-y-2.5">
+                <p className="type-eyebrow text-ink-faint">Product</p>
+                <Link href={assessHref} className="type-meta text-ink-soft hover:text-ink block">
+                  Assess a system
+                </Link>
+                <Link href={chatHref} className="type-meta text-ink-soft hover:text-ink block">
+                  Ask the copilot
+                </Link>
+              </div>
+              <div className="space-y-2.5">
+                <p className="type-eyebrow text-ink-faint">Source</p>
+                <a
+                  href="https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:02024R1689-20260727"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="type-meta text-ink-soft hover:text-ink block"
+                >
+                  Consolidated text on EUR-Lex
+                </a>
+              </div>
+              <div className="space-y-2.5">
+                <p className="type-eyebrow text-ink-faint">Account</p>
+                <Link href={signedIn ? "/app" : "/signin"} className="type-meta text-ink-soft hover:text-ink block">
+                  {signedIn ? "Open the app" : "Sign in"}
+                </Link>
+              </div>
+            </nav>
+          </div>
+          <div className="border-hairline type-micro text-ink-faint mt-12 flex flex-col gap-2 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
+            <p>Informational tool. Not legal advice. Only the Official Journal text is legally authentic.</p>
+            <p>AI Act Copilot</p>
+          </div>
         </div>
       </footer>
     </>

@@ -76,7 +76,7 @@ export function ChatPanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl px-6 py-10">
+        <div className="w-full max-w-[52rem] px-5 py-8 md:px-10 md:py-10">
           {loading ? (
             <div className="space-y-8" role="status" aria-live="polite" aria-label="Loading chat">
               <div className="flex justify-end">
@@ -92,11 +92,12 @@ export function ChatPanel({
               </div>
             </div>
           ) : empty ? (
-            <div className="py-8 sm:py-14">
-              <h1 className="type-h2 text-balance">
+            <div className="py-6 sm:py-12">
+              <p className="type-eyebrow text-ink-faint">Ask the copilot</p>
+              <h1 className="type-title text-ink mt-2.5 text-balance">
                 What can I help you check, {userName}?
               </h1>
-              <p className="type-lead text-muted-foreground mt-5 max-w-[42rem]">
+              <p className="type-lead text-ink-soft mt-4 max-w-[38rem] text-pretty">
                 Ask about obligations, prohibited practices, or whether a system
                 is high-risk. Every answer cites the provisions it came from.
               </p>
@@ -111,7 +112,7 @@ export function ChatPanel({
                     key={starter}
                     type="button"
                     onClick={() => submit(starter)}
-                    className="border-border/70 bg-card hover:border-primary/40 hover:bg-accent focus-visible:ring-ring type-meta rounded-xl border px-4.5 py-3.5 text-left transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                    className="border-hairline bg-card hover:border-hairline-strong hover:bg-surface-sunken/60 focus-visible:ring-ring type-meta text-ink-soft hover:text-ink rounded-xl border px-4.5 py-3.5 text-left shadow-[var(--shadow-xs)] transition-colors focus-visible:ring-2 focus-visible:outline-none"
                   >
                     {starter}
                   </button>
@@ -142,15 +143,15 @@ export function ChatPanel({
         </div>
       </div>
 
-      <div className="border-border/60 bg-background/90 border-t backdrop-blur-md">
-        <div className="mx-auto w-full max-w-3xl px-6 py-4">
+      <div className="border-hairline bg-paper/90 border-t backdrop-blur-md">
+        <div className="w-full max-w-[52rem] px-5 py-4 md:px-10">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               submit(question);
             }}
           >
-            <div className="border-border/70 bg-card focus-within:border-primary/50 focus-within:ring-ring/25 flex items-end gap-2 rounded-2xl border p-2.5 transition-shadow focus-within:ring-2">
+            <div className="border-hairline-strong bg-card focus-within:border-accent-solid/60 focus-within:ring-ring/20 flex items-end gap-2 rounded-2xl border p-2 shadow-[var(--shadow-sm)] transition-shadow focus-within:ring-4">
               <Textarea
                 ref={inputRef}
                 value={question}

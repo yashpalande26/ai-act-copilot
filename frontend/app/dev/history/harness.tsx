@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 
-import { HistoryDrawer, HistorySidebar } from "@/components/chat/history-sidebar";
+import { AppShell } from "@/components/app/app-shell";
+import { HistoryList } from "@/components/chat/history-sidebar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { SessionSummary } from "@/lib/types";
 
 const HOUR = 3_600_000;
@@ -29,36 +31,50 @@ function fixture(now = Date.now()): SessionSummary[] {
   }));
 }
 
+/** Stand-in for the server-rendered account control (no session here). */
+function FakeAccount({ compact = false }: { compact?: boolean }) {
+  const avatar = (
+    <Avatar className="size-8">
+      <AvatarFallback className="text-xs">OP</AvatarFallback>
+    </Avatar>
+  );
+  if (compact) return avatar;
+  return (
+    <div className="flex items-center gap-3 px-2.5 py-2">
+      {avatar}
+      <span className="min-w-0">
+        <span className="type-meta text-ink block truncate font-medium">Operator</span>
+        <span className="type-micro text-ink-faint block truncate">operator@example.com</span>
+      </span>
+    </div>
+  );
+}
+
 export function HistoryHarness() {
   const [sessions] = useState(fixture);
   const [current, setCurrent] = useState<string | undefined>("a2");
-  const props = {
-    sessions,
-    loading: false,
-    currentId: current,
-    onSelect: setCurrent,
-    onNew: () => setCurrent(undefined),
-    showAssessments: false, // no session in the harness; the block would 401
-  };
-
+  const rail = (
+    <HistoryList
+      sessions={sessions}
+      loading={false}
+      currentId={current}
+      onSelect={setCurrent}
+      onNew={() => setCurrent(undefined)}
+      showAssessments={false} // no session in the harness; the block would 401
+    />
+  );
   return (
-    <div className="flex h-dvh flex-col">
-      <p className="type-eyebrow text-ink-faint border-hairline border-b px-6 py-3">
-        Preview harness, not a product page
+    <AppShell
+      account={<FakeAccount />}
+      accountCompact={<FakeAccount compact />}
+      rail={rail}
+      title="Ask the copilot"
+      isAdmin
+    >
+      <p className="type-eyebrow text-ink-faint mb-6">Preview harness, not a product page</p>
+      <p className="type-body text-ink-soft">
+        Conversation column. Current session: {current ?? "none (new chat)"}.
       </p>
-      <div className="flex min-h-0 flex-1">
-        <HistorySidebar {...props} className="hidden md:flex md:flex-col" />
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="border-hairline flex h-11 items-center border-b px-3 md:hidden">
-            <HistoryDrawer {...props} />
-          </div>
-          <div className="mx-auto w-full max-w-3xl px-6 py-10">
-            <p className="type-body text-ink-soft">
-              Conversation column. Current session: {current ?? "none (new chat)"}.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+    </AppShell>
   );
 }

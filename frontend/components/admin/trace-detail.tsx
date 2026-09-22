@@ -32,7 +32,7 @@ function TraceDetailView({ trace }: { trace: Trace }) {
           <ArrowLeftIcon className="size-3.5" aria-hidden />
           All traces
         </Link>
-        <h1 className="type-h2 mt-3 text-balance">{trace.question}</h1>
+        <h1 className="type-title text-ink mt-3 text-balance">{trace.question}</h1>
         {trace.rewritten_query ? (
           <p className="type-micro text-ink-soft mt-2">
             Retrieved for (rewritten follow-up):{" "}

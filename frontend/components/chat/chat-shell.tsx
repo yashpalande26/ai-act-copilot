@@ -1,20 +1,32 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { AppShell } from "@/components/app/app-shell";
 import { ChatPanel } from "@/components/chat/chat-panel";
-import { HistoryDrawer, HistorySidebar } from "@/components/chat/history-sidebar";
+import { HistoryList } from "@/components/chat/history-sidebar";
 import { useChatSession, useSessions } from "@/components/chat/use-chat-session";
 
 /**
- * The signed-in workspace: history rail + conversation. Owns nothing itself;
- * state lives in useChatSession, data in useSessions. The current session id
- * is mirrored to `?s=` so a reload reopens the same thread. That parameter is
- * only a hint about which session to fetch: the fetch is ownership-checked
- * server-side, so a foreign id simply fails to load.
+ * The signed-in workspace: the app shell with the chat history as its rail,
+ * and the conversation as the content. Owns nothing itself; state lives in
+ * useChatSession, data in useSessions. The current session id is mirrored to
+ * `?s=` so a reload reopens the same thread. That parameter is only a hint
+ * about which session to fetch: the fetch is ownership-checked server-side,
+ * so a foreign id simply fails to load.
  */
-export function ChatShell({ userName }: { userName: string }) {
+export function ChatShell({
+  userName,
+  isAdmin,
+  account,
+  accountCompact,
+}: {
+  userName: string;
+  isAdmin: boolean;
+  account: ReactNode;
+  accountCompact: ReactNode;
+}) {
   const params = useSearchParams();
   const router = useRouter();
   const chat = useChatSession(params.get("s") ?? undefined);
@@ -27,34 +39,36 @@ export function ChatShell({ userName }: { userName: string }) {
     }
   }, [chat.sessionId, router]);
 
-  const historyProps = {
-    sessions: history.sessions,
-    loading: history.loading,
-    error: history.error,
-    currentId: chat.sessionId,
-    onSelect: (id: string) => {
-      if (id !== chat.sessionId) void chat.openSession(id);
-    },
-    onNew: chat.startNewChat,
-  };
+  const rail = (
+    <HistoryList
+      sessions={history.sessions}
+      loading={history.loading}
+      error={history.error}
+      currentId={chat.sessionId}
+      onSelect={(id) => {
+        if (id !== chat.sessionId) void chat.openSession(id);
+      }}
+      onNew={chat.startNewChat}
+    />
+  );
 
   return (
-    <div className="flex min-h-0 flex-1">
-      <HistorySidebar {...historyProps} className="hidden md:flex md:flex-col" />
-
-      <div className="flex min-h-0 flex-1 flex-col">
-        <div className="border-hairline flex h-11 items-center border-b px-3 md:hidden">
-          <HistoryDrawer {...historyProps} />
-        </div>
-        <ChatPanel
-          userName={userName}
-          turns={chat.turns}
-          pending={chat.pending}
-          loading={chat.loading}
-          loadError={chat.loadError}
-          onSubmit={chat.submit}
-        />
-      </div>
-    </div>
+    <AppShell
+      isAdmin={isAdmin}
+      account={account}
+      accountCompact={accountCompact}
+      rail={rail}
+      title="Ask the copilot"
+      scroll="none"
+    >
+      <ChatPanel
+        userName={userName}
+        turns={chat.turns}
+        pending={chat.pending}
+        loading={chat.loading}
+        loadError={chat.loadError}
+        onSubmit={chat.submit}
+      />
+    </AppShell>
   );
 }

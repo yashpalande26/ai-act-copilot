@@ -1,9 +1,12 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import { AccountMenu } from "@/components/app/account-menu";
+import { AppShell } from "@/components/app/app-shell";
+import { PageHeader } from "@/components/app/page-header";
 import { AssessFlow } from "@/components/assess/assess-flow";
-import { SiteHeader } from "@/components/site-header";
+import { AssessmentsRail } from "@/components/chat/assessments-rail";
+import { isAdminEmail } from "@/lib/admin";
 
 /**
  * The assessment wedge: describe the system -> deterministic classification ->
@@ -21,26 +24,28 @@ export default async function AssessPage({
   if (!session?.user?.email) redirect("/signin");
   const { describe } = await searchParams;
   const initialDescription = typeof describe === "string" ? describe.slice(0, 4000) : undefined;
+  const user = {
+    name: session.user.name ?? null,
+    email: session.user.email,
+    image: session.user.image ?? null,
+    isAdmin: isAdminEmail(session.user.email),
+  };
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <SiteHeader width="wide">
-        <Link href="/app" className="type-meta text-ink-soft hover:text-ink">
-          Back to chat
-        </Link>
-      </SiteHeader>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
-        <p className="type-eyebrow text-ink-faint">Assessment</p>
-        <h1 className="type-h2 mt-2 text-balance">Where does your AI system sit under the Act?</h1>
-        <p className="type-lead text-muted-foreground mt-4 max-w-[42rem]">
-          Describe the system for a head start, or answer the short questionnaire directly. The
-          result quotes the provisions it rests on, word for word, and computes the fine ceilings
-          from that text. It is informational, not legal advice.
-        </p>
-        <div className="mt-10">
-          <AssessFlow initialDescription={initialDescription} />
-        </div>
-      </main>
-    </div>
+    <AppShell
+      isAdmin={user.isAdmin}
+      account={<AccountMenu user={user} />}
+      accountCompact={<AccountMenu user={user} compact />}
+      rail={<AssessmentsRail />}
+      title="Assessment"
+      width="form"
+    >
+      <PageHeader
+        eyebrow="Assessment"
+        title="Where does your AI system sit under the Act?"
+        description="Describe the system for a head start, or answer the short questionnaire directly. The result quotes the provisions it rests on, word for word, and computes the fine ceilings from that text. It is informational, not legal advice."
+      />
+      <AssessFlow initialDescription={initialDescription} />
+    </AppShell>
   );
 }

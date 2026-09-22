@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { SiteHeader } from "@/components/site-header";
+import { AccountMenu } from "@/components/app/account-menu";
+import { AppShell } from "@/components/app/app-shell";
 import { isAdminEmail } from "@/lib/admin";
 
 /**
@@ -14,16 +14,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await auth();
   if (!session?.user?.email) redirect("/signin");
   if (!isAdminEmail(session.user.email)) notFound();
+  const user = {
+    name: session.user.name ?? null,
+    email: session.user.email,
+    image: session.user.image ?? null,
+    isAdmin: true,
+  };
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <SiteHeader width="wide">
-        <Link href="/app" className="type-meta text-ink-soft hover:text-ink">
-          Back to chat
-        </Link>
-      </SiteHeader>
-      {/* 7xl rather than the app's 6xl: an operator table earns the width. */}
-      <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-8">{children}</main>
-    </div>
+    <AppShell
+      isAdmin
+      account={<AccountMenu user={user} />}
+      accountCompact={<AccountMenu user={user} compact />}
+      title="Admin"
+      width="wide"
+    >
+      {children}
+    </AppShell>
   );
 }

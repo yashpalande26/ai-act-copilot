@@ -29,7 +29,7 @@ for (const [w, width, height] of VIEWPORTS) {
 
     const row = { viewport: w, theme };
     if (width < 768) {
-      const trigger = page.getByRole("button", { name: "History", exact: true });
+      const trigger = page.getByRole("button", { name: "Menu", exact: true });
       row.triggerExpandedBefore = await trigger.getAttribute("aria-expanded");
       await page.screenshot({ path: `${OUT}/drawer-closed-${w}-${theme}.png`, fullPage: false });
       await trigger.focus();
@@ -44,7 +44,7 @@ for (const [w, width, height] of VIEWPORTS) {
       row.triggerExpandedAfter = await trigger.getAttribute("aria-expanded");
     } else {
       row.currentItems = await page.locator('aside [aria-current="page"]').count();
-      row.newChatFocusable = await page.getByRole("button", { name: "New chat" }).evaluate((el) => {
+      row.newChatFocusable = await page.getByRole("button", { name: "New", exact: true }).evaluate((el) => {
         el.focus(); return document.activeElement === el;
       });
       await page.screenshot({ path: `${OUT}/rail-${w}-${theme}.png`, fullPage: false });

@@ -98,7 +98,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/signin">)
             <Wordmark />
           </div>
 
-          <div className="border-border/70 bg-card rounded-2xl border p-7 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_12px_32px_-16px_rgba(0,0,0,0.12)] sm:p-9">
+          <div className="border-hairline bg-card rounded-2xl border p-7 shadow-[var(--shadow-md)] sm:p-9">
             {anyProvider ? (
               <>
                 <h1 className="type-h2 text-[1.625rem] leading-tight">

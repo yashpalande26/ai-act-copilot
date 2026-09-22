@@ -71,7 +71,7 @@ export function TraceList({ initial }: { initial?: Page }) {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="type-h2">Query traces</h1>
+          <h1 className="type-title text-ink">Query traces</h1>
           <p className="type-meta text-ink-soft mt-2">
             Every answered question, newest first. Operator view; contains user questions.
           </p>

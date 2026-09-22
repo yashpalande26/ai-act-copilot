@@ -1,22 +1,10 @@
 import { Suspense } from "react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ActivityIcon, LogOutIcon } from "lucide-react";
 
-import { auth, signOut } from "@/auth";
+import { auth } from "@/auth";
+import { AccountMenu } from "@/components/app/account-menu";
 import { ChatShell } from "@/components/chat/chat-shell";
 import { isAdminEmail } from "@/lib/admin";
-import { SiteHeader } from "@/components/site-header";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 export default async function AppPage() {
   const session = await auth();
@@ -26,65 +14,22 @@ export default async function AppPage() {
 
   const email = session.user.email;
   const name = session.user.name?.split(" ")[0] ?? email.split("@")[0];
-  const initials = (session.user.name ?? email).slice(0, 2).toUpperCase();
+  const user = {
+    name: session.user.name ?? null,
+    email,
+    image: session.user.image ?? null,
+    isAdmin: isAdminEmail(email),
+  };
 
   return (
-    <div className="flex h-dvh flex-col">
-      <SiteHeader width="narrow">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              aria-label="Account menu"
-            >
-              <Avatar className="size-8">
-                {session.user.image ? (
-                  <AvatarImage src={session.user.image} alt="" />
-                ) : null}
-                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-60">
-            <DropdownMenuLabel className="font-normal">
-              <p className="text-sm font-medium">{session.user.name ?? "Signed in"}</p>
-              <p className="text-muted-foreground truncate text-xs">{email}</p>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {isAdminEmail(email) ? (
-              <>
-                <DropdownMenuItem asChild>
-                  <Link href="/app/admin/traces" className="cursor-pointer">
-                    <ActivityIcon className="size-4" aria-hidden />
-                    Admin: query traces
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </>
-            ) : null}
-            <form
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/" });
-              }}
-            >
-              <DropdownMenuItem asChild>
-                <button type="submit" className="w-full cursor-pointer">
-                  <LogOutIcon className="size-4" aria-hidden />
-                  Sign out
-                </button>
-              </DropdownMenuItem>
-            </form>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SiteHeader>
-
-      {/* Suspense: ChatShell reads ?s= via useSearchParams. */}
-      <Suspense fallback={null}>
-        <ChatShell userName={name} />
-      </Suspense>
-    </div>
+    // Suspense: ChatShell reads ?s= via useSearchParams.
+    <Suspense fallback={null}>
+      <ChatShell
+        userName={name}
+        isAdmin={user.isAdmin}
+        account={<AccountMenu user={user} />}
+        accountCompact={<AccountMenu user={user} compact />}
+      />
+    </Suspense>
   );
 }
