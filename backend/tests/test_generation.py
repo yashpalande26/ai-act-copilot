@@ -231,7 +231,7 @@ def test_index_present_uses_hybrid_bm25_and_records_it(monkeypatch):
 
     assert result.answer == "An answer."
     assert called.get("yes") is True
-    assert _captured_trace_config(session) == "hybrid_bm25|actor=none"
+    assert _captured_trace_config(session) == "hybrid_bm25|vector=empty|actor=none"
 
 
 def test_trace_is_stamped_with_current_environment(monkeypatch):
@@ -280,7 +280,7 @@ def test_actor_prior_reorders_context_and_is_recorded_in_trace(monkeypatch):
     # 0.012 * 0.25 = 0.003 < 0.010, so the deployer chunk now leads.
     assert [c.citation_id for c in result.citations] == ["art_26.par_1", "art_16.pt_a"]
     assert _captured_trace_config(session) == (
-        f"hybrid_bm25|actor=deployer|factor={answer_module.ACTOR_MISMATCH_FACTOR}"
+        f"hybrid_bm25|vector=empty|actor=deployer|factor={answer_module.ACTOR_MISMATCH_FACTOR}"
     )
 
 
@@ -297,7 +297,7 @@ def test_missing_index_degrades_without_calling_bm25(monkeypatch, capsys):
     result = _run_one_turn(monkeypatch, session)
 
     assert result.answer == "An answer."
-    assert _captured_trace_config(session) == "vector_only_degraded|actor=none"
+    assert _captured_trace_config(session) == "vector_only_degraded|vector=empty|actor=none"
     # A missing index means the deploy step never ran - it must be loud, not
     # only visible in the trace table.
     stderr = capsys.readouterr().err
@@ -319,7 +319,7 @@ def test_stale_index_degrades_loudly_instead_of_raising(monkeypatch, capsys):
     # The whole point: a stale index must not take the copilot down, and must
     # not serve BM25 results resolved against the wrong chunk_id mapping.
     assert result.answer == "An answer."
-    assert _captured_trace_config(session) == "vector_only_degraded|actor=none"
+    assert _captured_trace_config(session) == "vector_only_degraded|vector=empty|actor=none"
     stderr = capsys.readouterr().err
     assert "ACTION REQUIRED" in stderr
     assert "build_bm25_index.py" in stderr
@@ -337,7 +337,7 @@ def test_unexpected_bm25_failure_degrades_under_a_distinct_banner(monkeypatch, c
     result = _run_one_turn(monkeypatch, session)
 
     assert result.answer == "An answer."
-    assert _captured_trace_config(session) == "vector_only_degraded|actor=none"
+    assert _captured_trace_config(session) == "vector_only_degraded|vector=empty|actor=none"
     stderr = capsys.readouterr().err
     # Distinct from the stale banner, so a real bug never hides behind the
     # expected operational case.
@@ -506,3 +506,78 @@ def test_a_real_answer_is_not_an_abstention():
     assert not answer_module.is_abstention(
         answer_module.ABSTENTION_TEXT + " However, Article 6 says..."
     )
+
+
+# --- vector leg visibility (Part 0, 22 Sep 2026) ---------------------------------
+
+
+def test_vector_leg_is_not_floored_in_hybrid_mode(monkeypatch):
+    """A lay query whose best cosine similarity is 0.25 used to lose its whole
+    vector leg to the 0.3 floor and fuse from BM25 alone. Now the rows reach
+    fusion and the leg contributes."""
+    low = [_sr(1, citation_id="anx_III.pt_5.sub_b"), _sr(2, citation_id="art_51.par_1")]
+    for r in low:
+        r.similarity = 0.24
+    seen = {}
+
+    def fake_vector(session, q, cv, top_k, min_similarity):
+        seen["floor"] = min_similarity
+        return low
+
+    monkeypatch.setattr(answer_module, "vector_search", fake_vector)
+    monkeypatch.setattr(answer_module, "load_index", lambda cv: object())
+    monkeypatch.setattr(
+        answer_module,
+        "bm25_search",
+        lambda *a, **kw: [_sr(1, citation_id="anx_III.pt_5.sub_b"), _sr(3)],
+    )
+    fused, cfg = answer_module.retrieve_candidates(
+        object(), "lay question", 1, dense_anchor_floor=None
+    )
+    assert seen["floor"] == 0.0
+    assert cfg.startswith("hybrid_bm25") and "vector=empty" not in cfg
+    both = next(f for f in fused if f.result.chunk_id == 1)
+    assert both.vector_rank == 0 and both.lexical_rank == 0  # the leg contributed
+
+
+def test_floor_still_gates_when_the_lexical_leg_is_degraded(monkeypatch):
+    low = [_sr(1)]
+    low[0].similarity = 0.24
+    monkeypatch.setattr(answer_module, "vector_search", lambda *a, **kw: low)
+    monkeypatch.setattr(
+        answer_module, "load_index", lambda cv: None
+    )  # no index: degraded
+    fused, cfg = answer_module.retrieve_candidates(
+        object(), "q", 1, dense_anchor_floor=None
+    )
+    assert fused == [] and cfg.startswith("vector_only_degraded")
+    assert "vector=empty" in cfg
+
+
+def test_vector_leg_failure_is_loud_and_labelled_not_silent(monkeypatch, capsys):
+    def boom(*a, **kw):
+        raise RuntimeError("embedding API down")
+
+    monkeypatch.setattr(answer_module, "vector_search", boom)
+    monkeypatch.setattr(answer_module, "load_index", lambda cv: object())
+    monkeypatch.setattr(
+        answer_module,
+        "bm25_search",
+        lambda *a, **kw: [_sr(7, citation_id="art_16.pt_a")],
+    )
+    fused, cfg = answer_module.retrieve_candidates(
+        object(), "q", 1, dense_anchor_floor=None
+    )
+    assert [f.result.chunk_id for f in fused] == [7]
+    assert cfg.startswith("bm25_only_degraded")
+    assert "UNEXPECTED vector leg failure" in capsys.readouterr().err
+
+
+def test_empty_vector_leg_is_tagged(monkeypatch):
+    monkeypatch.setattr(answer_module, "vector_search", lambda *a, **kw: [])
+    monkeypatch.setattr(answer_module, "load_index", lambda cv: object())
+    monkeypatch.setattr(answer_module, "bm25_search", lambda *a, **kw: [_sr(7)])
+    _, cfg = answer_module.retrieve_candidates(
+        object(), "q", 1, dense_anchor_floor=None
+    )
+    assert cfg.startswith("hybrid_bm25|vector=empty")

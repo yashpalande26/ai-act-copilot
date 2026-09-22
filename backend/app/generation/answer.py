@@ -357,17 +357,41 @@ def _hybrid_candidates(
     """The two legs and their RRF fusion for ONE query, before the actor prior
     and the dense anchor. Returns (fused, vector_results, retrieval_config).
     `breadth` is the per-leg depth and the fused list length; only the Stage 2
-    grader's single bounded widen passes anything but the default."""
-    vector_results = vector_search(
-        session,
-        query,
-        corpus_version_id,
-        top_k=breadth,
-        min_similarity=min_similarity,
-    )
+    grader's single bounded widen passes anything but the default.
+
+    The vector leg is NOT floored in hybrid mode (22 Sep 2026). RRF fuses by
+    rank, so a low absolute cosine similarity costs nothing; the old
+    `min_similarity` floor silently emptied the whole leg for lay phrasing
+    ("property valuation model for bridge lending": every row between 0.20 and
+    0.25, Annex III point 5(b) at vector rank 2, none fused) while the label
+    still read hybrid_bm25. The floor is applied only when the lexical leg is
+    degraded, where it is the pre-LLM abstention gate it always was. A vector
+    leg that fails (embedding or pgvector) is degraded to BM25-only under its
+    own label and a loud log, mirroring the lexical fallback; a vector leg that
+    returns nothing is tagged, so the trace never shows an empty column
+    without saying why."""
+    try:
+        vector_results = vector_search(
+            session, query, corpus_version_id, top_k=breadth, min_similarity=0.0
+        )
+        vector_failed = False
+    except Exception as exc:  # noqa: BLE001 - uptime beats a hard failure when a correct fallback exists; the distinct banner keeps real bugs visible
+        print(
+            f"UNEXPECTED vector leg failure, serving bm25-only: {exc!r}",
+            file=sys.stderr,
+        )
+        vector_results, vector_failed = [], True
     lexical_results, retrieval_config = _lexical_leg(
         session, query, corpus_version_id, breadth=breadth
     )
+    if vector_failed:
+        retrieval_config = "bm25_only_degraded"
+    elif retrieval_config == "vector_only_degraded":
+        # No lexical leg: the floor is the only gate against answering from
+        # nothing, exactly as before the hybrid retriever existed.
+        vector_results = [r for r in vector_results if r.similarity >= min_similarity]
+    if not vector_results and not vector_failed:
+        retrieval_config += "|vector=empty"
     # With an empty lexical list every candidate scores
     # RETRIEVAL_VECTOR_WEIGHT * 1/(k + rank + 1), a strictly decreasing
     # function of the vector rank - so a degraded turn reproduces
