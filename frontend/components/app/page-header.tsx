@@ -17,7 +17,7 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-10 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="border-hairline mb-10 flex flex-col gap-5 border-b pb-8 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         <p className="type-eyebrow text-ink-faint">{eyebrow}</p>
         <h1 className="type-title text-ink mt-2.5 text-balance">{title}</h1>

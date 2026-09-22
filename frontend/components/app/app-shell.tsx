@@ -46,7 +46,9 @@ export type AppShellProps = {
   children: ReactNode;
 };
 
-const WIDTHS = { reading: "max-w-[52rem]", form: "max-w-3xl", wide: "max-w-none" } as const;
+// Content columns are centred in the main area and sized to the content, so
+// a wide screen shows margin on both sides instead of a dead right gutter.
+const WIDTHS = { reading: "max-w-[54rem]", form: "max-w-[50rem]", wide: "max-w-[88rem]" } as const;
 
 function NavLinks({ isAdmin, onNavigate }: { isAdmin: boolean; onNavigate?: () => void }) {
   const pathname = usePathname() ?? "";
@@ -62,13 +64,13 @@ function NavLinks({ isAdmin, onNavigate }: { isAdmin: boolean; onNavigate?: () =
                 href={href}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
-                className={`type-meta focus-visible:ring-ring flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none ${
+                className={`type-meta focus-visible:ring-ring relative flex items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors focus-visible:ring-2 focus-visible:outline-none ${
                   active
-                    ? "bg-sidebar-accent text-ink ring-hairline font-medium shadow-[var(--shadow-xs)] ring-1"
+                    ? "bg-sidebar-accent text-ink ring-hairline font-medium shadow-[var(--shadow-xs)] ring-1 before:bg-accent-solid before:absolute before:top-2 before:bottom-2 before:-left-3 before:w-0.5 before:rounded-full"
                     : "text-ink-soft hover:bg-sidebar-accent/70 hover:text-ink"
                 }`}
               >
-                <Icon className={`size-4 ${active ? "text-ink" : "text-ink-faint"}`} aria-hidden />
+                <Icon className={`size-4 ${active ? "text-accent-solid" : "text-ink-faint"}`} aria-hidden />
                 {label}
               </Link>
             </li>
@@ -98,8 +100,8 @@ function SidebarBody({
       <div className="pt-1 pb-3">
         <NavLinks isAdmin={isAdmin} onNavigate={onNavigate} />
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">{rail}</div>
-      <div className="border-hairline shrink-0 border-t p-2.5">{account}</div>
+      <div className="border-hairline min-h-0 flex-1 overflow-y-auto border-t">{rail}</div>
+      <div className="border-hairline bg-sidebar shrink-0 border-t p-2.5">{account}</div>
     </div>
   );
 }
@@ -107,8 +109,8 @@ function SidebarBody({
 /**
  * The signed-in application frame: one sidebar (wordmark, primary
  * navigation, a page-specific rail, the account), a slim top bar, and a
- * content area whose column is left-aligned under the top bar rather than
- * centred on the viewport. Every /app screen renders inside it so the chrome,
+ * content area whose column is centred in the main area and sized to the
+ * content (reading, form or wide). Every /app screen renders inside it so the chrome,
  * widths and spacing are the same product everywhere. Below md the sidebar
  * becomes a drawer with dialog semantics.
  */
@@ -146,7 +148,7 @@ export function AppShell({
     <div className="bg-paper flex h-dvh min-h-0">
       <aside
         aria-label="Navigation"
-        className="border-hairline bg-sidebar hidden w-[17rem] shrink-0 border-r md:flex md:flex-col"
+        className="border-hairline bg-sidebar hidden w-[16.5rem] shrink-0 border-r md:flex md:flex-col"
       >
         <SidebarBody isAdmin={isAdmin} rail={rail} account={account} />
       </aside>
@@ -180,7 +182,7 @@ export function AppShell({
 
         {scroll === "main" ? (
           <main className="min-h-0 flex-1 overflow-y-auto">
-            <div className={`w-full px-5 py-8 md:px-10 md:py-10 ${WIDTHS[width]}`}>{children}</div>
+            <div className={`mx-auto w-full px-5 py-8 md:px-10 md:py-12 ${WIDTHS[width]}`}>{children}</div>
           </main>
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">{children}</div>

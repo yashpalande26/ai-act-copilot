@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { AppShell } from "@/components/app/app-shell";
+import { ChatPanel } from "@/components/chat/chat-panel";
 import { HistoryList } from "@/components/chat/history-sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import type { SessionSummary } from "@/lib/types";
@@ -70,11 +71,10 @@ export function HistoryHarness() {
       rail={rail}
       title="Ask the copilot"
       isAdmin
+      scroll="none"
     >
-      <p className="type-eyebrow text-ink-faint mb-6">Preview harness, not a product page</p>
-      <p className="type-body text-ink-soft">
-        Conversation column. Current session: {current ?? "none (new chat)"}.
-      </p>
+      {/* The real empty conversation column: starters and composer, no backend. */}
+      <ChatPanel userName="Operator" turns={[]} pending={false} onSubmit={() => undefined} />
     </AppShell>
   );
 }

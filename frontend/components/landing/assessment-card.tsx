@@ -1,4 +1,6 @@
-import { ArrowUpRightIcon, ScaleIcon } from "lucide-react";
+import { ArrowUpRightIcon } from "lucide-react";
+
+import { Mark } from "@/components/site-header";
 
 import { eurlexHref } from "@/lib/eurlex";
 import report from "@/lib/fixtures/assessment-report.json";
@@ -47,16 +49,25 @@ function Quote({ p }: { p: ProvisionText }) {
 export function AssessmentCard() {
   if (!basis || !article16) return null;
   return (
-    <figure className="border-hairline bg-surface [box-shadow:var(--shadow-xl)] overflow-hidden rounded-2xl border">
+    <figure className="border-hairline bg-surface overflow-hidden rounded-2xl border shadow-[var(--shadow-xl)]">
+      <div className="border-hairline flex items-center justify-between gap-4 border-b px-5 py-2.5 sm:px-7">
+        <span className="flex items-center gap-2">
+          <Mark className="size-5 text-[0.8rem]" />
+          <span className="type-micro text-ink-faint font-mono">assessment record</span>
+        </span>
+        <span className="type-micro text-ink-faint font-mono">
+          consolidated text {fixture.corpus_consolidated_date}
+        </span>
+      </div>
       <div className="border-hairline bg-surface-sunken/60 border-b px-5 py-4 sm:px-7 sm:py-5">
-        <p className="type-eyebrow text-ink-faint">Assessment result, from a real report</p>
+        <p className="type-eyebrow text-ink-faint">Result, from a real report</p>
         <p className="type-body text-ink mt-2 font-medium">{fixture.headline_text}</p>
       </div>
 
       <div className="px-5 py-6 sm:px-7 sm:py-7">
         <div className="flex gap-3.5">
-          <span className="bg-brand-solid text-brand-on mt-0.5 hidden size-7 shrink-0 items-center justify-center rounded-lg sm:flex">
-            <ScaleIcon className="size-3.5" aria-hidden />
+          <span className="bg-accent-soft text-accent-solid mt-0.5 hidden size-7 shrink-0 items-center justify-center rounded-lg sm:flex">
+            <span className="font-display text-[0.95rem] leading-none" aria-hidden>&sect;</span>
           </span>
           <div className="min-w-0 flex-1">
             <p className="type-eyebrow text-ink-faint">Why</p>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { FileTextIcon } from "lucide-react";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import type { SavedAssessmentSummary } from "@/lib/types";
@@ -51,7 +52,13 @@ export function AssessmentsRail() {
           ))}
         </ul>
       ) : rows.length === 0 ? (
-        <p className="type-micro text-ink-soft px-3 py-2">Saved assessments will appear here.</p>
+        <div className="border-hairline mx-1 my-1 rounded-xl border border-dashed px-3 py-4 text-center">
+          <FileTextIcon className="text-ink-faint mx-auto size-4" aria-hidden />
+          <p className="type-micro text-ink-soft mt-2">No saved assessments</p>
+          <p className="text-ink-faint mt-0.5 text-[0.75rem] leading-snug">
+            Save a report to keep its record here.
+          </p>
+        </div>
       ) : (
         <ul className="space-y-0.5">
           {rows.map((a) => (

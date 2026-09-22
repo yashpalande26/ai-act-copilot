@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpIcon } from "lucide-react";
+import Link from "next/link";
+import {
+  ArrowRightIcon,
+  ArrowUpIcon,
+  CircleSlashIcon,
+  ClipboardCheckIcon,
+  ScaleIcon,
+  UsersIcon,
+} from "lucide-react";
 
 import { AssistantTurn, PendingTurn, UserTurn } from "@/components/chat/answer-turn";
 import { LegalNotice } from "@/components/legal-notice";
@@ -22,10 +30,26 @@ function lastUserQuestion(turns: ChatTurn[], i: number): string | undefined {
 const MAX_CHARS = 2000;
 
 const STARTERS = [
-  "What obligations apply to providers of high-risk AI systems?",
-  "Is an AI system used for credit scoring high-risk?",
-  "Which AI practices are prohibited outright?",
-  "What must a deployer do before using a high-risk AI system?",
+  {
+    eyebrow: "Obligations",
+    icon: ScaleIcon,
+    q: "What obligations apply to providers of high-risk AI systems?",
+  },
+  {
+    eyebrow: "Classification",
+    icon: ClipboardCheckIcon,
+    q: "Is an AI system used for credit scoring high-risk?",
+  },
+  {
+    eyebrow: "Prohibited practices",
+    icon: CircleSlashIcon,
+    q: "Which AI practices are prohibited outright?",
+  },
+  {
+    eyebrow: "Deployers",
+    icon: UsersIcon,
+    q: "What must a deployer do before using a high-risk AI system?",
+  },
 ];
 
 type Props = {
@@ -56,6 +80,9 @@ export function ChatPanel({
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    // Follow the conversation, but leave the empty state at the top so the
+    // heading and starters are what a new user sees first.
+    if (turns.length === 0 && !pending) return;
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [turns, pending]);
 
@@ -76,7 +103,7 @@ export function ChatPanel({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-[52rem] px-5 py-8 md:px-10 md:py-10">
+        <div className="mx-auto w-full max-w-[52rem] px-5 py-8 md:px-10 md:py-12">
           {loading ? (
             <div className="space-y-8" role="status" aria-live="polite" aria-label="Loading chat">
               <div className="flex justify-end">
@@ -107,17 +134,42 @@ export function ChatPanel({
                 </p>
               ) : null}
               <div className="mt-10 grid gap-3 sm:grid-cols-2">
-                {STARTERS.map((starter) => (
+                {STARTERS.map(({ eyebrow, icon: Icon, q }) => (
                   <button
-                    key={starter}
+                    key={q}
                     type="button"
-                    onClick={() => submit(starter)}
-                    className="border-hairline bg-card hover:border-hairline-strong hover:bg-surface-sunken/60 focus-visible:ring-ring type-meta text-ink-soft hover:text-ink rounded-xl border px-4.5 py-3.5 text-left shadow-[var(--shadow-xs)] transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                    onClick={() => submit(q)}
+                    className="card-raised lift group focus-visible:ring-ring hover:border-hairline-strong flex flex-col rounded-2xl p-5 text-left focus-visible:ring-2 focus-visible:outline-none"
                   >
-                    {starter}
+                    <span className="flex items-center gap-2">
+                      <span className="bg-accent-soft text-accent-solid flex size-7 items-center justify-center rounded-lg">
+                        <Icon className="size-3.5" aria-hidden />
+                      </span>
+                      <span className="type-eyebrow text-ink-faint">{eyebrow}</span>
+                    </span>
+                    <span className="type-meta text-ink mt-3 font-medium">{q}</span>
+                    <span className="type-micro text-ink-faint group-hover:text-accent-solid mt-4 inline-flex items-center gap-1 transition-colors">
+                      Ask
+                      <ArrowRightIcon className="size-3 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                    </span>
                   </button>
                 ))}
               </div>
+              <Link
+                href="/app/assess"
+                className="card-raised lift hover:border-hairline-strong focus-visible:ring-ring mt-4 flex items-center gap-4 rounded-2xl p-5 focus-visible:ring-2 focus-visible:outline-none"
+              >
+                <span className="bg-brand-solid text-brand-on font-display flex size-10 shrink-0 items-center justify-center rounded-xl text-[1.35rem] leading-none shadow-[inset_0_1px_0_oklch(1_0_0/0.14)]">
+                  <span aria-hidden>&sect;</span>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="type-meta text-ink block font-medium">Need the full record for one system?</span>
+                  <span className="type-micro text-ink-soft mt-0.5 block">
+                    Run the assessment: quoted obligations, dates and fine ceilings, saved and exportable.
+                  </span>
+                </span>
+                <ArrowRightIcon className="text-ink-faint size-4 shrink-0" aria-hidden />
+              </Link>
               <div className="mt-12">
                 <LegalNotice />
               </div>
@@ -144,7 +196,7 @@ export function ChatPanel({
       </div>
 
       <div className="border-hairline bg-paper/90 border-t backdrop-blur-md">
-        <div className="w-full max-w-[52rem] px-5 py-4 md:px-10">
+        <div className="mx-auto w-full max-w-[52rem] px-5 py-4 md:px-10">
           <form
             onSubmit={(e) => {
               e.preventDefault();

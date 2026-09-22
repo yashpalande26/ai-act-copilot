@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeftIcon, ClockIcon, MailIcon } from "lucide-react";
+import { ArrowLeftIcon, CheckIcon, ClockIcon, MailIcon } from "lucide-react";
 
 import { auth, signIn } from "@/auth";
 import { LegalNotice } from "@/components/legal-notice";
-import { Wordmark } from "@/components/site-header";
+import { Mark, Wordmark } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
@@ -93,12 +93,35 @@ export default async function SignInPage({ searchParams }: PageProps<"/signin">)
       </div>
 
       <div className="flex flex-1 items-start justify-center px-6 pb-24 sm:items-center">
-        <div className="w-full max-w-[25rem]">
-          <div className="mb-9 flex justify-center">
+        <div className="grid w-full max-w-5xl items-center gap-12 lg:grid-cols-2 lg:gap-20">
+          {/* What you are signing in to: the same facts as the landing page. */}
+          <div className="hidden lg:block">
+            <Mark className="size-12 text-[1.9rem]" />
+            <h2 className="type-title text-ink mt-8 text-balance">
+              Where your AI system sits under the Act, quoted from the text.
+            </h2>
+            <ul className="mt-8 space-y-3.5">
+              {[
+                "Deterministic classification against Article 5, Article 6 and Annex III.",
+                "Every obligation quoted word for word, with the date it applies from.",
+                "Cited answers from the copilot; it declines when the text does not answer.",
+              ].map((line) => (
+                <li key={line} className="type-meta text-ink-soft flex items-start gap-3">
+                  <span className="bg-grounded-soft text-grounded mt-1 flex size-5 shrink-0 items-center justify-center rounded-full">
+                    <CheckIcon className="size-3" aria-hidden />
+                  </span>
+                  {line}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mx-auto w-full max-w-[25rem]">
+          <div className="mb-9 flex justify-center lg:hidden">
             <Wordmark />
           </div>
 
-          <div className="border-hairline bg-card rounded-2xl border p-7 shadow-[var(--shadow-md)] sm:p-9">
+          <div className="card-raised rounded-2xl p-7 shadow-[var(--shadow-md)] sm:p-9">
             {anyProvider ? (
               <>
                 <h1 className="type-h2 text-[1.625rem] leading-tight">
@@ -195,6 +218,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/signin">)
 
           <div className="mt-7 text-center">
             <LegalNotice variant="inline" />
+          </div>
           </div>
         </div>
       </div>

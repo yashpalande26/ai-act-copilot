@@ -17,8 +17,19 @@ import { auth } from "@/auth";
 import { AnswerCard } from "@/components/landing/answer-card";
 import { AssessmentCard } from "@/components/landing/assessment-card";
 import { LegalNotice } from "@/components/legal-notice";
-import { SiteHeader, Wordmark } from "@/components/site-header";
+import { Mark, SiteHeader, Wordmark } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
+import report from "@/lib/fixtures/assessment-report.json";
+
+const CONSOLIDATED = (report as { corpus_consolidated_date: string }).corpus_consolidated_date;
+
+/* Facts, not claims: each is true of the product as built. */
+const FACTS = [
+  { label: "Consolidated text of", value: CONSOLIDATED },
+  { label: "Scope", value: "113 articles, 13 annexes" },
+  { label: "Classification", value: "No language model in the path" },
+  { label: "Citations", value: "Every one opens EUR-Lex" },
+];
 
 const STEPS = [
   {
@@ -147,8 +158,32 @@ export default async function LandingPage() {
             </div>
 
             <div className="mt-14 lg:col-span-6 lg:mt-0">
-              <AssessmentCard />
+              {/* The product visual: a real record, stacked like the printed
+                  artefact it is. Two sheets behind, offset upward, no rotation. */}
+              <div className="relative">
+                <div
+                  aria-hidden
+                  className="border-hairline bg-surface absolute inset-x-6 -top-3.5 h-full rounded-2xl border opacity-60 shadow-[var(--shadow-sm)]"
+                />
+                <div
+                  aria-hidden
+                  className="border-hairline bg-surface absolute inset-x-3 -top-1.5 h-full rounded-2xl border opacity-80 shadow-[var(--shadow-sm)]"
+                />
+                <div className="relative">
+                  <AssessmentCard />
+                </div>
+              </div>
             </div>
+          </div>
+          <div className="border-hairline border-t">
+            <dl className="mx-auto grid max-w-6xl grid-cols-2 gap-x-8 gap-y-6 px-6 py-8 lg:grid-cols-4">
+              {FACTS.map(({ label, value }) => (
+                <div key={label}>
+                  <dt className="type-eyebrow text-ink-faint">{label}</dt>
+                  <dd className="type-meta text-ink mt-1.5 font-medium">{value}</dd>
+                </div>
+              ))}
+            </dl>
           </div>
         </section>
 
@@ -194,17 +229,14 @@ export default async function LandingPage() {
               </p>
             </div>
 
-            <ol className="lg:bg-hairline mt-14 grid gap-4 overflow-hidden rounded-2xl lg:grid-cols-3 lg:gap-px">
+            <ol className="mt-14 grid gap-5 lg:grid-cols-3">
               {STEPS.map(({ n, icon: Icon, title, body }) => (
-                <li
-                  key={n}
-                  className="reveal border-hairline bg-surface rounded-2xl border p-7 lg:rounded-none lg:border-0 lg:p-9"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="border-hairline bg-paper flex size-10 items-center justify-center rounded-xl border">
-                      <Icon className="text-accent-solid size-[18px]" aria-hidden />
+                <li key={n} className="reveal card-raised rounded-2xl p-7 lg:p-9">
+                  <div className="flex items-center justify-between">
+                    <span className="bg-accent-soft text-accent-solid flex size-10 items-center justify-center rounded-xl">
+                      <Icon className="size-[18px]" aria-hidden />
                     </span>
-                    <span className="type-mono text-ink-faint">{n}</span>
+                    <span className="font-display text-ink-faint text-[1.75rem] leading-none">{n}</span>
                   </div>
                   <h3 className="type-h3 text-ink mt-5">{title}</h3>
                   <p className="type-meta text-ink-soft mt-2.5">{body}</p>
@@ -251,7 +283,7 @@ export default async function LandingPage() {
             <div className="mt-14 grid gap-10 lg:grid-cols-3 lg:gap-12">
               {PILLARS.map(({ icon: Icon, title, body }) => (
                 <div key={title} className="reveal max-w-[26rem]">
-                  <span className="bg-brand-solid text-brand-on flex size-11 items-center justify-center rounded-xl">
+                  <span className="bg-brand-solid text-brand-on flex size-11 items-center justify-center rounded-xl shadow-[inset_0_1px_0_oklch(1_0_0/0.14),var(--shadow-xs)]">
                     <Icon className="size-5" aria-hidden />
                   </span>
                   <h3 className="type-h3 text-ink mt-5">{title}</h3>
@@ -278,11 +310,10 @@ export default async function LandingPage() {
             </div>
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {AUDIENCES.map(({ icon: Icon, title, body }) => (
-                <div
-                  key={title}
-                  className="reveal border-hairline bg-surface rounded-2xl border p-7 [box-shadow:var(--shadow-xs)]"
-                >
-                  <Icon className="text-accent-solid size-5" aria-hidden />
+                <div key={title} className="reveal card-raised rounded-2xl p-7">
+                  <span className="bg-accent-soft text-accent-solid flex size-9 items-center justify-center rounded-lg">
+                    <Icon className="size-4" aria-hidden />
+                  </span>
                   <h3 className="type-h3 text-ink mt-5">{title}</h3>
                   <p className="type-meta text-ink-soft mt-2.5">{body}</p>
                 </div>
@@ -294,7 +325,7 @@ export default async function LandingPage() {
         {/* CTA */}
         <section>
           <div className="mx-auto max-w-6xl px-6 py-20 lg:py-28">
-            <div className="reveal bg-brand-solid rounded-3xl px-6 py-16 shadow-[var(--shadow-lg)] sm:px-14 lg:py-20">
+            <div className="reveal bg-brand-solid flex flex-col gap-10 rounded-3xl px-6 py-16 shadow-[var(--shadow-lg),inset_0_1px_0_oklch(1_0_0/0.10)] sm:px-14 lg:flex-row lg:items-center lg:justify-between lg:py-20">
               <div className="max-w-[34rem]">
                 <h2 className="type-display-sm text-brand-on text-balance">
                   Find out where you stand.
@@ -305,7 +336,7 @@ export default async function LandingPage() {
                 <Button
                   asChild
                   size="lg"
-                  className="type-body bg-brand-on text-brand-solid hover:bg-brand-on/90 mt-9 h-12 px-7"
+                  className="type-body bg-brand-on text-brand-solid hover:bg-brand-on/90 mt-9 h-12 px-7 shadow-none"
                 >
                   <Link href={assessHref}>
                     Assess your AI system
@@ -313,6 +344,7 @@ export default async function LandingPage() {
                   </Link>
                 </Button>
               </div>
+              <Mark className="text-brand-on/90 hidden size-24 text-[4rem] lg:flex" />
             </div>
             <div className="mx-auto mt-12 max-w-[46rem]">
               <LegalNotice />

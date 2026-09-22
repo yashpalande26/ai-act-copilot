@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon } from "lucide-react";
+import { MessageSquareDashedIcon, PlusIcon } from "lucide-react";
 
 import { AssessmentsRail } from "@/components/chat/assessments-rail";
 import { Button } from "@/components/ui/button";
@@ -83,9 +83,13 @@ export function HistoryList({
             Your past chats could not be loaded right now.
           </p>
         ) : sessions.length === 0 ? (
-          <p className="type-micro text-ink-soft px-3 py-3">
-            Your past chats will appear here.
-          </p>
+          <div className="border-hairline mx-1 my-2 rounded-xl border border-dashed px-3 py-4 text-center">
+            <MessageSquareDashedIcon className="text-ink-faint mx-auto size-4" aria-hidden />
+            <p className="type-micro text-ink-soft mt-2">No chats yet</p>
+            <p className="text-ink-faint mt-0.5 text-[0.75rem] leading-snug">
+              Your questions will be kept here.
+            </p>
+          </div>
         ) : (
           <ul className="space-y-0.5">
             {sessions.map((s) => {
