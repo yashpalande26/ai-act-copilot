@@ -135,6 +135,17 @@ def main() -> None:
     real_decide = answer_module.decide_step
     real_rewrite = graph_module.rewrite_followup
     real_grade = graph_module.grade_context
+    real_verify = graph_module.verify_answer
+    real_generate = answer_module.generate_step
+
+    def capturing_verify(answer, fused, extractor=None):
+        res = real_verify(answer, fused, extractor)
+        captured.setdefault("verifies", []).append(res)
+        return res
+
+    def capturing_generate(query, fused, **kw):
+        captured["generate_calls"] = captured.get("generate_calls", 0) + 1
+        return real_generate(query, fused, **kw)
 
     def capturing_retrieve(sess, query, cv_id, **kw):
         step = real_retrieve(sess, query, cv_id, **kw)
@@ -167,6 +178,8 @@ def main() -> None:
     answer_module.decide_step = capturing_decide
     graph_module.rewrite_followup = capturing_rewrite
     graph_module.grade_context = capturing_grade
+    graph_module.verify_answer = capturing_verify
+    answer_module.generate_step = capturing_generate
     session = SessionLocal()
     real_commit = session.commit
     session.commit = session.flush  # nothing persists
@@ -219,6 +232,15 @@ def main() -> None:
                 ),
                 None,
             )
+            verifies = captured.get("verifies", [])
+            verify_outcome = next(
+                (
+                    k
+                    for k in ("passed", "regenerated", "abstained", "skipped")
+                    if f"verify={k}" in tag
+                ),
+                None,
+            )
             rw = captured.get("rewrite")
             served_rewrite = (
                 rw.query
@@ -261,6 +283,14 @@ def main() -> None:
                     (g.prompt_tokens or 0) + (g.completion_tokens or 0) for g in grades
                 ),
                 "retrieve_calls": captured.get("retrieve_calls", 0),
+                "verify_outcome": verify_outcome,
+                "verify_unsupported": [list(v.unsupported_claims) for v in verifies],
+                "verify_missing_refs": [list(v.missing_references) for v in verifies],
+                "verify_tokens": sum(
+                    (v.prompt_tokens or 0) + (v.completion_tokens or 0)
+                    for v in verifies
+                ),
+                "generate_calls": captured.get("generate_calls", 0),
                 "rewritten_query": served_rewrite,
                 "rewrite_introduced": list(rw.introduced) if rw is not None else [],
                 "served_introduced": served_introduced,
@@ -371,6 +401,35 @@ def main() -> None:
             print(
                 f"  answerable items the grader abstained on (must be 0): {len(wrong)} {wrong}"
             )
+        verified = [t for t in traces if t["verify_outcome"]]
+        if verified:
+            vc = {
+                k: sum(t["verify_outcome"] == k for t in verified)
+                for k in ("passed", "regenerated", "abstained", "skipped")
+            }
+            print(
+                f"\n== VERIFY NODE ==  verified {len(verified)}  "
+                + "  ".join(f"{k} {v}" for k, v in vc.items())
+                + f"  max generate calls per turn {max(t['generate_calls'] for t in traces)} (bound 2)"
+                + f"  verifier tokens total {sum(t['verify_tokens'] for t in traces)}"
+            )
+            flagged = [
+                t["id"]
+                for t in verified
+                if t["verify_outcome"] in ("regenerated", "abstained")
+            ]
+            print(f"  answers flagged on first pass: {len(flagged)} {flagged}")
+            for t in verified:
+                if t["verify_outcome"] in ("regenerated", "abstained"):
+                    print(
+                        f"    {t['id']}: missing refs {t['verify_missing_refs'][0]}; unsupported {t['verify_unsupported'][0][:3]}"
+                    )
+            wrong = [
+                t["id"]
+                for t in verified
+                if t["verify_outcome"] == "abstained" and not t["expected_abstention"]
+            ]
+            print(f"  answerable items the verifier abstained on: {len(wrong)} {wrong}")
         attempted = [t for t in traces if t["rewrite_outcome"]]
         if attempted:
             outcomes = {
@@ -409,6 +468,8 @@ def main() -> None:
         answer_module.decide_step = real_decide
         graph_module.rewrite_followup = real_rewrite
         graph_module.grade_context = real_grade
+        graph_module.verify_answer = real_verify
+        answer_module.generate_step = real_generate
         session.commit = real_commit
         session.rollback()
         session.close()

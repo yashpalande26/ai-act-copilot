@@ -152,6 +152,37 @@ def agentic_grade_enabled() -> bool:
     )
 
 
+def verify_model() -> str:
+    """The post-generation citation verifier's model (Stage 3). Measured on
+    22 Sep 2026: on the 24-probe misgrounding set gpt-4o caught 12/12 with
+    0 false positives and gpt-4o-mini 11/12 with 0; on the 35-item agentic
+    set gpt-4o withheld one correct single-hop answer (a faithful paraphrase
+    of Article 66(h) rejected twice), a false abstention the gate forbids,
+    while gpt-4o-mini regressed nothing. gpt-4o-mini is therefore the default;
+    VERIFY_MODEL=openai:gpt-4o selects the stricter verifier."""
+    return os.environ.get("VERIFY_MODEL", "openai:gpt-4o-mini")
+
+
+# Stage 3 node default. "1" since the passing run of 22 Sep 2026 with the
+# gpt-4o-mini verifier (evals/runs/stage3_verify_mini_j2.json vs
+# stage2_grade_j2.json): every deterministic metric identical, no answerable
+# item abstained on, probe true positives 11/12 with 0 false positives. Only
+# effective when AGENTIC_RAG=1, which stays off.
+AGENTIC_VERIFY_DEFAULT = "1"
+
+
+def agentic_verify_enabled() -> bool:
+    """Stage 3: the citation verifier after generation (app.generation.verify).
+    Effective only inside the graph (AGENTIC_RAG=1). Every cited claim must be
+    entailed by the cited provision in the context; otherwise the answer is
+    regenerated ONCE with a grounding instruction and re-verified, and if
+    still unsupported the turn abstains. It never adds content."""
+    return (
+        agentic_rag_enabled()
+        and os.environ.get("AGENTIC_VERIFY", AGENTIC_VERIFY_DEFAULT) == "1"
+    )
+
+
 # --- admin allowlist --------------------------------------------------------
 # Comma-separated e-mail addresses allowed to read the admin trace viewer
 # (/admin/*). Compared, lower-cased, against the e-mail asserted in the

@@ -1,0 +1,263 @@
+[
+ {
+  "id": "pv_01",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_3.pt_4",
+   "art_26.par_2"
+  ],
+  "answer": "A deployer is a natural or legal person, public authority, agency or other body using an AI system under its authority, except where the AI system is used in the course of a personal non-professional activity (Article 3, point (4)). Deployers must assign human oversight to natural persons who have the necessary competence, training and authority, as well as the necessary support (Article 26, paragraph 2).",
+  "note": ""
+ },
+ {
+  "id": "pv_02",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_99.par_3",
+   "art_5.par_1.pt_a"
+  ],
+  "answer": "Non-compliance with the prohibition of the AI practices referred to in Article 5 is subject to administrative fines of up to EUR 35 000 000 or, if the offender is an undertaking, up to 7 % of its total worldwide annual turnover for the preceding financial year, whichever is higher (Article 99, paragraph 3).",
+  "note": "Article 5 is named inside the passage's own text"
+ },
+ {
+  "id": "pv_03",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_16.pt_h",
+   "art_99.par_4",
+   "art_99.par_4.pt_a"
+  ],
+  "answer": "Providers must affix the CE marking to the high-risk AI system or, where that is not possible, on its packaging or its accompanying documentation (Article 16, point (h)). Non-compliance with the obligations of providers pursuant to Article 16 is subject to administrative fines of up to EUR 15 000 000 or, for an undertaking, up to 3 % of its total worldwide annual turnover, whichever is higher (Article 99, paragraph 4, point (a)).",
+  "note": ""
+ },
+ {
+  "id": "pv_04",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_3.pt_60",
+   "art_50.par_4"
+  ],
+  "answer": "A deep fake is AI-generated or manipulated image, audio or video content that resembles existing persons, objects, places, entities or events and would falsely appear to a person to be authentic or truthful (Article 3, point (60)). Deployers of an AI system that generates or manipulates such content must disclose that it has been artificially generated or manipulated, unless the use is authorised by law to detect, prevent, investigate or prosecute criminal offences (Article 50, paragraph 4).",
+  "note": ""
+ },
+ {
+  "id": "pv_05",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_3.pt_49",
+   "art_73.par_1"
+  ],
+  "answer": "Providers of high-risk AI systems placed on the Union market must report any serious incident to the market surveillance authorities of the Member States where that incident occurred (Article 73, paragraph 1). A serious incident includes an incident that leads to the death of a person or serious harm to a person's health (Article 3, point (49)).",
+  "note": ""
+ },
+ {
+  "id": "pv_06",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_12.par_1",
+   "art_26.par_5"
+  ],
+  "answer": "High-risk AI systems must technically allow for the automatic recording of events (logs) over the lifetime of the system (Article 12, paragraph 1). Deployers must monitor the operation of the high-risk AI system on the basis of the instructions for use (Article 26, paragraph 5).",
+  "note": ""
+ },
+ {
+  "id": "pv_07",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_6.par_2",
+   "art_49.par_1"
+  ],
+  "answer": "In addition to the high-risk AI systems referred to in paragraph 1, AI systems referred to in Annex III are considered to be high-risk (Article 6, paragraph 2). Before placing such a system on the market or putting it into service, the provider or, where applicable, the authorised representative must register themselves and the system in the EU database referred to in Article 71, with the exception of systems referred to in point 2 of Annex III (Article 49, paragraph 1).",
+  "note": "Annex III and Article 71 are named inside the passages"
+ },
+ {
+  "id": "pv_08",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_9.par_1",
+   "art_14.par_1"
+  ],
+  "answer": "A risk management system must be established, implemented, documented and maintained in relation to high-risk AI systems (Article 9, paragraph 1). High-risk AI systems must be designed and developed so that they can be effectively overseen by natural persons during the period in which they are in use (Article 14, paragraph 1).",
+  "note": ""
+ },
+ {
+  "id": "pv_09",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_3.pt_63",
+   "art_51.par_1"
+  ],
+  "answer": "A general-purpose AI model is an AI model that displays significant generality and is capable of competently performing a wide range of distinct tasks regardless of the way it is placed on the market, except AI models used for research, development or prototyping activities before they are placed on the market (Article 3, point (63)).",
+  "note": ""
+ },
+ {
+  "id": "pv_10",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_13.par_1",
+   "art_10.par_2"
+  ],
+  "answer": "High-risk AI systems must be designed and developed so that their operation is sufficiently transparent to enable deployers to interpret a system's output and use it appropriately (Article 13, paragraph 1). Training, validation and testing data sets are subject to data governance and management practices appropriate for the intended purpose of the system (Article 10, paragraph 2).",
+  "note": ""
+ },
+ {
+  "id": "pv_11",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_27.par_1"
+  ],
+  "answer": "Before deploying a high-risk AI system referred to in Article 6(2), deployers that are bodies governed by public law or private entities providing public services must perform an assessment of the impact on fundamental rights that the use of the system may produce, with the exception of systems intended to be used in the area listed in point 2 of Annex III (Article 27, paragraph 1).",
+  "note": "Article 6(2) and Annex III are named inside the passage, not in the context: must NOT be flagged"
+ },
+ {
+  "id": "pv_12",
+  "kind": "valid",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_71.par_1"
+  ],
+  "answer": "The Commission, in collaboration with the Member States, must set up and maintain an EU database containing information concerning high-risk AI systems referred to in Article 6(2) which are registered in accordance with Articles 49 and 60 (Article 71, paragraph 1).",
+  "note": "cross-references repeated from the passage"
+ },
+ {
+  "id": "pm_01",
+  "kind": "wrong_label",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_3.pt_4",
+   "art_26.par_2"
+  ],
+  "answer": "Deployers must assign human oversight to natural persons who have the necessary competence, training and authority (Article 3, point (4)).",
+  "note": "the claim is from Article 26(2), cited to the definition"
+ },
+ {
+  "id": "pm_02",
+  "kind": "fabricated_figure",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_99.par_3",
+   "art_5.par_1.pt_a"
+  ],
+  "answer": "Non-compliance with the prohibition of the AI practices referred to in Article 5 is subject to administrative fines of up to EUR 50 000 000 or 10 % of total worldwide annual turnover (Article 99, paragraph 3).",
+  "note": "35 000 000 and 7 % in the passage"
+ },
+ {
+  "id": "pm_03",
+  "kind": "absent_label_mentioned",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_16.pt_h"
+  ],
+  "answer": "Providers must affix the CE marking to the high-risk AI system (Article 16, point (h)). The CE marking must be at least 5 mm high (Article 48, paragraph 1).",
+  "note": "Article 48 is only cross-referenced inside the passage; the 5 mm claim cites a passage that is not in the context"
+ },
+ {
+  "id": "pm_04",
+  "kind": "wrong_actor",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_73.par_1",
+   "art_3.pt_49"
+  ],
+  "answer": "Deployers of high-risk AI systems placed on the Union market must report any serious incident to the market surveillance authorities of the Member States where the incident occurred (Article 73, paragraph 1).",
+  "note": "the obligation is on providers"
+ },
+ {
+  "id": "pm_05",
+  "kind": "added_condition",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_12.par_1",
+   "art_26.par_5"
+  ],
+  "answer": "High-risk AI systems must technically allow for the automatic recording of events (logs) for at least ten years (Article 12, paragraph 1).",
+  "note": "the passage says over the lifetime of the system, no period"
+ },
+ {
+  "id": "pm_06",
+  "kind": "wrong_label",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_6.par_2",
+   "art_49.par_1"
+  ],
+  "answer": "AI systems referred to in Annex III are considered to be high-risk (Article 49, paragraph 1).",
+  "note": "the claim is Article 6(2)'s"
+ },
+ {
+  "id": "pm_07",
+  "kind": "absent_label",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_9.par_1",
+   "art_14.par_1"
+  ],
+  "answer": "High-risk AI systems must be designed so that they can be effectively overseen by natural persons while in use (Article 14, paragraph 1), and providers must keep the automatically generated logs for at least six months (Article 19, paragraph 1).",
+  "note": "Article 19 is neither in the context nor named by a passage: the deterministic check alone must catch it"
+ },
+ {
+  "id": "pm_08",
+  "kind": "insufficient_provision",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_3.pt_63"
+  ],
+  "answer": "A general-purpose AI model must be registered in the EU database before it is placed on the market (Article 3, point (63)).",
+  "note": "an obligation cited to a definition that contains no such thing"
+ },
+ {
+  "id": "pm_09",
+  "kind": "fabricated_detail",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_3.pt_60",
+   "art_50.par_4"
+  ],
+  "answer": "Deployers must disclose deep fakes by placing a visible watermark in the top-left corner of the content (Article 50, paragraph 4).",
+  "note": "the passage requires disclosure, not a watermark or a position"
+ },
+ {
+  "id": "pm_10",
+  "kind": "wrong_label",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_13.par_1",
+   "art_10.par_2"
+  ],
+  "answer": "Training, validation and testing data sets must be subject to data governance and management practices appropriate for the intended purpose of the high-risk AI system (Article 13, paragraph 1).",
+  "note": "the claim is Article 10(2)'s"
+ },
+ {
+  "id": "pm_11",
+  "kind": "contradiction",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_27.par_1"
+  ],
+  "answer": "Deployers that are private companies never have to perform a fundamental rights impact assessment before deploying a high-risk AI system (Article 27, paragraph 1).",
+  "note": "private entities providing public services must"
+ },
+ {
+  "id": "pm_12",
+  "kind": "figure_from_other_paragraph",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_99.par_4",
+   "art_99.par_4.pt_a",
+   "art_16.pt_h"
+  ],
+  "answer": "Non-compliance with the obligations of providers pursuant to Article 16 is subject to administrative fines of up to EUR 35 000 000 or 7 % of total worldwide annual turnover (Article 99, paragraph 4, point (a)).",
+  "note": "those are paragraph 3's figures; paragraph 4 says 15 000 000 and 3 %"
+ }
+]

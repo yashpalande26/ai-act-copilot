@@ -583,11 +583,17 @@ def generate_step(
     fused: list[FusedResult],
     *,
     max_output_tokens: int | None = None,
+    extra_instruction: str | None = None,
 ) -> GenerationStep:
+    """`extra_instruction`, when given, is appended to the user message (never
+    to the system prompt, which is the grounding contract). Only the Stage 3
+    verifier's single regeneration passes one; the plain path never does."""
     if not fused:
         # Pre-LLM abstention: nothing to ground on, so no call is made.
         return GenerationStep(None, None, None, None)
     prompt = _build_user_prompt(query, fused)
+    if extra_instruction:
+        prompt = f"{prompt}\n\n{extra_instruction}"
     generation_start = time.monotonic()
     # Omit max_tokens entirely when unset rather than passing None, so the
     # request body is byte-identical to before for existing callers.

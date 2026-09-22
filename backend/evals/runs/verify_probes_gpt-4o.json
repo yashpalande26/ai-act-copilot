@@ -1,0 +1,347 @@
+{
+ "model": "openai:gpt-4o",
+ "tp": 12,
+ "n_mis": 12,
+ "fp": 0,
+ "n_valid": 12,
+ "rows": [
+  {
+   "id": "pv_01",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 769,
+   "latency_ms": 2608
+  },
+  {
+   "id": "pv_02",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 792,
+   "latency_ms": 1974
+  },
+  {
+   "id": "pv_03",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 907,
+   "latency_ms": 2739
+  },
+  {
+   "id": "pv_04",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 889,
+   "latency_ms": 2582
+  },
+  {
+   "id": "pv_05",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 801,
+   "latency_ms": 2053
+  },
+  {
+   "id": "pv_06",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 856,
+   "latency_ms": 2219
+  },
+  {
+   "id": "pv_07",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 833,
+   "latency_ms": 2319
+  },
+  {
+   "id": "pv_08",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 709,
+   "latency_ms": 1846
+  },
+  {
+   "id": "pv_09",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 741,
+   "latency_ms": 1631
+  },
+  {
+   "id": "pv_10",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 759,
+   "latency_ms": 1680
+  },
+  {
+   "id": "pv_11",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 796,
+   "latency_ms": 2391
+  },
+  {
+   "id": "pv_12",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 744,
+   "latency_ms": 1753
+  },
+  {
+   "id": "pm_01",
+   "kind": "wrong_label",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Deployers must assign human oversight to natural persons who have the necessary competence, training and authority (Article 3, point (4))."
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 616,
+   "latency_ms": 1565
+  },
+  {
+   "id": "pm_02",
+   "kind": "fabricated_figure",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Non-compliance with the prohibition of the AI practices referred to in Article 5 is subject to administrative fines of up to EUR 50 000 000 or 10 % of total worldwide annual turnover (Article 99, paragraph 3)."
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 774,
+   "latency_ms": 1725
+  },
+  {
+   "id": "pm_03",
+   "kind": "absent_label_mentioned",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "The CE marking must be at least 5 mm high (Article 48, paragraph 1)."
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 638,
+   "latency_ms": 1706
+  },
+  {
+   "id": "pm_04",
+   "kind": "wrong_actor",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Deployers of high-risk AI systems placed on the Union market must report any serious incident to the market surveillance authorities of the Member States where the incident occurred (Article 73, paragraph 1)."
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 679,
+   "latency_ms": 1328
+  },
+  {
+   "id": "pm_05",
+   "kind": "added_condition",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "High-risk AI systems must technically allow for the automatic recording of events (logs) for at least ten years (Article 12, paragraph 1)."
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 761,
+   "latency_ms": 1577
+  },
+  {
+   "id": "pm_06",
+   "kind": "wrong_label",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "AI systems referred to in Annex III are considered to be high-risk (Article 49, paragraph 1)."
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 635,
+   "latency_ms": 1613
+  },
+  {
+   "id": "pm_07",
+   "kind": "absent_label",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [
+    "art_19.par_1"
+   ],
+   "unsupported_claims": [
+    "Providers must keep the automatically generated logs for at least six months (Article 19, paragraph 1)"
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 699,
+   "latency_ms": 2954
+  },
+  {
+   "id": "pm_08",
+   "kind": "insufficient_provision",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "A general-purpose AI model must be registered in the EU database before it is placed on the market (Article 3, point (63))."
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 636,
+   "latency_ms": 1910
+  },
+  {
+   "id": "pm_09",
+   "kind": "fabricated_detail",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Deployers must disclose deep fakes by placing a visible watermark in the top-left corner of the content (Article 50, paragraph 4)."
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 707,
+   "latency_ms": 1403
+  },
+  {
+   "id": "pm_10",
+   "kind": "wrong_label",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Training, validation and testing data sets must be subject to data governance and management practices appropriate for the intended purpose of the high-risk AI system (Article 13, paragraph 1)."
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 669,
+   "latency_ms": 1516
+  },
+  {
+   "id": "pm_11",
+   "kind": "contradiction",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Deployers that are private companies never have to perform a fundamental rights impact assessment before deploying a high-risk AI system (Article 27, paragraph 1)."
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 667,
+   "latency_ms": 1855
+  },
+  {
+   "id": "pm_12",
+   "kind": "figure_from_other_paragraph",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Non-compliance with the obligations of providers pursuant to Article 16 is subject to administrative fines of up to EUR 35 000 000 or 7 % of total worldwide annual turnover (Article 99, paragraph 4, point (a))."
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 741,
+   "latency_ms": 1680
+  }
+ ]
+}

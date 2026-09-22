@@ -1,7 +1,7 @@
 """The grounded-answer pipeline as a LangGraph graph, behind AGENTIC_RAG=1
 (default off).
 
-    START -> rewrite -> retrieve -> grade -> generate -> decide -> END
+    START -> rewrite -> retrieve -> grade -> generate -> verify -> decide -> END
     (retrieve -> decide directly when there is no context: the model is not
     called and decide abstains, exactly as the plain path does;
     rewrite -> decide directly on an actor conflict; grade -> decide when
@@ -50,8 +50,18 @@ call. No web, no content, no loop. retrieval_config carries |grade=proceed,
 |grade=widened, |grade=abstain or |grade=skipped (grader failure, slice served
 as retrieved).
 
+Stage 3 (22 Sep 2026): the verify node after generate, active only when
+config.agentic_verify_enabled() (AGENTIC_VERIFY, effective inside the graph
+only). See app.generation.verify: every provision the answer names must be
+in the context (deterministic) and every cited claim must be entailed by its
+passage (VERIFY_MODEL). A misgrounded answer is regenerated ONCE with a
+grounding instruction and re-verified; still misgrounded, the turn abstains.
+retrieval_config carries |verify=passed, |verify=regenerated,
+|verify=abstained or |verify=skipped (verifier failure, answer served as
+generated). Bounded: one regeneration, no loop; the verifier adds nothing.
+
 Grounding, citations and the refusal sentence are decided downstream by the
-unchanged generate and decide steps.
+unchanged decide step.
 
 The graph carries the SQLAlchemy session and pydantic objects in its state as
 plain Python values. There is no checkpointer and nothing is serialised, so
@@ -64,7 +74,11 @@ from uuid import UUID
 
 from langgraph.graph import END, START, StateGraph
 
-from app.config import agentic_grade_enabled, agentic_rewrite_enabled
+from app.config import (
+    agentic_grade_enabled,
+    agentic_rewrite_enabled,
+    agentic_verify_enabled,
+)
 from app.generation import answer as pipeline
 from app.generation.answer import (
     GenerationStep,
@@ -80,6 +94,11 @@ from app.generation.grade import (
     reorder,
 )
 from app.generation.rewrite import RewriteResult, load_history, rewrite_followup
+from app.generation.verify import (
+    VerifyResult,
+    regeneration_instruction,
+    verify_answer,
+)
 from app.retrieval.actor import detect_query_actor
 
 PATH_TAG = "|path=graph"
@@ -93,6 +112,12 @@ GRADE_TAGS = {
     "widened": "|grade=widened",
     "abstain": "|grade=abstain",
     "skipped": "|grade=skipped",
+}
+VERIFY_TAGS = {
+    "passed": "|verify=passed",
+    "regenerated": "|verify=regenerated",
+    "abstained": "|verify=abstained",
+    "skipped": "|verify=skipped",
 }
 AMBIGUOUS_CONFIG = "none|abstain=ambiguous_actor"
 
@@ -117,6 +142,8 @@ class GraphState(TypedDict, total=False):
     grade_outcome: str | None  # proceed | widened | abstain | skipped | None
     grade_results: list[GradeResult]
     generated: GenerationStep
+    verify_outcome: str | None  # passed | regenerated | abstained | skipped | None
+    verify_results: list[VerifyResult]
     result: GroundedAnswer
 
 
@@ -259,6 +286,80 @@ def generate(state: GraphState) -> dict:
     }
 
 
+def _abstain_step(
+    first: GenerationStep, second: GenerationStep | None
+) -> GenerationStep:
+    """An abstention that keeps the spend of every draft on the trace."""
+    drafts = [d for d in (first, second) if d is not None]
+    return GenerationStep(
+        answer_text=pipeline.ABSTENTION_TEXT,
+        prompt_tokens=sum(d.prompt_tokens or 0 for d in drafts) or None,
+        completion_tokens=sum(d.completion_tokens or 0 for d in drafts) or None,
+        latency_ms=sum(d.latency_ms or 0 for d in drafts) or None,
+    )
+
+
+def verify(state: GraphState) -> dict:
+    """passed / regenerated once / abstained. Bounded: one regeneration, no
+    loop. Only tightens: it can replace an answer with a better-grounded
+    draft or with the abstention, never with added content."""
+    if not agentic_verify_enabled():
+        return {}
+    generated = state.get("generated")
+    if generated is None or generated.answer_text is None:
+        return {}
+    if pipeline.is_abstention(generated.answer_text):
+        return {}
+    fused = state["retrieved"].fused
+    first = verify_answer(generated.answer_text, fused)
+    results = [first]
+    if not first.ok and not first.misgrounded:
+        return {"verify_outcome": "skipped", "verify_results": results}
+    if not first.misgrounded:
+        return {"verify_outcome": "passed", "verify_results": results}
+    redo = pipeline.generate_step(
+        state["query"],
+        fused,
+        max_output_tokens=state["max_output_tokens"],
+        extra_instruction=regeneration_instruction(first),
+    )
+    merged = GenerationStep(
+        answer_text=redo.answer_text,
+        prompt_tokens=(generated.prompt_tokens or 0) + (redo.prompt_tokens or 0),
+        completion_tokens=(generated.completion_tokens or 0)
+        + (redo.completion_tokens or 0),
+        latency_ms=(generated.latency_ms or 0) + (redo.latency_ms or 0),
+    )
+    if redo.answer_text is None or pipeline.is_abstention(redo.answer_text):
+        return {
+            "generated": _abstain_step(generated, redo),
+            "verify_outcome": "abstained",
+            "verify_results": results,
+        }
+    second = verify_answer(redo.answer_text, fused)
+    results.append(second)
+    if second.ok and not second.misgrounded:
+        return {
+            "generated": merged,
+            "verify_outcome": "regenerated",
+            "verify_results": results,
+        }
+    if not second.ok and not second.misgrounded:
+        # Verifier failed on the second pass: the first draft was rejected on
+        # evidence, the second cannot be checked. Abstain rather than serve
+        # an unverified draft of an answer already found misgrounded.
+        return {
+            "generated": _abstain_step(generated, redo),
+            "verify_outcome": "abstained",
+            "verify_results": results,
+        }
+    return {
+        "generated": _abstain_step(generated, redo),
+        "verify_outcome": "abstained",
+        "verify_results": results,
+    }
+
+
 def decide(state: GraphState) -> dict:
     retrieved = state.get("retrieved") or RetrievalStep(
         all_fused=[], fused=[], retrieval_config=AMBIGUOUS_CONFIG, latency_ms=0
@@ -267,6 +368,7 @@ def decide(state: GraphState) -> dict:
     tag = (
         REWRITE_TAGS.get(state.get("rewrite_outcome") or "", "")
         + GRADE_TAGS.get(state.get("grade_outcome") or "", "")
+        + VERIFY_TAGS.get(state.get("verify_outcome") or "", "")
         + PATH_TAG
     )
     return {
@@ -306,6 +408,7 @@ def build_graph() -> StateGraph:
     g.add_node("retrieve", retrieve)
     g.add_node("grade", grade)
     g.add_node("generate", generate)
+    g.add_node("verify", verify)
     g.add_node("decide", decide)
     g.add_edge(START, "rewrite")
     g.add_conditional_edges(
@@ -317,7 +420,8 @@ def build_graph() -> StateGraph:
     g.add_conditional_edges(
         "grade", route_after_grade, {"generate": "generate", "decide": "decide"}
     )
-    g.add_edge("generate", "decide")
+    g.add_edge("generate", "verify")
+    g.add_edge("verify", "decide")
     g.add_edge("decide", END)
     return g
 
