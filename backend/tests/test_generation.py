@@ -297,7 +297,10 @@ def test_missing_index_degrades_without_calling_bm25(monkeypatch, capsys):
     result = _run_one_turn(monkeypatch, session)
 
     assert result.answer == "An answer."
-    assert _captured_trace_config(session) == "vector_only_degraded|vector=empty|actor=none"
+    assert (
+        _captured_trace_config(session)
+        == "vector_only_degraded|vector=empty|actor=none"
+    )
     # A missing index means the deploy step never ran - it must be loud, not
     # only visible in the trace table.
     stderr = capsys.readouterr().err
@@ -319,7 +322,10 @@ def test_stale_index_degrades_loudly_instead_of_raising(monkeypatch, capsys):
     # The whole point: a stale index must not take the copilot down, and must
     # not serve BM25 results resolved against the wrong chunk_id mapping.
     assert result.answer == "An answer."
-    assert _captured_trace_config(session) == "vector_only_degraded|vector=empty|actor=none"
+    assert (
+        _captured_trace_config(session)
+        == "vector_only_degraded|vector=empty|actor=none"
+    )
     stderr = capsys.readouterr().err
     assert "ACTION REQUIRED" in stderr
     assert "build_bm25_index.py" in stderr
@@ -337,7 +343,10 @@ def test_unexpected_bm25_failure_degrades_under_a_distinct_banner(monkeypatch, c
     result = _run_one_turn(monkeypatch, session)
 
     assert result.answer == "An answer."
-    assert _captured_trace_config(session) == "vector_only_degraded|vector=empty|actor=none"
+    assert (
+        _captured_trace_config(session)
+        == "vector_only_degraded|vector=empty|actor=none"
+    )
     stderr = capsys.readouterr().err
     # Distinct from the stale banner, so a real bug never hides behind the
     # expected operational case.
