@@ -76,6 +76,19 @@ SYSTEM_PROMPT = (
     "Answer using ONLY the context provided below. Do not use any outside knowledge.\n"
     "If the context does not contain enough information to answer the question, "
     f'reply with EXACTLY this sentence and nothing else: "{ABSTENTION_TEXT}"\n'
+    # Added 22 Sep 2026 after the broad-question eval: with Article 6(1) at
+    # rank 1 the model refused "what is a high-risk AI system?" in most runs,
+    # treating a classification rule as "not a definition". The governing
+    # provision is the answer to such a question; this names that case
+    # without widening the grounding rule (still context only, still abstain
+    # when nothing in the context bears on the question).
+    "The context often contains the provision that GOVERNS the question rather "
+    "than a sentence phrased as a direct answer: a definition in Article 3, a "
+    "classification rule such as Article 6 or Annex III, a scope rule, or a list "
+    "of obligations or prohibitions. When it does, answer from that provision and "
+    "cite it; do not abstain merely because it is phrased as conditions or a rule "
+    "rather than as a definition. Abstain only when no provision in the context "
+    "bears on the question.\n"
     "When you do answer, reference the relevant provisions by their citation label "
     '(e.g. "Article 6, paragraph 2") inline in your answer.'
 )

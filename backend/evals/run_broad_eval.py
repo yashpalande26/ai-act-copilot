@@ -85,14 +85,30 @@ def main() -> None:
         help="dense anchor floor; -1 disables",
     )
     ap.add_argument("--golden", action="store_true", help="golden-set recall too")
+    ap.add_argument(
+        "--repeats",
+        type=int,
+        default=1,
+        help="generation repeats per question (stability)",
+    )
+    ap.add_argument("--only", help="comma-separated ids to run (broad and off-topic)")
+    ap.add_argument("--skip-offtopic", action="store_true")
     ap.add_argument("--json", type=Path)
     args = ap.parse_args()
+    only = set(args.only.split(",")) if args.only else None
     floor = None if args.anchor_floor < 0 else args.anchor_floor
     # generate_grounded_answer reads the module default; keep it in step.
     answer_module.DENSE_ANCHOR_FLOOR = floor
 
     broad = json.loads((HERE / "broad_set.json").read_text())
-    off = json.loads((HERE / "offtopic_set.json").read_text())
+    off = (
+        []
+        if args.skip_offtopic
+        else json.loads((HERE / "offtopic_set.json").read_text())
+    )
+    if only:
+        broad = [c for c in broad if c["id"] in only]
+        off = [c for c in off if c["id"] in only]
     session = SessionLocal()
     real_commit = session.commit
     session.commit = session.flush  # nothing persists
@@ -137,24 +153,37 @@ def main() -> None:
             "top3": ids[:3],
         }
         if args.generate and fused:
-            res = generate_grounded_answer(
-                session, q, cv.id, chat.id, max_output_tokens=800
-            )
-            cited = [x.citation_id for x in res.citations]
-            named = {a.lower() for a in _ART.findall(res.answer)}
-            allowed = articles_in(cited) | {
-                a.lower() for x in res.citations for a in _ART.findall(x.chunk_text)
-            }
-            answered = not is_abstention(res.answer)
+            # N repeats at temperature 0: the model is not deterministic, so a
+            # single pass over-states whatever it happened to do that time.
+            outcomes, bad_all, last = [], [], ""
+            for _ in range(args.repeats):
+                res = generate_grounded_answer(
+                    session, q, cv.id, chat.id, max_output_tokens=800
+                )
+                cited = [x.citation_id for x in res.citations]
+                named = {a.lower() for a in _ART.findall(res.answer)}
+                allowed = articles_in(cited) | {
+                    a.lower() for x in res.citations for a in _ART.findall(x.chunk_text)
+                }
+                answered = not is_abstention(res.answer)
+                gold_ok = bool(gold_rank(cited, c["gold_prefixes"])) and answered
+                outcomes.append(
+                    "gold" if gold_ok else ("answered" if answered else "refused")
+                )
+                bad_all += sorted(named - allowed)
+                last = res.answer[:200]
+            k = args.repeats
             row.update(
-                answered=answered,
-                gold_cited=bool(gold_rank(cited, c["gold_prefixes"])) and answered,
-                bad_articles=sorted(named - allowed),
-                answer=res.answer[:200],
+                answered=sum(o != "refused" for o in outcomes),
+                gold_cited=sum(o == "gold" for o in outcomes),
+                repeats=k,
+                outcomes=outcomes,
+                bad_articles=bad_all,
+                answer=last,
             )
         rows.append(row)
         gen = (
-            f" answered={row.get('answered')} gold_cited={row.get('gold_cited')} bad={row.get('bad_articles')}"
+            f" answered={row.get('answered')}/{row.get('repeats')} gold_cited={row.get('gold_cited')}/{row.get('repeats')} bad={row.get('bad_articles')}"
             if args.generate and fused
             else ""
         )
@@ -186,12 +215,16 @@ def main() -> None:
                 "refused": not fused,
             }
             if args.generate and fused:
-                res = generate_grounded_answer(
-                    session, q, cv.id, chat.id, max_output_tokens=800
-                )
-                row["refused"] = is_abstention(res.answer)
+                verdicts = []
+                for _ in range(args.repeats):
+                    res = generate_grounded_answer(
+                        session, q, cv.id, chat.id, max_output_tokens=800
+                    )
+                    verdicts.append(is_abstention(res.answer))
+                    row["answer"] = res.answer[:200]
+                row["refused"] = all(verdicts)
+                row["refused_count"] = f"{sum(verdicts)}/{len(verdicts)}"
                 row["refused_by"] = "model" if row["refused"] else "NOT REFUSED"
-                row["answer"] = res.answer[:200]
         off_rows.append(row)
         print(
             f"  {c['id']} refused={row['refused']} by={row['refused_by']} sim={row.get('top_sim')} anchor={row.get('anchored')}  | {q}"
@@ -208,9 +241,11 @@ def main() -> None:
         f"  anchor fired: broad {sum(r['anchored'] for r in rows)}/{n}, off-topic {sum(bool(r.get('anchored')) for r in off_rows)}/{len(off_rows)}"
     )
     if args.generate:
+        k = args.repeats
+        stable = sum(1 for r in rows if r.get("gold_cited", 0) >= max(1, k - 1))
         print(
-            f"  answered {pct(sum(bool(r.get('answered')) for r in rows), n)}   answered WITH gold cited {pct(sum(bool(r.get('gold_cited')) for r in rows), n)}"
-            f"   bad-article mentions {sum(len(r.get('bad_articles', [])) for r in rows)}"
+            f"  runs answered {pct(sum(r.get('answered', 0) for r in rows), n * k)}   runs answered WITH gold cited {pct(sum(r.get('gold_cited', 0) for r in rows), n * k)}"
+            f"   questions stable (gold in >= {max(1, k - 1)}/{k}) {pct(stable, n)}   bad-article mentions {sum(len(r.get('bad_articles', [])) for r in rows)}"
         )
     print(
         f"  off-topic refused: {pct(sum(r['refused'] for r in off_rows), len(off_rows))}"
