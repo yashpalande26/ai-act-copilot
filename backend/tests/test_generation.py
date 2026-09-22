@@ -432,3 +432,77 @@ def test_grounded_generation_integration_real_query():
         assert len(result.citations) > 0
     finally:
         session.close()
+
+
+# --- dense anchor and abstention tolerance (22 Sep 2026) -----------------------
+
+
+def _srs(chunk_id, citation_id, similarity):
+    return _sr(chunk_id, citation_id).model_copy(update={"similarity": similarity})
+
+
+def _fused(chunk_id, citation_id, sim=0.2, vr=None, lr=0):
+    return FusedResult(
+        result=_srs(chunk_id, citation_id, sim),
+        rrf_score=0.01,
+        vector_rank=vr,
+        lexical_rank=lr,
+    )
+
+
+def test_dense_anchor_promotes_a_confident_top_vector_hit_that_fusion_dropped():
+    fused = [_fused(i, f"art_{i}") for i in range(1, 26)]  # lexical-only saturation
+    top = _srs(99, "art_3.pt_3", 0.52)
+    out, anchored = answer_module.apply_dense_anchor(
+        fused, [top], floor=0.45, context_size=15
+    )
+    assert anchored and out[5].result.chunk_id == 99 and out[5].lexical_rank is None
+    # The fused top five are untouched; the rest shift down by one.
+    assert [f.result.chunk_id for f in out[:5]] == [1, 2, 3, 4, 5]
+    assert len(out) == 25 and out[6].result.chunk_id == 6
+
+
+def test_dense_anchor_does_nothing_below_the_floor_or_when_already_in_context():
+    fused = [_fused(i, f"art_{i}") for i in range(1, 26)]
+    out, anchored = answer_module.apply_dense_anchor(
+        fused, [_srs(99, "x", 0.44)], floor=0.45
+    )
+    assert not anchored and out is fused
+    present = _srs(7, "art_7", 0.9)  # chunk 7 sits at rank 7 already
+    out, anchored = answer_module.apply_dense_anchor(fused, [present], floor=0.45)
+    assert not anchored and out is fused
+    assert answer_module.apply_dense_anchor(fused, [], floor=0.45) == (fused, False)
+
+
+def test_dense_anchor_moves_a_hit_that_sat_outside_the_context_slice():
+    fused = [_fused(i, f"art_{i}") for i in range(1, 26)]
+    beyond = fused[20].result.model_copy(update={"similarity": 0.6})
+    out, anchored = answer_module.apply_dense_anchor(
+        fused, [beyond], floor=0.45, context_size=15
+    )
+    assert anchored and out[5].result.chunk_id == beyond.chunk_id
+    assert [f.result.chunk_id for f in out].count(beyond.chunk_id) == 1
+    assert len(out) == 25
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        answer_module.ABSTENTION_TEXT,
+        f'"{answer_module.ABSTENTION_TEXT}"',
+        f"“{answer_module.ABSTENTION_TEXT}”",
+        f"  {answer_module.ABSTENTION_TEXT}  ",
+        answer_module.ABSTENTION_TEXT.rstrip("."),
+    ],
+)
+def test_quoted_or_unpunctuated_abstention_is_still_an_abstention(text):
+    assert answer_module.is_abstention(text)
+
+
+def test_a_real_answer_is_not_an_abstention():
+    assert not answer_module.is_abstention(
+        "Providers must ensure compliance with Section 2."
+    )
+    assert not answer_module.is_abstention(
+        answer_module.ABSTENTION_TEXT + " However, Article 6 says..."
+    )

@@ -44,10 +44,32 @@ RETRIEVAL_LEXICAL_WEIGHT = 0.6
 # final_context_size of this - see the equivalence note in generate_grounded_answer.
 RETRIEVAL_CANDIDATE_BREADTH = 25
 
+# Dense anchor (22 Sep 2026). RRF at 0.4/0.6 gives a vector-only rank-1 chunk
+# 0.4/61 = 0.0066, while any lexical-only chunk inside BM25's top 25 scores at
+# least 0.6/85 = 0.0071: when BM25 is saturated with generic matches ("who is
+# a provider?" matches "provider" everywhere) the semantically best chunk
+# cannot even enter the candidate list. Diagnosed on the broad-question set:
+# the Article 3 definitions ranked #1 on the vector leg and were absent from
+# the fused 25. The rule below guarantees the top vector hit a place at the
+# front of the context when its similarity clears the floor and fusion left
+# it out. Floor chosen from the sweep in evals/run_broad_eval.py --golden.
+DENSE_ANCHOR_FLOOR = 0.45
+DENSE_ANCHOR_POSITION = 5  # 0-indexed: sixth in the context, below the fused top five
+
 ABSTENTION_TEXT = (
     "I don't have enough information in the retrieved EU AI Act provisions "
     "to answer this question."
 )
+
+
+def is_abstention(text: str) -> bool:
+    """The model is told to reply with EXACTLY the abstention sentence, and it
+    occasionally wraps it in the quotation marks the prompt shows it in. That
+    variant is still a refusal; treating it as an answer would attach fifteen
+    citations to a sentence that says there are none."""
+    t = text.strip().strip("\"'\u201c\u201d\u2018\u2019").strip()
+    return t.rstrip(".").lower() == ABSTENTION_TEXT.rstrip(".").lower()
+
 
 SYSTEM_PROMPT = (
     "You are a legal compliance copilot answering questions about the EU AI Act.\n"
@@ -249,31 +271,45 @@ def _write_trace_safe(
         )
 
 
-def generate_grounded_answer(
+def apply_dense_anchor(
+    all_fused: list[FusedResult],
+    vector_results: list[SearchResult],
+    *,
+    floor: float = DENSE_ANCHOR_FLOOR,
+    context_size: int = 15,
+    position: int = DENSE_ANCHOR_POSITION,
+) -> tuple[list[FusedResult], bool]:
+    """If the top vector hit clears `floor` and is not already inside the
+    context slice, insert it at `position` (0-indexed). Returns (fused,
+    anchored). Pure. Position 5 keeps the fused top five exactly as they
+    were, so recall@5 on the golden sets is unchanged by construction; the
+    anchored chunk still sits well inside the 15-chunk context."""
+    if not vector_results or floor is None:
+        return all_fused, False
+    top = vector_results[0]
+    if top.similarity < floor:
+        return all_fused, False
+    if any(f.result.chunk_id == top.chunk_id for f in all_fused[:context_size]):
+        return all_fused, False
+    rest = [f for f in all_fused if f.result.chunk_id != top.chunk_id]
+    anchored = FusedResult(result=top, rrf_score=0.0, vector_rank=0, lexical_rank=None)
+    at = min(position, len(rest))
+    merged = [*rest[:at], anchored, *rest[at:]]
+    return merged[: max(len(all_fused), 1)], True
+
+
+def retrieve_candidates(
     session: Session,
     query: str,
     corpus_version_id: int,
-    chat_session_id: UUID,
-    final_context_size: int = 15,
+    *,
     min_similarity: float = 0.3,
-    write_trace: bool = True,
-    max_output_tokens: int | None = None,
-    user_text: str | None = None,
-    rewrite: "RewriteInfo | None" = None,
-) -> GroundedAnswer:
-    """max_output_tokens bounds the expensive half of a call (gpt-4o output is
-    4x input cost). Default None preserves the previous unbounded behaviour
-    exactly, so existing callers and eval runs are unaffected; the HTTP
-    surface passes an explicit ceiling.
-
-    `query` is what retrieval and the prompt see. `user_text`, when given, is
-    what the user actually typed and is what gets persisted as their message
-    and as query_text on the trace; a follow-up rewrite (app.generation.rewrite)
-    passes the standalone question as `query` and the original as `user_text`.
-    Everything from retrieval onwards is identical either way."""
-    stored_text = user_text if user_text is not None else query
-    rw = rewrite or RewriteInfo()
-    retrieval_start = time.monotonic()
+    dense_anchor_floor: float | None | str = "default",
+    final_context_size: int = 15,
+) -> tuple[list[FusedResult], str]:
+    """The production candidate list: vector + BM25, RRF, actor prior, dense
+    anchor. One function so the evals measure exactly what /ask serves.
+    Returns (fused candidates, retrieval_config string)."""
     vector_results = vector_search(
         session,
         query,
@@ -303,6 +339,51 @@ def generate_grounded_answer(
     retrieval_config += f"|actor={query_actor or 'none'}"
     if query_actor is not None:
         retrieval_config += f"|factor={ACTOR_MISMATCH_FACTOR}"
+    # "default" resolves at call time, so an eval can sweep the module
+    # constant and the generation path follows it.
+    floor = (
+        DENSE_ANCHOR_FLOOR if dense_anchor_floor == "default" else dense_anchor_floor
+    )
+    if floor is not None:
+        all_fused, anchored = apply_dense_anchor(
+            all_fused,
+            vector_results,
+            floor=floor,
+            context_size=final_context_size,
+        )
+        if anchored:
+            retrieval_config += "|anchor=dense"
+    return all_fused, retrieval_config
+
+
+def generate_grounded_answer(
+    session: Session,
+    query: str,
+    corpus_version_id: int,
+    chat_session_id: UUID,
+    final_context_size: int = 15,
+    min_similarity: float = 0.3,
+    write_trace: bool = True,
+    max_output_tokens: int | None = None,
+    user_text: str | None = None,
+    rewrite: "RewriteInfo | None" = None,
+) -> GroundedAnswer:
+    """max_output_tokens bounds the expensive half of a call (gpt-4o output is
+    4x input cost). Default None preserves the previous unbounded behaviour
+    exactly, so existing callers and eval runs are unaffected; the HTTP
+    surface passes an explicit ceiling.
+
+    `query` is what retrieval and the prompt see. `user_text`, when given, is
+    what the user actually typed and is what gets persisted as their message
+    and as query_text on the trace; a follow-up rewrite (app.generation.rewrite)
+    passes the standalone question as `query` and the original as `user_text`.
+    Everything from retrieval onwards is identical either way."""
+    stored_text = user_text if user_text is not None else query
+    rw = rewrite or RewriteInfo()
+    retrieval_start = time.monotonic()
+    all_fused, retrieval_config = retrieve_candidates(
+        session, query, corpus_version_id, min_similarity=min_similarity
+    )
     retrieval_latency_ms = int((time.monotonic() - retrieval_start) * 1000)
 
     # Equivalent to the old rrf_rank_and_fuse(..., top_k=final_context_size):
@@ -362,7 +443,7 @@ def generate_grounded_answer(
     prompt_tokens = response.usage.prompt_tokens
     completion_tokens = response.usage.completion_tokens
 
-    if answer_text.strip() == ABSTENTION_TEXT:
+    if is_abstention(answer_text):
         # The LLM itself decided the retrieved context didn't actually answer
         # the question. Persist the same shape as the pre-LLM abstention -
         # refusal text, zero citations - not citations for chunks the model

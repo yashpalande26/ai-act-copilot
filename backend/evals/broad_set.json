@@ -1,0 +1,16 @@
+[
+  {"id": "br_01", "question": "what is a high-risk AI system?", "gold_prefixes": ["art_6", "anx_III"]},
+  {"id": "br_02", "question": "which AI systems are high-risk?", "gold_prefixes": ["anx_III", "art_6"]},
+  {"id": "br_03", "question": "what are the prohibited AI practices?", "gold_prefixes": ["art_5"]},
+  {"id": "br_04", "question": "who is a provider?", "gold_prefixes": ["art_3.pt_3"]},
+  {"id": "br_05", "question": "who is a deployer?", "gold_prefixes": ["art_3.pt_4"]},
+  {"id": "br_06", "question": "what is an AI system?", "gold_prefixes": ["art_3.pt_1"]},
+  {"id": "br_07", "question": "what transparency obligations apply?", "gold_prefixes": ["art_50"]},
+  {"id": "br_08", "question": "what are the penalties?", "gold_prefixes": ["art_99"]},
+  {"id": "br_09", "question": "what is a general-purpose AI model?", "gold_prefixes": ["art_3.pt_63"]},
+  {"id": "br_10", "question": "what is a deep fake?", "gold_prefixes": ["art_3.pt_60"]},
+  {"id": "br_11", "question": "what are the obligations of providers of high-risk AI systems?", "gold_prefixes": ["art_16"]},
+  {"id": "br_12", "question": "when does the AI Act start to apply?", "gold_prefixes": ["art_113"]},
+  {"id": "br_13", "question": "what is an importer?", "gold_prefixes": ["art_3.pt_6"]},
+  {"id": "br_14", "question": "what do deployers of high-risk AI systems have to do?", "gold_prefixes": ["art_26"]}
+]
