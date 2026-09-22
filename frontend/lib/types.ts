@@ -17,6 +17,12 @@ export type AskResult = {
    *  answer says what the Act says about that type of system and the record
    *  routes to the assessment for the classification. Never a verdict. */
   system_description?: boolean;
+  /** A deterministic social reply (greeting, name, thanks, capability): no
+   *  citations, no legal content. */
+  social?: boolean;
+  /** The answer is the copilot's one clarifying question about the system
+   *  the user described; the next message is treated as the reply. */
+  clarifying?: boolean;
   /** Turn 2+: the standalone question the answer was retrieved for, when the
    *  follow-up was rewritten from the conversation. Null otherwise. */
   rewritten_query?: string | null;

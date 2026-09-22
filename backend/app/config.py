@@ -260,6 +260,64 @@ def query_understanding_enabled() -> bool:
     )
 
 
+def intent_model() -> str:
+    return os.environ.get("INTENT_MODEL", "openai:gpt-4o-mini")
+
+
+# Intent gate default. "1" since the passing run of 22 Sep 2026
+# (evals/runs/intent_gate_j2.json and intent_clarify_on_agentic_j2.json vs
+# adr21_final_on_j2.json): routing 21/21 across greeting, name, thanks,
+# capability, offtopic and disguised-legal buckets; offtopic answered 0;
+# disguised-legal misrouted 0; social replies with legal content 0; social and
+# offtopic lanes retrieved 0 times; names persisted and recalled 2/2; verdict
+# leaks 0; the 47-item on-topic set identical on recall, citation accuracy
+# and abstention item by item. Only effective when AGENTIC_RAG=1.
+INTENT_GATE_DEFAULT = "1"
+
+
+def intent_gate_enabled() -> bool:
+    """First graph node: gpt-4o-mini classifies the message as social,
+    offtopic or on_topic (classify only). Social gets a deterministic
+    template and persists an introduced name on the conversation; offtopic
+    gets the existing grounded refusal without retrieval; on_topic continues
+    unchanged. Any mention of an AI system, the Act, risk or compliance is
+    on_topic by deterministic override. Effective inside the graph only."""
+    return (
+        agentic_rag_enabled()
+        and os.environ.get("INTENT_GATE", INTENT_GATE_DEFAULT) == "1"
+    )
+
+
+def clarify_model() -> str:
+    return os.environ.get("CLARIFY_MODEL", "openai:gpt-4o-mini")
+
+
+# Clarifying follow-up default. OFF: on the 22 Sep 2026 run the trigger never
+# fired. On all three underspecified descriptions the grader PROCEEDED (it
+# finds some passage relevant to any vague AI question) and the generator
+# abstained; the specified trigger is the grader's abstention, so the
+# clarifying question was never asked and its gates (grounding on the second
+# pass 0/3) could not pass. The observed "no supporting provision" signal is
+# the generator's explain-mode abstention; widening the trigger to it is a
+# design decision, not taken here. The node, guards and eval stay.
+CLARIFY_FOLLOWUP_DEFAULT = "0"
+
+
+def clarify_followup_enabled() -> bool:
+    """When the grader finds no supporting provision for a plain-language
+    system description, ask ONE clarifying question (gpt-4o-mini, function
+    of the system: what decision, about whom, on what data) instead of
+    abstaining; the reply is retrieved as question plus reply through the
+    unchanged path; still nothing means the route to the assessment. The
+    question must name no Article, Annex or legal category and must pass
+    the verdict-leak detector, else it is dropped. Effective inside the
+    graph only."""
+    return (
+        agentic_rag_enabled()
+        and os.environ.get("CLARIFY_FOLLOWUP", CLARIFY_FOLLOWUP_DEFAULT) == "1"
+    )
+
+
 # --- admin allowlist --------------------------------------------------------
 # Comma-separated e-mail addresses allowed to read the admin trace viewer
 # (/admin/*). Compared, lower-cased, against the e-mail asserted in the

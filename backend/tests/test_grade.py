@@ -129,6 +129,8 @@ def _run(
     monkeypatch.setenv("AGENTIC_REWRITE", "0")
     monkeypatch.setenv("AGENTIC_GRADE", "1" if on else "0")
     monkeypatch.setenv("QUERY_UNDERSTANDING", "0")
+    monkeypatch.setenv("INTENT_GATE", "0")
+    monkeypatch.setenv("CLARIFY_FOLLOWUP", "0")
     monkeypatch.setenv("AGENTIC_VERIFY", "0")
     monkeypatch.setenv("AGENTIC_DECOMPOSE", "0")
     outputs = iter(grades)
@@ -259,10 +261,12 @@ def test_grade_node_is_inert_when_off(monkeypatch):
 def test_graph_has_no_node_or_edge_outside_the_corpus():
     g = graph_module.GRAPH.get_graph()
     assert sorted(n for n in g.nodes if not n.startswith("__")) == [
+        "clarify",
         "decide",
         "decompose",
         "generate",
         "grade",
+        "intent",
         "retrieve",
         "rewrite",
         "understand",
@@ -270,7 +274,9 @@ def test_graph_has_no_node_or_edge_outside_the_corpus():
     ]
     edges = {(e.source, e.target) for e in g.edges}
     assert edges == {
-        ("__start__", "rewrite"),
+        ("__start__", "intent"),
+        ("intent", "rewrite"),
+        ("intent", "decide"),
         ("rewrite", "understand"),
         ("rewrite", "decide"),
         ("understand", "decompose"),
@@ -279,14 +285,16 @@ def test_graph_has_no_node_or_edge_outside_the_corpus():
         ("retrieve", "decide"),
         ("grade", "generate"),
         ("grade", "decide"),
+        ("grade", "clarify"),
+        ("clarify", "decide"),
         ("generate", "verify"),
         ("verify", "decide"),
         ("decide", "__end__"),
     }
     # bounded: no edge returns to retrieve or grade
     assert not any(
-        t in ("understand", "decompose", "retrieve", "grade")
-        and s in ("grade", "generate", "verify", "decide")
+        t in ("intent", "understand", "decompose", "retrieve", "grade")
+        and s in ("grade", "clarify", "generate", "verify", "decide")
         for s, t in edges
     )
 

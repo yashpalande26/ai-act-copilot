@@ -177,6 +177,8 @@ def _run(
     monkeypatch.setenv("AGENTIC_VERIFY", "0")
     monkeypatch.setenv("AGENTIC_DECOMPOSE", "1" if on else "0")
     monkeypatch.setenv("QUERY_UNDERSTANDING", "0")
+    monkeypatch.setenv("INTENT_GATE", "0")
+    monkeypatch.setenv("CLARIFY_FOLLOWUP", "0")
     monkeypatch.setattr(graph_module, "plan_decomposition", lambda q: plan_result)
     retrieve_calls = []
     grade_calls = []

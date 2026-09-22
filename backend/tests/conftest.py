@@ -41,6 +41,16 @@ def _service_secret(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def _lane_flags_off(monkeypatch):
+    """INTENT_GATE and CLARIFY_FOLLOWUP are on by default inside the graph;
+    a unit test that does not set them must never make the gate's real
+    classification call. Tests that exercise them set them explicitly (a
+    later setenv in the test body wins)."""
+    monkeypatch.setenv("INTENT_GATE", "0")
+    monkeypatch.setenv("CLARIFY_FOLLOWUP", "0")
+
+
+@pytest.fixture(autouse=True)
 def _reset_limiter():
     """slowapi counters persist on the module-level Limiter, so one test's
     requests would otherwise 429 the next. Global because both /ask and

@@ -59,6 +59,31 @@ export default function CitationsPreview() {
       system_description: true,
     },
   };
+  const social: ChatTurn = {
+    role: "assistant",
+    id: "preview-social",
+    result: {
+      answer:
+        "Nice to meet you, Ana. I answer questions about the EU AI Act from its consolidated text, with every answer cited to the provision it comes from, and I can say what the Act says about a type of AI system. For whether your own system is in scope, the assessment gives a classification from your description and a short questionnaire.",
+      citations: [],
+      abstained: false,
+      session_id: "preview",
+      social: true,
+    },
+  };
+  const clarifying: ChatTurn = {
+    role: "assistant",
+    id: "preview-clarifying",
+    result: {
+      answer:
+        "What does the system actually do? For example, does it rank job applicants, decide on a loan, flag suspicious payments, or answer customer questions?",
+      citations: [],
+      abstained: false,
+      session_id: "preview",
+      clarifying: true,
+      system_description: true,
+    },
+  };
   const error: ChatTurn = {
     role: "error",
     id: "preview-error",
@@ -77,6 +102,10 @@ export default function CitationsPreview() {
         <AssistantTurn turn={scope} question="hey" />
         <UserTurn question={systemQuestion} />
         <AssistantTurn turn={systemAnswer} question={systemQuestion} />
+        <UserTurn question="my name is Ana" />
+        <AssistantTurn turn={social} question="my name is Ana" />
+        <UserTurn question="we have an AI model in our company, is it a problem?" />
+        <AssistantTurn turn={clarifying} question="we have an AI model in our company, is it a problem?" />
         <AssistantTurn turn={error} question={question} />
       </div>
     </main>

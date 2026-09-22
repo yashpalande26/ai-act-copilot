@@ -238,6 +238,8 @@ def _run(monkeypatch, *, understanding, drafts, on=True):
     ):
         monkeypatch.setenv(k, "0")
     monkeypatch.setenv("QUERY_UNDERSTANDING", "1" if on else "0")
+    monkeypatch.setenv("INTENT_GATE", "0")
+    monkeypatch.setenv("CLARIFY_FOLLOWUP", "0")
     monkeypatch.setattr(graph_module, "understand_query", lambda q: understanding)
     retrieve_calls = []
 

@@ -1,0 +1,45 @@
+[
+ {
+  "id": "cl_01",
+  "bucket": "clarifies_to_provision",
+  "description": "we have an AI model in our company, is it a problem?",
+  "reply": "it screens job applications for our recruiters",
+  "gold_citation_ids": [
+   "anx_III.pt_4.sub_a"
+  ]
+ },
+ {
+  "id": "cl_02",
+  "bucket": "clarifies_to_provision",
+  "description": "our app uses machine learning, do we need to worry about anything?",
+  "reply": "it decides whether a customer gets a loan",
+  "gold_citation_ids": [
+   "anx_III.pt_5.sub_b"
+  ]
+ },
+ {
+  "id": "cl_03",
+  "bucket": "clarifies_to_provision",
+  "description": "I built an AI thing for my clinic, is that regulated?",
+  "reply": "it decides which patients get seen first in emergencies",
+  "gold_citation_ids": [
+   "anx_III.pt_5.sub_d"
+  ]
+ },
+ {
+  "id": "cl_04",
+  "bucket": "law_silent",
+  "description": "I want to build a property valuation model for bridge lending, how risky is it?",
+  "reply": "it estimates the market value of the property used as collateral",
+  "gold_citation_ids": [],
+  "must_route": true
+ },
+ {
+  "id": "cl_05",
+  "bucket": "offtopic",
+  "description": "how risky is my pizza oven?",
+  "reply": "it bakes at 400 degrees",
+  "gold_citation_ids": [],
+  "must_not_fire": true
+ }
+]

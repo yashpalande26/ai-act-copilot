@@ -116,6 +116,12 @@ class GroundedAnswer(BaseModel):
     # language; the answer is in explain-and-route mode and the UI shows the
     # route to the assessment. Never a verdict.
     system_description: bool = False
+    # Intent gate: a deterministic social-lane reply (greeting, name, thanks,
+    # capability). No citations, no legal content.
+    social: bool = False
+    # Clarifying follow-up: the answer is the copilot's one clarifying
+    # question about the described system, not an answer about the Act.
+    clarifying: bool = False
 
 
 class RewriteInfo(BaseModel):
@@ -744,6 +750,8 @@ def decide_step(
     rewrite: "RewriteInfo | None" = None,
     path_tag: str = "",
     system_description: bool = False,
+    social: bool = False,
+    clarifying: bool = False,
 ) -> GroundedAnswer:
     """Abstain or answer, persist the turn, write the trace. `path_tag` is
     appended to retrieval_config so the audit log says which execution path
@@ -776,6 +784,8 @@ def decide_step(
     if rw.applied:
         result.rewritten_query = query
     result.system_description = system_description
+    result.social = social
+    result.clarifying = clarifying
 
     if write_trace:
         _write_trace_safe(

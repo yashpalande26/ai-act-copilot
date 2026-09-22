@@ -26,6 +26,7 @@ from app.config import (
     MAX_QUESTION_CHARS,
     PER_MINUTE_LIMIT,
     followup_rewrite_enabled,
+    intent_gate_enabled,
 )
 from app.db.models import ChatSession, CorpusVersion
 from app.generation.answer import (
@@ -70,6 +71,11 @@ class AskResponse(BaseModel):
     # explains what the Act says about that type of system and the UI routes
     # to the assessment for the classification. Never a verdict here.
     system_description: bool = False
+    # Intent gate: a deterministic social reply (no retrieval, no citations).
+    social: bool = False
+    # Clarifying follow-up: the answer is one question about the user's
+    # described system; the next message is treated as the reply.
+    clarifying: bool = False
 
 
 def _get_or_create_session(
@@ -107,7 +113,12 @@ def ask(
     session: Session = DbSession,
 ) -> AskResponse:
     user = resolve_user(session, caller)
-    if is_trivial_input(payload.question):
+    # With the intent gate on and a conversation already open, a greeting or
+    # thanks goes to the graph's social lane (a gpt-4o-mini classification,
+    # no retrieval) so the reply can use the name kept on the conversation.
+    # A first-turn greeting stays free: no session, no name to recall.
+    let_through = intent_gate_enabled() and payload.session_id is not None
+    if is_trivial_input(payload.question) and not let_through:
         # "hey", "thanks", "???": say what the copilot is for instead of
         # spending a call to retrieve nothing. No quota, no session, no trace.
         return AskResponse(
@@ -176,4 +187,6 @@ def ask(
         abstained=result.answer == ABSTENTION_TEXT,
         session_id=chat.id,
         system_description=bool(getattr(result, "system_description", False)),
+        social=bool(getattr(result, "social", False)),
+        clarifying=bool(getattr(result, "clarifying", False)),
     )

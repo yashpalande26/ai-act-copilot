@@ -1,6 +1,50 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-22: Intent gate shipped, clarifying follow-up built but off (2026-09-22)
+Context: Two additions to the chat graph, each behind its own flag and gated first. (A) Social
+and off-topic messages reached retrieval and a paid gpt-4o call before refusing; nothing
+remembered a user's name. (B) A plain-language system description that retrieves nothing
+usable ends in a bare abstention when one question about the system's function would
+often resolve it.
+Decision: (A) INTENT_GATE, the first graph node (app/generation/intent.py): gpt-4o-mini
+classifies the message as social, offtopic or on_topic and does nothing else. Social
+(greeting, name, thanks, capability) is answered from deterministic templates that name
+no provision and state nothing about the law; an introduced name is extracted (model,
+checked by regex) and persisted on chat_session.display_name (migration e5f6a7b8c9d0), and
+rehydrated into the graph state each turn so later greetings use it. Offtopic returns the
+existing grounded refusal with no retrieval. On_topic continues unchanged. Any mention of
+an AI system, model, tool, the Act, risk, compliance or an obligation is on_topic by
+deterministic override, so "hey, is my hiring tool ok?" is never social; a model failure
+is on_topic so an outage cannot refuse everything. Tags |intent=social:<kind>,
+|intent=offtopic, |intent=on_topic. ask.py's free scope short-circuit for bare greetings
+still runs before the graph. (B) CLARIFY_FOLLOWUP (app/generation/clarify.py): when the
+grader abstains on a question understood as a system description, one gpt-4o-mini
+question about the system's function (what decision, about whom, on what data, with
+neutral examples) is asked instead of abstaining; it must name no Article, Annex or legal
+category and pass the verdict-leak detector or it is dropped and the turn routes. The
+original question is kept on chat_session.pending_clarification; the reply turn is
+retrieved as question plus reply through the unchanged path, skips the intent gate, and
+cannot ask again. Tags |clarify=asked, |clarify=dropped:<reason>, |clarify=round.
+Evidence: Intent set, 21 messages in 19 sequences, graph called directly: routing 3/3
+greeting, 4/4 name (both names persisted, both recalled on the later turn), 2/2 thanks,
+2/2 capability, 5/5 offtopic factual (0 answered), 5/5 disguised legal (0 misrouted);
+social and offtopic lanes retrieved 0 times; social replies with legal content 0; verdict
+leaks 0. The 47-item on-topic set with both flags on: recall, citation accuracy and
+abstention identical item by item to the ADR-21 run, six off-topic items now refused at
+the gate without retrieval. Clarify set, 5 sequences: the trigger never fired. On all
+three underspecified descriptions the grader PROCEEDED (it finds some passage relevant to
+any vague AI question) and the generator abstained; the property-valuation and pizza
+items behaved as before. Grounding on the second pass 0/3 because no question was asked;
+0 provisions asserted, 0 leaks.
+Consequences: INTENT_GATE is on inside AGENTIC_RAG (off in production). CLARIFY_FOLLOWUP
+stays off: its specified trigger (grader abstention) is not where "no supporting
+provision" shows up in this pipeline; the generator's explain-mode abstention is. Widening
+the trigger to that signal is a design decision to take before re-gating; the node, the
+guards, the marker and the eval are in place. Two migrations' worth of columns are
+nullable and additive.
+Status: Accepted (A); Deferred (B).
+
 ## ADR-21: Plain-language system questions: explain the type, route the verdict, never certify (2026-09-22)
 Context: Live, "I want to build a property valuation model for bridge lending, how risky is
 it?" refused. The class of query is a user describing their OWN AI system in lay words and

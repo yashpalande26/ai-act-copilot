@@ -327,3 +327,34 @@ def test_ask_integration_real_stack():
 
     assert r.status_code == 200
     assert r.json()["citations"]
+
+
+# --- intent gate: greetings on an open conversation reach the graph ------------
+
+
+def test_trivial_input_reaches_the_graph_only_with_the_gate_on_and_a_session(
+    client, monkeypatch
+):
+    monkeypatch.setenv("AGENTIC_RAG", "1")
+    monkeypatch.setenv("INTENT_GATE", "1")
+    client.generated.reset_mock()
+    # no session: the free scope notice, no generation
+    r = client.post("/ask", json={"question": "hi again"}, headers=_auth())
+    assert r.status_code == 200 and r.json()["scope_notice"] is True
+    assert client.generated.call_count == 0
+    # open conversation: the graph handles it (its social lane, no retrieval)
+    r = client.post(
+        "/ask",
+        json={"question": "hi again", "session_id": str(client.chat_id)},
+        headers=_auth(),
+    )
+    assert r.status_code == 200 and r.json()["scope_notice"] is False
+    assert client.generated.call_count == 1
+    # gate off: the scope notice regardless of the session
+    monkeypatch.setenv("INTENT_GATE", "0")
+    r = client.post(
+        "/ask",
+        json={"question": "hi again", "session_id": str(client.chat_id)},
+        headers=_auth(),
+    )
+    assert r.json()["scope_notice"] is True and client.generated.call_count == 1

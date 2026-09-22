@@ -134,6 +134,28 @@ export function AssistantTurn({ turn, question }: { turn: ChatTurn; question?: s
   if (turn.result.abstained) {
     return <AbstentionTurn question={question} scope={Boolean(turn.result.scope_notice)} />;
   }
+  if (turn.result.social) {
+    return (
+      <Bubble>
+        <div className="type-body whitespace-pre-wrap" data-testid="social-turn">
+          {turn.result.answer}
+        </div>
+      </Bubble>
+    );
+  }
+  if (turn.result.clarifying) {
+    return (
+      <Bubble>
+        <div className="type-body whitespace-pre-wrap" data-testid="clarifying-turn">
+          {turn.result.answer}
+        </div>
+        <p className="type-micro text-ink-faint">
+          Your answer helps the copilot find the provision that covers this kind of system. The classification
+          of your system itself comes from the assessment.
+        </p>
+      </Bubble>
+    );
+  }
 
   return (
     <Bubble>

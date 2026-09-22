@@ -1,0 +1,204 @@
+[
+ {
+  "id": "in_gr_01",
+  "bucket": "greeting",
+  "turns": [
+   {
+    "text": "hello there",
+    "lane": "social"
+   }
+  ]
+ },
+ {
+  "id": "in_gr_02",
+  "bucket": "greeting",
+  "turns": [
+   {
+    "text": "good morning!",
+    "lane": "social"
+   }
+  ]
+ },
+ {
+  "id": "in_gr_03",
+  "bucket": "greeting",
+  "turns": [
+   {
+    "text": "hi, how are you today?",
+    "lane": "social"
+   }
+  ]
+ },
+ {
+  "id": "in_nm_01",
+  "bucket": "name",
+  "turns": [
+   {
+    "text": "my name is Ana",
+    "lane": "social",
+    "name": "Ana"
+   },
+   {
+    "text": "hi again",
+    "lane": "social",
+    "recall_name": "Ana"
+   }
+  ]
+ },
+ {
+  "id": "in_nm_02",
+  "bucket": "name",
+  "turns": [
+   {
+    "text": "I'm Marcus, nice to meet you",
+    "lane": "social",
+    "name": "Marcus"
+   },
+   {
+    "text": "thanks!",
+    "lane": "social",
+    "recall_name": "Marcus"
+   }
+  ]
+ },
+ {
+  "id": "in_th_01",
+  "bucket": "thanks",
+  "turns": [
+   {
+    "text": "thanks, that was helpful",
+    "lane": "social"
+   }
+  ]
+ },
+ {
+  "id": "in_th_02",
+  "bucket": "thanks",
+  "turns": [
+   {
+    "text": "thank you!",
+    "lane": "social"
+   }
+  ]
+ },
+ {
+  "id": "in_cp_01",
+  "bucket": "capability",
+  "turns": [
+   {
+    "text": "what can you do?",
+    "lane": "social"
+   }
+  ]
+ },
+ {
+  "id": "in_cp_02",
+  "bucket": "capability",
+  "turns": [
+   {
+    "text": "what kind of questions can I ask you?",
+    "lane": "social"
+   }
+  ]
+ },
+ {
+  "id": "in_ot_01",
+  "bucket": "offtopic_factual",
+  "turns": [
+   {
+    "text": "what is 2+2?",
+    "lane": "offtopic"
+   }
+  ]
+ },
+ {
+  "id": "in_ot_02",
+  "bucket": "offtopic_factual",
+  "turns": [
+   {
+    "text": "what is the capital of India?",
+    "lane": "offtopic"
+   }
+  ]
+ },
+ {
+  "id": "in_ot_03",
+  "bucket": "offtopic_factual",
+  "turns": [
+   {
+    "text": "who won the football world cup in 2018?",
+    "lane": "offtopic"
+   }
+  ]
+ },
+ {
+  "id": "in_ot_04",
+  "bucket": "offtopic_factual",
+  "turns": [
+   {
+    "text": "write me a haiku about rain",
+    "lane": "offtopic"
+   }
+  ]
+ },
+ {
+  "id": "in_ot_05",
+  "bucket": "offtopic_factual",
+  "turns": [
+   {
+    "text": "what's the weather in Dublin tomorrow?",
+    "lane": "offtopic"
+   }
+  ]
+ },
+ {
+  "id": "in_dl_01",
+  "bucket": "disguised_legal",
+  "turns": [
+   {
+    "text": "hey, is my hiring tool ok?",
+    "lane": "on_topic"
+   }
+  ]
+ },
+ {
+  "id": "in_dl_02",
+  "bucket": "disguised_legal",
+  "turns": [
+   {
+    "text": "thanks! also, does the act cover chatbots?",
+    "lane": "on_topic"
+   }
+  ]
+ },
+ {
+  "id": "in_dl_03",
+  "bucket": "disguised_legal",
+  "turns": [
+   {
+    "text": "hi, my name is Ana and I build a credit model, is it risky?",
+    "lane": "on_topic"
+   }
+  ]
+ },
+ {
+  "id": "in_dl_04",
+  "bucket": "disguised_legal",
+  "turns": [
+   {
+    "text": "quick one: what's a deployer?",
+    "lane": "on_topic"
+   }
+  ]
+ },
+ {
+  "id": "in_dl_05",
+  "bucket": "disguised_legal",
+  "turns": [
+   {
+    "text": "hello, are emotion recognition tools banned at work?",
+    "lane": "on_topic"
+   }
+  ]
+ }
+]

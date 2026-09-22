@@ -1,7 +1,10 @@
 """The grounded-answer pipeline as a LangGraph graph, behind AGENTIC_RAG=1
 (default off).
 
-    START -> rewrite -> understand -> decompose -> retrieve -> grade -> generate -> verify -> decide -> END
+    START -> intent -> rewrite -> understand -> decompose -> retrieve -> grade -> generate -> verify -> decide -> END
+    (intent -> decide for the social and offtopic lanes; grade -> clarify -> decide
+    when a plain-language description found nothing and one clarifying question
+    may be asked)
     (retrieve -> decide directly when there is no context: the model is not
     called and decide abstains, exactly as the plain path does;
     rewrite -> decide directly on an actor conflict; grade -> decide when
@@ -80,6 +83,21 @@ instruction, a deterministic verdict-leak check after generation (regenerate
 once, then abstain) and system_description=True on the result.
 retrieval_config carries |understand=applied or |understand=n/a.
 
+Intent gate (22 Sep 2026, INTENT_GATE): the first node. gpt-4o-mini classifies
+the message (classify only); social gets a deterministic template and persists
+an introduced name on chat_session.display_name, offtopic gets the existing
+grounded refusal without retrieval, on_topic continues. A message mentioning an
+AI system, the Act, risk or compliance is on_topic by deterministic override.
+Tags |intent=social:<kind>, |intent=offtopic, |intent=on_topic.
+
+Clarifying follow-up (22 Sep 2026, CLARIFY_FOLLOWUP): when the grader abstains
+on a plain-language system description, one gpt-4o-mini question about the
+system's function is asked instead (must name no provision or legal category
+and pass the verdict-leak detector, else dropped and the turn routes). The
+original question is kept on chat_session.pending_clarification; the next turn
+is retrieved as question plus reply through the unchanged path and cannot ask
+again. Tags |clarify=asked, |clarify=dropped:<reason>, |clarify=round.
+
 Grounding, citations and the refusal sentence are decided downstream by the
 unchanged decide step.
 
@@ -99,8 +117,11 @@ from app.config import (
     agentic_grade_enabled,
     agentic_rewrite_enabled,
     agentic_verify_enabled,
+    clarify_followup_enabled,
+    intent_gate_enabled,
     query_understanding_enabled,
 )
+from app.db.models import ChatSession
 from app.generation import answer as pipeline
 from app.generation.answer import (
     GenerationStep,
@@ -108,6 +129,7 @@ from app.generation.answer import (
     RetrievalStep,
     RewriteInfo,
 )
+from app.generation.clarify import Clarification, clarifying_question, combined_question
 from app.generation.decompose import Plan, interleave
 from app.generation.decompose import plan as plan_decomposition
 from app.generation.grade import (
@@ -117,6 +139,7 @@ from app.generation.grade import (
     grade_context,
     reorder,
 )
+from app.generation.intent import IntentResult, classify, social_reply
 from app.generation.rewrite import RewriteResult, load_history, rewrite_followup
 from app.generation.understand import (
     EXPLAIN_AND_ROUTE_INSTRUCTION,
@@ -147,6 +170,7 @@ GRADE_TAGS = {
 }
 DECOMPOSE_SKIPPED_TAG = "|decompose=skipped"
 UNDERSTAND_TAGS = {True: "|understand=applied", False: "|understand=n/a"}
+INTENT_ON_TOPIC_TAG = "|intent=on_topic"
 VERIFY_TAGS = {
     "passed": "|verify=passed",
     "regenerated": "|verify=regenerated",
@@ -169,6 +193,13 @@ class GraphState(TypedDict, total=False):
     max_output_tokens: int | None
     rewrite: RewriteInfo | None
     # produced by nodes
+    intent_result: IntentResult | None
+    user_name: str | None  # chat_session.display_name, rehydrated each turn
+    clarification_round: bool  # this turn is the reply to the one clarifying question
+    original_question: str | None  # the question that clarification is about
+    clarify_result: Clarification | None
+    social: bool
+    clarifying: bool
     understanding: Understanding | None
     translated_query: str | None  # Act-vocabulary search terms, fused with the question
     leak_outcome: str | None  # None | regenerated | abstained
@@ -187,6 +218,108 @@ class GraphState(TypedDict, total=False):
     verify_outcome: str | None  # passed | regenerated | abstained | skipped | None
     verify_results: list[VerifyResult]
     result: GroundedAnswer
+
+
+def load_chat(session: Any, chat_session_id: UUID) -> ChatSession | None:
+    """The conversation record, for the introduced name and the pending
+    clarification marker. Separate so tests can fake it."""
+    try:
+        return session.get(ChatSession, chat_session_id)
+    except Exception:  # noqa: BLE001 - a missing row must not break a turn
+        return None
+
+
+def intent(state: GraphState) -> dict:
+    """First node. Rehydrates the conversation record (name, pending
+    clarification) and, when the intent gate is on, sorts the message into a
+    lane. Social and offtopic lanes never retrieve."""
+    gate_on = intent_gate_enabled()
+    clarify_on = clarify_followup_enabled()
+    if not gate_on and not clarify_on:
+        return {}
+    chat = load_chat(state["session"], state["chat_session_id"])
+    out: dict = {"user_name": getattr(chat, "display_name", None) if chat else None}
+    if clarify_on and chat is not None and chat.pending_clarification:
+        # The reply to the one clarifying question: retrieve as question plus
+        # reply, never clarify again, and skip the intent gate (a terse reply
+        # such as "loans" is not off-topic here).
+        original = chat.pending_clarification
+        chat.pending_clarification = None
+        out.update(
+            query=combined_question(original, state["query"]),
+            original_question=original,
+            clarification_round=True,
+        )
+        return out
+    if not gate_on:
+        return out
+    res = classify(state["query"])
+    out["intent_result"] = res
+    if res.name and chat is not None:
+        chat.display_name = res.name  # persisted by the turn's commit
+        out["user_name"] = res.name
+    if res.intent == "social":
+        reply = social_reply(res.social_kind, res.name, out.get("user_name"))
+        out.update(
+            social=True,
+            retrieved=RetrievalStep(
+                all_fused=[],
+                fused=[],
+                retrieval_config=f"none|intent=social:{res.social_kind}",
+                latency_ms=0,
+            ),
+            generated=GenerationStep(reply, None, None, None),
+        )
+    elif res.intent == "offtopic":
+        out.update(
+            retrieved=RetrievalStep(
+                all_fused=[],
+                fused=[],
+                retrieval_config="none|intent=offtopic",
+                latency_ms=0,
+            ),
+            generated=GenerationStep(None, None, None, None),
+        )
+    return out
+
+
+def route_after_intent(state: GraphState) -> str:
+    r = state.get("intent_result")
+    return (
+        "decide" if r is not None and r.intent in ("social", "offtopic") else "rewrite"
+    )
+
+
+def clarify(state: GraphState) -> dict:
+    """One clarifying question for a plain-language description the grader
+    found nothing for. Dropped, and the turn routes, unless it names no
+    provision or legal category and passes the verdict-leak detector."""
+    original = state.get("original_question") or state["query"]
+    c = clarifying_question(original)
+    chat = load_chat(state["session"], state["chat_session_id"])
+    if c.question is None:
+        return {"clarify_result": c}
+    if chat is not None:
+        chat.pending_clarification = original  # persisted by the turn's commit
+    return {
+        "clarify_result": c,
+        "clarifying": True,
+        "generated": GenerationStep(
+            c.question, c.prompt_tokens, c.completion_tokens, c.latency_ms
+        ),
+    }
+
+
+def route_after_grade_or_clarify(state: GraphState) -> str:
+    if state.get("grade_outcome") != "abstain":
+        return "generate"
+    if (
+        clarify_followup_enabled()
+        and _explain_route(state)
+        and not state.get("clarification_round")
+    ):
+        return "clarify"
+    return "decide"
 
 
 def actor_conflict(original: str, rewritten: str) -> bool:
@@ -492,6 +625,8 @@ def verify(state: GraphState) -> dict:
         return {}
     if pipeline.is_abstention(generated.answer_text):
         return {}
+    if state.get("social") or state.get("clarifying"):
+        return {}  # deterministic template or a question: nothing to verify
     fused = state["retrieved"].fused
     if _explain_route(state):
         # ADR-21 hard line, checked before anything else and regardless of
@@ -595,9 +730,25 @@ def decide(state: GraphState) -> dict:
         all_fused=[], fused=[], retrieval_config=AMBIGUOUS_CONFIG, latency_ms=0
     )
     generated = state.get("generated") or GenerationStep(None, None, None, None)
+    c = state.get("clarify_result")
+    clarify_tag = (
+        ""
+        if c is None
+        else (
+            "|clarify=asked"
+            if c.question
+            else f"|clarify=dropped:{(c.rejected_reason or 'none').replace(' ', '_')}"
+        )
+    ) + ("|clarify=round" if state.get("clarification_round") else "")
+    ir = state.get("intent_result")
+    intent_tag = (
+        INTENT_ON_TOPIC_TAG if ir is not None and ir.intent == "on_topic" else ""
+    )
     tag = (
-        REWRITE_TAGS.get(state.get("rewrite_outcome") or "", "")
+        intent_tag
+        + REWRITE_TAGS.get(state.get("rewrite_outcome") or "", "")
         + GRADE_TAGS.get(state.get("grade_outcome") or "", "")
+        + clarify_tag
         + VERIFY_TAGS.get(state.get("verify_outcome") or "", "")
         + ("|leak=" + state["leak_outcome"] if state.get("leak_outcome") else "")
         + PATH_TAG
@@ -616,6 +767,8 @@ def decide(state: GraphState) -> dict:
             rewrite=state.get("rewrite"),
             path_tag=tag,
             system_description=_explain_route(state),
+            social=bool(state.get("social")),
+            clarifying=bool(state.get("clarifying")),
         )
     }
 
@@ -636,15 +789,20 @@ def route_after_grade(state: GraphState) -> str:
 
 def build_graph() -> StateGraph:
     g = StateGraph(GraphState)
+    g.add_node("intent", intent)
     g.add_node("rewrite", rewrite)
     g.add_node("understand", understand)
     g.add_node("decompose", decompose)
     g.add_node("retrieve", retrieve)
     g.add_node("grade", grade)
+    g.add_node("clarify", clarify)
     g.add_node("generate", generate)
     g.add_node("verify", verify)
     g.add_node("decide", decide)
-    g.add_edge(START, "rewrite")
+    g.add_edge(START, "intent")
+    g.add_conditional_edges(
+        "intent", route_after_intent, {"rewrite": "rewrite", "decide": "decide"}
+    )
     g.add_conditional_edges(
         "rewrite", route_after_rewrite, {"understand": "understand", "decide": "decide"}
     )
@@ -654,8 +812,11 @@ def build_graph() -> StateGraph:
         "retrieve", route_after_retrieve, {"grade": "grade", "decide": "decide"}
     )
     g.add_conditional_edges(
-        "grade", route_after_grade, {"generate": "generate", "decide": "decide"}
+        "grade",
+        route_after_grade_or_clarify,
+        {"generate": "generate", "decide": "decide", "clarify": "clarify"},
     )
+    g.add_edge("clarify", "decide")
     g.add_edge("generate", "verify")
     g.add_edge("verify", "decide")
     g.add_edge("decide", END)

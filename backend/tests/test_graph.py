@@ -77,6 +77,8 @@ def _run(monkeypatch, *, flag: bool, fused, llm_text):
     monkeypatch.setenv("AGENTIC_REWRITE", "0")  # Stage 0 equivalence: nodes off
     monkeypatch.setenv("AGENTIC_GRADE", "0")
     monkeypatch.setenv("QUERY_UNDERSTANDING", "0")
+    monkeypatch.setenv("INTENT_GATE", "0")
+    monkeypatch.setenv("CLARIFY_FOLLOWUP", "0")
     monkeypatch.setenv("AGENTIC_VERIFY", "0")
     monkeypatch.setenv("AGENTIC_DECOMPOSE", "0")
     _patch_retrieval(monkeypatch, fused)
@@ -213,10 +215,12 @@ def test_flag_on_routes_through_run_graph(monkeypatch):
 def test_graph_shape_is_rewrite_retrieve_grade_generate_decide():
     g = graph_module.GRAPH.get_graph()
     assert sorted(n for n in g.nodes if not n.startswith("__")) == [
+        "clarify",
         "decide",
         "decompose",
         "generate",
         "grade",
+        "intent",
         "retrieve",
         "rewrite",
         "understand",
@@ -224,7 +228,9 @@ def test_graph_shape_is_rewrite_retrieve_grade_generate_decide():
     ]
     edges = {(e.source, e.target) for e in g.edges}
     assert edges == {
-        ("__start__", "rewrite"),
+        ("__start__", "intent"),
+        ("intent", "rewrite"),
+        ("intent", "decide"),
         ("rewrite", "understand"),
         ("rewrite", "decide"),
         ("understand", "decompose"),
@@ -233,6 +239,8 @@ def test_graph_shape_is_rewrite_retrieve_grade_generate_decide():
         ("retrieve", "decide"),
         ("grade", "generate"),
         ("grade", "decide"),
+        ("grade", "clarify"),
+        ("clarify", "decide"),
         ("generate", "verify"),
         ("verify", "decide"),
         ("decide", "__end__"),
@@ -268,6 +276,8 @@ def _stage1(monkeypatch, *, history, rewrite_result, fused, llm_text, upstream=N
     monkeypatch.setenv("AGENTIC_REWRITE", "1")
     monkeypatch.setenv("AGENTIC_GRADE", "0")
     monkeypatch.setenv("QUERY_UNDERSTANDING", "0")
+    monkeypatch.setenv("INTENT_GATE", "0")
+    monkeypatch.setenv("CLARIFY_FOLLOWUP", "0")
     monkeypatch.setenv("AGENTIC_VERIFY", "0")
     monkeypatch.setenv("AGENTIC_DECOMPOSE", "0")
     monkeypatch.setattr(graph_module, "load_history", lambda s, cid: history)

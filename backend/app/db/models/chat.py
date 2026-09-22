@@ -15,6 +15,15 @@ class ChatSession(Base):
     user_id: Mapped[UUID] = mapped_column(ForeignKey("app_user.id"))
     corpus_version_id: Mapped[int] = mapped_column(ForeignKey("corpus_version.id"))
     title: Mapped[str | None]
+    # The name the user introduced themselves with ("my name is Ana"), kept on
+    # the conversation so later turns can greet by name (intent gate, 22 Sep
+    # 2026). Never used for anything but the greeting template.
+    display_name: Mapped[str | None]
+    # The original plain-language question a clarifying follow-up was asked
+    # about. Set when the copilot asks its one clarifying question, cleared on
+    # the next turn, so that turn is retrieved as question plus reply and no
+    # second clarification can be asked.
+    pending_clarification: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
