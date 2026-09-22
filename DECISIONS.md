@@ -1,6 +1,173 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-19: Chat scope handling: greeting short-circuit shipped, follow-up rewrite built but off (2026-09-22)
+Context: Two chat behaviours were measured this week. (1) Greetings and off-topic input
+("hey", "thanks", "???") hit the generic retrieval refusal after a paid call. (2) Follow-ups
+("and for deployers?") lose their context because each turn retrieves on the raw message.
+Decision: (1) app/generation/scope.py: is_trivial_input() detects empty, letterless or
+greeting-only input deterministically; /ask answers it with a fixed scope message
+(scope_notice=true, session_id null) BEFORE the quota check, embedding or model call, so it
+creates no session, no message and no trace. The genuine retrieval refusal is unchanged; the
+UI renders the same purposeful copy for both (what the copilot is for, three example
+questions, the route to an assessment, "not legal advice"). (2) app/generation/rewrite.py:
+a gpt-4o-mini structured rewrite of turn 2+ into a standalone question, behind the existing
+StructuredExtractor interface, with a deterministic entity guard (any actor, body, system
+type, article or number absent from the conversation discards the rewrite), idempotence,
+and fail-open to the original question. Wired into /ask but gated OFF by default
+(config.followup_rewrite_enabled, FOLLOWUP_REWRITE=1 to enable). query_trace gained
+rewritten_query, rewrite_prompt_tokens, rewrite_completion_tokens (migration c9e1f2a3b4d5,
+additive, nullable).
+Evidence: Scope: unit and API tests; greeting returns the notice with no quota consulted and
+no session write. Rewrite eval (evals/followup_set.json, 44 sequences, retrieval-only,
+gpt-4o-mini + embeddings, ~$0.008): hard gates held (single-turn golden set 56/56 pass-through
+with recall unchanged; 0 hallucinated-entity rewrites; off-topic follow-ups left untouched 3/3;
+idempotence 5/5). Value gate missed: correct citation in the 15-chunk context pooled over 36
+follow-ups 69% -> 81% (+12 points against a required +30); on the 18 context-dependent
+follow-ups 44% -> 67%. The first 18 follow-ups as written carried the target's own nouns, so
+the baseline already retrieved 17/18; the terse block was added rather than substituted.
+Consequences: The scope notice is live and free. The rewrite stays in the code path but makes
+no call until the flag is set after a passing run; the eval and gate are re-runnable as is.
+The refusal contract (ABSTENTION_TEXT, generation unchanged) was not touched by either.
+Status: Accepted (scope notice); Deferred (rewrite, flag off).
+
+## ADR-18: Delete a chat; query_trace attributed by user_id so the quota survives (2026-09-22)
+Context: Users need to delete chats. Recon found every FK on chat_session, message and
+query_trace is NO ACTION and query_trace.chat_session_id was NOT NULL, so a hard delete
+could not proceed without deleting the traces; and the daily quota was counted through
+query_trace -> chat_session -> app_user, so deleting a chat would have reset the user's count
+for the day and blinded the admin viewer. The audit and money rows must outlive the chat.
+Decision: Migration d4f5a6b7c8e9: query_trace.user_id (FK app_user, backfilled from the
+session, then NOT NULL, indexed with created_at) and chat_session_id made nullable.
+DELETE /sessions/{id} (owner-scoped via get_owned_session, same 404 for foreign and unknown
+ids) sets chat_session_id to NULL on the chat's traces, deletes citations, messages and the
+session, and commits. calls_today() counts query_trace and extraction_run by their own
+user_id, no session join. The trace writer stores user_id on every new row; the admin viewer
+joins app_user through query_trace.user_id, so detached traces stay visible. Saved
+assessments are separate records and are not touched. UI: a per-row menu, a Radix
+AlertDialog confirmation (focus trapped, Escape and backdrop cancel), refetch after delete,
+the designed empty state when the last chat goes; the shell drawer ignores an Escape a nested
+dialog has already handled.
+Evidence: tests: non-owner and unknown id return the same 404 and change nothing; anonymous
+401; owner delete removes chat, messages and citations; the trace remains with
+chat_session_id NULL and the owner's user_id, retrieval_trace intact, calls_today unchanged;
+the assessment remains; the chat is gone from the list; a second delete is 404; the admin
+list still shows the detached trace. Row diff around the DB-backed suites +0 on eight tables.
+Backfill left 0 rows with a null user_id. Playwright: menu, dialog role alertdialog with focus
+inside, Escape cancels with no row lost, confirm removes the row, "No chats yet" after the
+last one.
+Consequences: Deleting a chat can never reset a quota or hide a turn from the operator. The
+migration's downgrade is the one lossy direction: detached traces would have to be deleted
+to restore NOT NULL. Migration must run before the code that writes query_trace.user_id
+starts (ADR-11 rule).
+Status: Accepted.
+
+## ADR-17: Generation answers from the governing provision instead of refusing on a technicality (2026-09-22)
+Context: After ADR-16 every broad question had its gold provision in context, yet "what is a
+high-risk AI system?" still refused in most runs (1/6, 3/6 and 1/2 across three sessions)
+with Article 6(1) at rank 1. The four Article 3 definition questions answered 6/6. The model
+was treating a classification rule phrased as conditions as "not a definition". The
+ungrounded control ("when does the Act start to apply?", whose general application sentence
+the corpus does not capture) refused 6/6, correctly.
+Decision: One additive paragraph in SYSTEM_PROMPT: the context often contains the provision
+that governs the question (a definition in Article 3, a classification rule such as Article
+6 or Annex III, a scope rule, a list of obligations or prohibitions); when it does, answer
+from it and cite it, and do not abstain merely because it is phrased as conditions or a
+rule; abstain only when no provision in the context bears on the question. The "context
+only" rule and the exact abstention sentence are unchanged. Also: is_abstention() treats the
+abstention sentence wrapped in quotation marks as a refusal (the model sometimes copies the
+quotes the prompt shows; the exact-match check had let that through as an answer with
+fifteen citations attached).
+Evidence: 6 repeats at temperature 0 per query, nothing persisted. Flagship 3/6 -> 6/6;
+provider, deployer, AI system, GPAI definitions 6/6 -> 6/6; ungrounded control 0/6 -> 0/6.
+Off-topic set (11 questions, twice each) 22/22 refused. Easy golden set with the judge:
+citation hit 16/16 -> 16/16, abstention accuracy 20/20 -> 20/20, mean faithfulness 4.812 ->
+4.938, faithfulness pass@4 1.000 -> 1.000, mean relevance 4.938 -> 4.875 (one item, gs_02,
+4 -> 3 for "lacks specific examples", same citation hit). Golden retrieval unaffected (a
+prompt cannot move it; re-measured anyway). Live smoke through /ask: the flagship answers
+citing Article 6(2) and Annex III; pizza and the application-date question refuse. Spend
+about 137 gpt-4o and 64 gpt-4o-mini judge calls, roughly $0.90 at list prices.
+Consequences: Broad classification questions now answer stably when the governing provision
+is shown; nothing answers without it. The one-point relevance move on one item is recorded,
+not hidden. The application-date gap is a corpus/parser matter (ADR-002), out of scope here.
+Status: Accepted.
+
+## ADR-16: Dense anchor in fusion; BM25 saturation was hiding rank-1 vector hits (2026-09-22)
+Context: "what is a high-risk AI system?" and similar broad questions were reported as
+refusing. Measured before any change on a 14-question broad set: 10/14 answered and 9/14
+cited the gold, not ~0. The 5 misses were NOT retrieved at all, and all five were Article 3
+definitions or Article 113. Per leg, the vector search ranked the gold #1 for every one of
+them while BM25 did not have it in its top 25: "provider" and "system" match hundreds of
+chunks. RRF at 0.4/0.6 gives a vector-only rank-1 chunk 0.4/61 = 0.0066, while any
+lexical-only chunk in BM25's top 25 scores at least 0.6/85 = 0.0071, so a dense rank-1 hit
+could not even enter the 25 fused candidates. The pre-LLM gate never fired on any broad
+question; the model refused correctly given what it was shown.
+Decision: retrieve_candidates() in app/generation/answer.py now holds the whole production
+retrieval block (vector + BM25, RRF, actor prior) so evals measure the served path, plus
+apply_dense_anchor(): if the top vector hit clears DENSE_ANCHOR_FLOOR = 0.45 and is absent
+from the 15-chunk context, insert it at DENSE_ANCHOR_POSITION = 5 (sixth) and stamp
+"|anchor=dense" on retrieval_config. Position six because inserting at the front cost one
+golden recall@5 hit; below the top five, recall@5 is unchanged by construction. Floor from
+the sweep {0.40, 0.45, 0.50}: golden recall identical at all three; 0.40 also fires on the
+off-topic "summarise the GDPR" (0.415); 0.50 leaves "who is a provider?" (0.503) no margin.
+Both constants are Yash's to re-pick (ADR-7 rule); the sweep is evals/run_broad_eval.py.
+Evidence: Broad set gold in context 9/14 -> 14/14; answered with gold cited 9/14 -> 13/14
+single pass, 12/14 stable over repeats; golden recall hard 34/35 @5 and 35/35 @15,
+realistic 56/56 and 56/56, identical before and after; off-topic 11/11 refused, anchor
+fired 0/11 off-topic; 0 ungrounded article mentions. The two that remained: the flagship
+(model variance, fixed in ADR-17) and the application-date question (corpus gap).
+Consequences: Short definitional queries reach the generator with their definition. The
+anchor privileges the dense leg's top-1 only when fusion has excluded it; every firing is
+visible in query_trace.retrieval_config. Not MMR, not a threshold change, no new paid call.
+Status: Accepted.
+
+## ADR-15: Free-text input for the assessment: LLM fills the form, never the verdict (2026-09-22)
+Context: The questionnaire is 29 fields. The strategy wants a lower front door: the user
+describes the system, a model pre-fills the form, the user confirms, the deterministic
+engine runs unchanged. The mapping is generated output, so it is eval-gated (CLAUDE.md
+invariant 3), unlike the wedge itself (ADR-12).
+Decision: app/extraction/ (a separate package: app/assessment stays provably LLM-free by
+test). One interface, StructuredExtractor, with OpenAIExtractor (chat.completions.parse,
+strict schema, temperature 0) and FakeExtractor for tests; default openai:gpt-4o-mini via
+config.extraction_model(). Every field of ExtractedAnswers carries its own {value, quote}
+slot. The mapper enforces, not trusts: (D1) a quote must be a verbatim substring of the
+description, tolerant of whitespace, letter case and edge punctuation only (D6), else the
+value is downgraded to unknown and the failure recorded; (D2) the five legal
+characterisations (is_ai_system, substantial_modification, changed_intended_purpose,
+relies_on_6_3, gpai_systemic) are NEVER pre-filled, whatever the model returns; (D3) a "no"
+may rest on the passage that entails it, only when unambiguous; (D4) quote only from the
+description, never the law text, build-and-use in-house is provider and deployer,
+interacts_with_persons means the system itself addresses a person; (D7) annex_iii_point
+quotes the purpose passage; (D8) undertaking is never inferred from an occupation word. The
+extract endpoint returns answers, provenance, quotes and to_confirm, never a report; the UI
+blocks "Build the report" until every visible unknown is answered. POST /assess/extract:
+service token, per-minute limit, the same daily quota as chat (extraction_run rows counted
+with query_trace, written fail-closed), length cap before spend, description stored for
+admin-only review (C5). Saved assessments carry source and extraction_run_id (migration
+b7d3e9f1a2c4); the export says "pre-filled from a description on ..., then reviewed and
+confirmed by the user". Gemini was not wired: adding it needs google-genai, GEMINI_API_KEY,
+and the PAID tier only (the free tier's terms, fetched 21 Sep 2026, allow human review and
+product improvement on submitted content).
+Evidence: Authored eval set, 30 cases (10 explicit, 10 partial, 10 adversarial), scored
+over the fields the user would see. Four runs (~$0.035 each): run 1 exposed that a side
+list of quotes is skipped (396 missing); run 2 exposed law text passed off as quotes (18
+caught); run 3 exposed an "annex = none" collapse. Run 4, the shipped prompt
+(prompt_version 2f666c1e7b49): false inference 2/187 (1%), legal-five false inference 0/62
+by construction, fabricated quotes passing an independent audit 0/123, verdict match after
+the user confirms unknowns 28/30 (93%), verdict match as mapped 16/30 (53%), gold-known
+fields correct 27%. Gate: legal-five 0, no fabricated quote passes, false inference <= 7%,
+verdict-after-confirmation >= 85%: pass. Calibration: describe-screen copy says "a head
+start; you confirm the rest" because verdict-as-mapped and correct-rate sit under the 60% /
+45% thresholds for stronger wording. One live extraction: 5,943 prompt / 438 completion
+tokens, 5.6 s. Documented pre-fill gap: Article 5(1)(f) workplace emotion inference and
+5(1)(h) real-time RBI were never flagged in any run; the prohibited-practices step is
+always shown for the user to answer.
+Consequences: The pre-fill is a head start, not a filled form (most entailed negatives are
+left for the user). The eval set is authored by the prompt's author and blind to real
+phrasing; numbers are provisional until real descriptions are added. ENGINE_VERSION is
+unaffected (extraction sits upstream of Answers); prompt_version is stored per run.
+Status: Accepted.
+
 ## ADR-14: Export as a self-contained HTML record, rendered on the backend (2026-09-21)
 Context: The strategy doc sells the artifact, not the chat: a dated, cited record a customer
 can hand to a reviewer. Three ways to produce it were weighed. (A) Server-side PDF: the
