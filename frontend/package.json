@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:timeline": "node --experimental-strip-types --test lib/timeline.test.mjs"
   },
   "dependencies": {
     "@auth/pg-adapter": "^1.11.3",
