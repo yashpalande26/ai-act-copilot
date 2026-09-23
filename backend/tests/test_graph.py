@@ -239,7 +239,7 @@ def test_graph_shape_is_rewrite_retrieve_grade_generate_decide():
         ("retrieve", "decide"),
         ("grade", "generate"),
         ("grade", "decide"),
-        ("grade", "clarify"),
+        ("verify", "clarify"),
         ("clarify", "decide"),
         ("generate", "verify"),
         ("verify", "decide"),

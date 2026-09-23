@@ -306,26 +306,31 @@ def clarify_model() -> str:
     return os.environ.get("CLARIFY_MODEL", "openai:gpt-4o-mini")
 
 
-# Clarifying follow-up default. OFF: on the 22 Sep 2026 run the trigger never
-# fired. On all three underspecified descriptions the grader PROCEEDED (it
-# finds some passage relevant to any vague AI question) and the generator
-# abstained; the specified trigger is the grader's abstention, so the
-# clarifying question was never asked and its gates (grounding on the second
-# pass 0/3) could not pass. The observed "no supporting provision" signal is
-# the generator's explain-mode abstention; widening the trigger to it is a
-# design decision, not taken here. The node, guards and eval stay.
+# Clarifying follow-up default. OFF. ADR-24 (23 Sep 2026) moved the trigger
+# to the generator's explain-mode abstention and revised the explain
+# instruction; on the 14-sequence clarify set 12 of 13 gates hold (0 leaks,
+# 0 stretched provisions, fired only on abstaining system descriptions,
+# 4/4 underspecified asked, one question maximum, off-topic never fires). The
+# one failing gate: 3/4 underspecified grounded on the second pass; the fourth
+# retrieved the gold provision and answered on it, and the gpt-4o-mini
+# verifier withheld the answer twice (the paraphrase over-withholding of
+# ADR-20 b). The task rule is enable only on a full pass, so the default stays
+# off; the call to enable is Yash's.
 CLARIFY_FOLLOWUP_DEFAULT = "0"
 
 
 def clarify_followup_enabled() -> bool:
-    """When the grader finds no supporting provision for a plain-language
-    system description, ask ONE clarifying question (gpt-4o-mini, function
-    of the system: what decision, about whom, on what data) instead of
-    abstaining; the reply is retrieved as question plus reply through the
-    unchanged path; still nothing means the route to the assessment. The
-    question must name no Article, Annex or legal category and must pass
-    the verdict-leak detector, else it is dropped. Effective inside the
-    graph only."""
+    """ADR-24: when the generator abstains in explain mode on a question
+    understood as a plain-language system description (no retrieved
+    provision concerns a system of the kind described), ask ONE clarifying
+    question (gpt-4o-mini, function of the system: what decision, about
+    whom, on what data) instead of the abstention; the reply is retrieved as
+    question plus reply through the unchanged path exactly once; whatever
+    that pass decides stands (grounded answer, route to the assessment, or
+    the grounded refusal for a drifted reply), never a second question. The
+    question must name no Article, Annex or legal category and must pass the
+    verdict-leak detector, else it is dropped and the turn routes. Effective
+    inside the graph only."""
     return (
         agentic_rag_enabled()
         and os.environ.get("CLARIFY_FOLLOWUP", CLARIFY_FOLLOWUP_DEFAULT) == "1"

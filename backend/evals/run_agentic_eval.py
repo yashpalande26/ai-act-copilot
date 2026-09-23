@@ -230,9 +230,22 @@ def main() -> None:
             )
             latency_ms = int((time.monotonic() - t0) * 1000)
             abstained = is_abstention(res.answer)
+            # ADR-24: a clarifying question is neither an answer nor the
+            # abstention; recorded on its own, never judged for faithfulness.
+            clarifying = bool(getattr(res, "clarifying", False))
             cited = [c.citation_id for c in res.citations]
             step = captured.get("retrieved")
-            context_ids = [f.result.citation_id for f in step.fused] if step else []
+            # A clarifying turn serves no citations (fused is emptied by the
+            # clarify node); the context that was retrieved and graded before
+            # the question is the first slice of all_fused, which is what the
+            # recall metric should see.
+            context_ids = (
+                [f.result.citation_id for f in step.all_fused[:15]]
+                if step and clarifying
+                else [f.result.citation_id for f in step.fused]
+                if step
+                else []
+            )
             cfg = (step.retrieval_config if step else "none") + captured.get(
                 "path_tag", ""
             )
@@ -309,6 +322,7 @@ def main() -> None:
                     else ("n/a" if "understand=n/a" in cfg else None)
                 ),
                 "system_description": bool(getattr(res, "system_description", False)),
+                "clarifying": clarifying,
                 "verdict_leaks": [] if abstained else verdict_leaks(res.answer),
                 "leak_outcome": next(
                     (k for k in ("regenerated", "abstained") if f"leak={k}" in tag),
@@ -338,7 +352,7 @@ def main() -> None:
                 "latency_ms": latency_ms,
                 "answer": res.answer[:300],
             }
-            if not args.no_judge and not abstained:
+            if not args.no_judge and not abstained and not clarifying:
                 f = judge_faithfulness(
                     res.answer,
                     [c.chunk_text for c in res.citations],
@@ -352,6 +366,7 @@ def main() -> None:
             print(
                 f"  {it['id']} {it['bucket']:<12} abstain={'Y' if abstained else 'n'}"
                 f"{'(exp)' if it['expected_abstention'] else '     '}"
+                f"{' CLARIFY' if clarifying else ''}"
                 f" ctx_recall={fmt(row['context_recall'])} ctx_prec={fmt(row['context_precision'])}"
                 f" cite={fmt(row['citation_accuracy'])} inline={row['inline_mention']}"
                 f" faith={row.get('faithfulness')} rel={row.get('answer_relevance')}"
@@ -477,6 +492,7 @@ def main() -> None:
                 f"  routed {sum(t['system_description'] for t in plain if t['must_route'])}/{sum(t['must_route'] for t in plain)} of must-route"
                 f"  off-topic item routed (must be 0): {sum(t['system_description'] for t in plain if t['expected_abstention'])}"
                 f"  leak regenerations {sum(t['leak_outcome'] == 'regenerated' for t in traces)}  leak abstentions {sum(t['leak_outcome'] == 'abstained' for t in traces)}"
+                f"  clarifying question asked {sum(t['clarifying'] for t in traces)} {[t['id'] for t in traces if t['clarifying']]}"
             )
         verified = [t for t in traces if t["verify_outcome"]]
         if verified:

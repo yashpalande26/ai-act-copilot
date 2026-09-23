@@ -11,12 +11,16 @@ social replies checked for legal content (no provision named, no legal
 category), offtopic answered count (gate 0), disguised-legal misroutes
 (gate 0), name recall across turns, verdict leaks (gate 0).
 
-Clarify set: a plain-language description, then the reply the user would
-give to a clarifying question. The reply is sent only if a clarifying question
-was asked. Reported: every generated question with the leak-detector and
-legal-term verdict, whether the second pass grounded on the gold provision,
-law-silent items still routed with no provision asserted, offtopic items on
-which the follow-up did not fire.
+Clarify set (ADR-24): a plain-language description, then the reply the user
+would give to a clarifying question. The reply is sent only if a clarifying
+question was asked. Buckets: underspecified (must ask, then ground on the
+second pass), area_only (an area of use but no function: either grounds on
+turn 1 or asks and grounds on the second pass), law_silent (may ask; after the reply must route with no
+provision asserted), already_clear (must not ask; grounds directly), offtopic
+(chat lane; never fires), drift (informational: a drifted reply goes through
+the normal path once, no second question). Reported: every generated question
+with the leak-detector and legal-term verdict, per-bucket fire and ground
+counts, and the non-compensatory gates.
 
 NOTE: in production, ask.py answers bare greetings with the scope notice
 before the graph (is_trivial_input); this runner calls the graph directly, so
@@ -103,6 +107,12 @@ def main() -> None:
 
     real_chat = graph_module.chat_reply
     real_guard = graph_module.injection_check
+    real_generate = graph_module.pipeline.generate_step
+
+    def cap_generate(query, fused, **kw):
+        step = real_generate(query, fused, **kw)
+        captured.setdefault("drafts", []).append(step.answer_text)
+        return step
 
     def cap_chat(history, message, user_name=None, extractor=None):
         captured["chat_calls"] = captured.get("chat_calls", 0) + 1
@@ -119,6 +129,7 @@ def main() -> None:
     graph_module.injection_check = cap_guard
     graph_module.pipeline.retrieve_step = cap_retrieve
     graph_module.pipeline.decide_step = cap_decide
+    graph_module.pipeline.generate_step = cap_generate
     out: dict = {
         "flags": {
             "intent": config.intent_gate_enabled(),
@@ -334,28 +345,52 @@ def main() -> None:
                 res1, cap1 = turn(chat, it["description"])
                 asked = res1.clarifying
                 q = res1.answer if asked else None
+                cfg1 = cap1.get("cfg", "")
+                drafts1 = cap1.get("drafts", [])
                 row = {
                     "id": it["id"],
                     "bucket": it["bucket"],
                     "description": it["description"],
-                    "turn1_cfg": cap1.get("cfg", ""),
+                    "turn1_cfg": cfg1,
+                    "turn1_lane": lane_of(cfg1),
+                    "turn1_understood": "understand=applied" in cfg1,
+                    "turn1_generator_abstained": bool(drafts1)
+                    and drafts1[-1] is not None
+                    and is_abstention(drafts1[-1]),
                     "turn1_abstained": is_abstention(res1.answer),
+                    "turn1_recall": context_recall(
+                        cap1.get("context_ids", []), it["gold_citation_ids"]
+                    )
+                    if it["gold_citation_ids"]
+                    else None,
+                    "turn1_route": res1.system_description,
                     "turn1_named": references_in(res1.answer)
-                    if not is_abstention(res1.answer)
+                    if not is_abstention(res1.answer) and not asked
                     else [],
+                    "turn1_leaks": verdict_leaks(res1.answer) if not asked else [],
                     "asked": asked,
                     "question": q,
                     "question_check": check_question(q) if q else None,
                     "question_leaks": verdict_leaks(q) if q else [],
                     "pending_marker": chat.pending_clarification,
+                    "turn1_answer": res1.answer[:200],
                 }
+                # The fire rule, checked per item: asked only if understood
+                # as a system description AND the generator's draft abstained.
+                row["fired_correctly"] = (not asked) or (
+                    row["turn1_understood"] and row["turn1_generator_abstained"]
+                )
                 if asked:
                     res2, cap2 = turn(chat, it["reply"])
                     ctx = cap2.get("context_ids", [])
+                    cfg2 = cap2.get("cfg", "")
                     row.update(
-                        turn2_cfg=cap2.get("cfg", ""),
+                        turn2_cfg=cfg2,
+                        turn2_lane=lane_of(cfg2),
                         turn2_abstained=is_abstention(res2.answer),
-                        turn2_recall=context_recall(ctx, it["gold_citation_ids"]),
+                        turn2_recall=context_recall(ctx, it["gold_citation_ids"])
+                        if it["gold_citation_ids"]
+                        else None,
                         turn2_named=references_in(res2.answer)
                         if not is_abstention(res2.answer)
                         else [],
@@ -367,34 +402,110 @@ def main() -> None:
                     )
                 rows.append(row)
                 print(
-                    f"  {it['id']} {it['bucket']:<24} turn1: {row['turn1_cfg'].split('|path')[0]} asked={asked}"
+                    f"  {it['id']} {it['bucket']:<14} turn1: lane={row['turn1_lane']} understood={row['turn1_understood']} gen_abstained={row['turn1_generator_abstained']} asked={asked} recall={row['turn1_recall']} named={row['turn1_named'][:2]}"
                 )
                 if asked:
                     print(
-                        f"     Q: {q!r}\n     check={row['question_check']} leaks={row['question_leaks']}\n     turn2: abstained={row['turn2_abstained']} recall={row['turn2_recall']} named={row['turn2_named'][:3]} route={row['turn2_route']} clarifying_again={row['turn2_clarifying']} marker_cleared={row['marker_cleared']}"
+                        f"     Q: {q!r}\n     check={row['question_check']} leaks={row['question_leaks']}\n     turn2: lane={row['turn2_lane']} abstained={row['turn2_abstained']} recall={row['turn2_recall']} named={row['turn2_named'][:3]} route={row['turn2_route']} clarifying_again={row['turn2_clarifying']} marker_cleared={row['marker_cleared']}\n     A2: {row['turn2_answer'][:160]!r}"
                     )
-            print("\n== CLARIFY: gates ==")
-            asked_rows = [r for r in rows if r["asked"]]
+                elif not row["turn1_abstained"]:
+                    print(f"     A1: {row['turn1_answer'][:160]!r}")
+
+            def bucket(name):
+                return [r for r in rows if r["bucket"] == name]
+
+            def grounded_on(r, key):
+                return r.get(key + "_recall") == 1.0 and not r.get(key + "_abstained")
+
+            print("\n== CLARIFY: every generated question ==")
+            for r in rows:
+                if r["asked"]:
+                    print(
+                        f"  {r['id']:<6} check={r['question_check'] or 'ok':<8} leaks={len(r['question_leaks'])}  {r['question']!r}"
+                    )
+            print("\n== CLARIFY: per bucket (fired / grounded) ==")
+            for b in (
+                "underspecified",
+                "area_only",
+                "law_silent",
+                "already_clear",
+                "offtopic",
+                "drift",
+            ):
+                rs = bucket(b)
+                if not rs:
+                    continue
+                fired = sum(r["asked"] for r in rs)
+                g1 = sum(grounded_on(r, "turn1") for r in rs)
+                g2 = sum(r["asked"] and grounded_on(r, "turn2") for r in rs)
+                routed2 = sum(
+                    bool(r.get("turn2_route")) and bool(r.get("turn2_abstained"))
+                    for r in rs
+                )
+                lanes = [r["turn1_lane"] for r in rs]
+                print(
+                    f"  {b:<14} n={len(rs)} fired={fired} grounded_turn1={g1} grounded_turn2={g2} routed_after_reply={routed2} turn1_lanes={lanes}"
+                )
+            under = bucket("underspecified")
+            silent = bucket("law_silent")
+            clear = bucket("already_clear")
+            off = bucket("offtopic")
+            gates = {
+                "verdict leaks, all items and questions": sum(
+                    bool(r["turn1_leaks"])
+                    or bool(r["question_leaks"])
+                    or bool(r.get("turn2_leaks"))
+                    for r in rows
+                ),
+                "law_silent stretched to a provision": sum(
+                    bool(r["turn1_named"]) or bool(r.get("turn2_named")) for r in silent
+                ),
+                "law_silent not routed after the sequence": sum(
+                    not (
+                        (r.get("turn2_route") and r.get("turn2_abstained"))
+                        if r["asked"]
+                        else (r["turn1_route"] and r["turn1_abstained"])
+                    )
+                    for r in silent
+                ),
+                "fired on something other than an abstaining system description": sum(
+                    not r["fired_correctly"] for r in rows
+                ),
+                "questions failing the check after display": sum(
+                    bool(r["question_check"]) for r in rows if r["asked"]
+                ),
+                "second clarification asked": sum(
+                    bool(r.get("turn2_clarifying")) for r in rows
+                ),
+                "marker left set after the reply": sum(
+                    r["asked"] and not r.get("marker_cleared") for r in rows
+                ),
+                "underspecified not asked": sum(not r["asked"] for r in under),
+                "underspecified not grounded on the second pass": sum(
+                    not (r["asked"] and grounded_on(r, "turn2")) for r in under
+                ),
+                "area_only neither grounded on turn 1 nor asked-then-grounded": sum(
+                    not (
+                        grounded_on(r, "turn2")
+                        if r["asked"]
+                        else grounded_on(r, "turn1")
+                    )
+                    for r in bucket("area_only")
+                ),
+                "already_clear asked": sum(r["asked"] for r in clear),
+                "already_clear not grounded on turn 1": sum(
+                    not grounded_on(r, "turn1") for r in clear
+                ),
+                "offtopic fired": sum(r["asked"] for r in off),
+            }
+            print("\n== CLARIFY: gates (every count must be 0) ==")
+            for k, v in gates.items():
+                print(f"  {'ok  ' if v == 0 else 'FAIL'} {v:>2}  {k}")
             print(
-                f"  questions asked: {len(asked_rows)}; failing the check after display (gate 0): {sum(bool(r['question_check']) for r in asked_rows)}; leaking: {sum(bool(r['question_leaks']) for r in asked_rows)}"
-            )
-            print(
-                f"  clarifies_to_provision grounded on second pass: {sum(1 for r in rows if r['bucket'] == 'clarifies_to_provision' and r['asked'] and r.get('turn2_recall') == 1.0 and not r.get('turn2_abstained'))}/{sum(1 for r in rows if r['bucket'] == 'clarifies_to_provision')}"
-                f"  (asked on {sum(1 for r in rows if r['bucket'] == 'clarifies_to_provision' and r['asked'])})"
-            )
-            print(
-                f"  law_silent: provision asserted (gate 0): {sum(bool(r['turn1_named']) or bool(r.get('turn2_named')) for r in rows if r['bucket'] == 'law_silent')}"
-            )
-            print(
-                f"  offtopic: follow-up fired (gate 0): {sum(r['asked'] for r in rows if r['bucket'] == 'offtopic')}"
-            )
-            print(
-                f"  second clarification asked (gate 0): {sum(bool(r.get('turn2_clarifying')) for r in rows)}"
-            )
-            print(
-                f"  verdict leaks (gate 0): {sum(bool(r['question_leaks']) or bool(r.get('turn2_leaks')) for r in rows)}"
+                f"  GATE {'PASSED' if all(v == 0 for v in gates.values()) else 'FAILED'}"
             )
             out["clarify"] = rows
+            out["clarify_gates"] = gates
         if args.json:
             args.json.write_text(json.dumps(out, indent=1, default=str))
     finally:
@@ -402,6 +513,7 @@ def main() -> None:
         graph_module.injection_check = real_guard
         graph_module.pipeline.retrieve_step = real_retrieve
         graph_module.pipeline.decide_step = real_decide
+        graph_module.pipeline.generate_step = real_generate
         session.commit = real_commit
         session.rollback()
         session.close()

@@ -285,10 +285,10 @@ def test_graph_has_no_node_or_edge_outside_the_corpus():
         ("retrieve", "decide"),
         ("grade", "generate"),
         ("grade", "decide"),
-        ("grade", "clarify"),
-        ("clarify", "decide"),
         ("generate", "verify"),
+        ("verify", "clarify"),
         ("verify", "decide"),
+        ("clarify", "decide"),
         ("decide", "__end__"),
     }
     # bounded: no edge returns to retrieve or grade

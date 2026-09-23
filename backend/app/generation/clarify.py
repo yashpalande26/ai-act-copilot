@@ -1,16 +1,21 @@
-"""Clarifying follow-up (22 Sep 2026). When the grader finds no supporting
-provision for a plain-language system description, the copilot may ask ONE
-question about the system's function instead of abstaining: what decision it
-drives, about whom, on what data, with a few neutral example functions.
+"""Clarifying follow-up (22 Sep 2026; trigger relocated 23 Sep 2026, ADR-24).
+When the generator abstains in explain mode on a plain-language system
+description (no retrieved provision concerns a system of the kind described),
+the copilot may ask ONE question about the system's function instead of the
+abstention: what decision it drives, about whom, on what data, with a few
+neutral example functions. The grader's abstention was the original trigger
+and never fired: the grader proceeds on every vague AI description.
 
 Rules enforced in code:
   never legal    the question may name no Article, Annex point or legal
                  category (high-risk, prohibited, minimal risk, GPAI ...),
                  and must pass the verdict-leak detector. A question that
                  fails is dropped and the turn routes to the assessment.
-  one only       the graph asks at most one; the reply turn is retrieved as
-                 the original question plus the reply and cannot clarify
-                 again (chat_session.pending_clarification is the marker).
+  one only       the graph asks at most one per thread; the reply turn is
+                 retrieved as the original question plus the reply through
+                 the unchanged path, exactly once, and cannot clarify again
+                 even if it abstains again (chat_session.pending_clarification
+                 is the marker: set when asked, cleared when the reply comes).
   fail closed    model trouble means no question: the turn routes.
 """
 

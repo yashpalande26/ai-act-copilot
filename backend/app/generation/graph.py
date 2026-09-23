@@ -2,9 +2,9 @@
 (default off).
 
     START -> intent -> rewrite -> understand -> decompose -> retrieve -> grade -> generate -> verify -> decide -> END
-    (intent -> decide for the social and offtopic lanes; grade -> clarify -> decide
-    when a plain-language description found nothing and one clarifying question
-    may be asked)
+    (intent -> decide for the social and offtopic lanes; verify -> clarify -> decide
+    when the generator abstained on a plain-language description and one
+    clarifying question may be asked)
     (retrieve -> decide directly when there is no context: the model is not
     called and decide abstains, exactly as the plain path does;
     rewrite -> decide directly on an actor conflict; grade -> decide when
@@ -90,13 +90,24 @@ grounded refusal without retrieval, on_topic continues. A message mentioning an
 AI system, the Act, risk or compliance is on_topic by deterministic override.
 Tags |intent=social:<kind>, |intent=offtopic, |intent=on_topic.
 
-Clarifying follow-up (22 Sep 2026, CLARIFY_FOLLOWUP): when the grader abstains
-on a plain-language system description, one gpt-4o-mini question about the
-system's function is asked instead (must name no provision or legal category
-and pass the verdict-leak detector, else dropped and the turn routes). The
-original question is kept on chat_session.pending_clarification; the next turn
-is retrieved as question plus reply through the unchanged path and cannot ask
-again. Tags |clarify=asked, |clarify=dropped:<reason>, |clarify=round.
+Clarifying follow-up (22 Sep 2026, CLARIFY_FOLLOWUP; trigger relocated 23 Sep
+2026, ADR-24): when a turn understood as a plain-language system description
+reaches the generator and the generator ABSTAINS in explain mode (no retrieved
+provision concerns a system of the kind described), one gpt-4o-mini question
+about the system's function is asked instead of the abstention. Measured before
+the move: the grader proceeds on every vague AI description, so its abstention
+never fired; the generator's explain-mode abstention is where "no supporting
+provision" shows up. The question must name no provision or legal category and
+pass the verdict-leak detector, else it is dropped and the turn routes to the
+assessment. The user's own words are kept on chat_session.pending_clarification;
+the next turn is the reply: the injection guard still screens it, the intent
+gate and chat lane are skipped (a terse reply such as "loans" is not off-topic
+here), and it is retrieved as question plus reply through the unchanged
+understand -> retrieve -> grade -> generate path exactly once. Whatever that
+path decides stands: grounded means the explain-and-route answer, still
+abstaining means the route, a reply that drifted means the grounded refusal.
+Never a second question on the thread. Tags |clarify=asked,
+|clarify=dropped:<reason>, |clarify=round.
 
 Grounding, citations and the refusal sentence are decided downstream by the
 unchanged decide step.
@@ -228,6 +239,7 @@ class GraphState(TypedDict, total=False):
     grade_outcome: str | None  # proceed | widened | abstain | skipped | None
     grade_results: list[GradeResult]
     generated: GenerationStep
+    generator_abstained: bool  # the generator's own first draft was the abstention
     verify_outcome: str | None  # passed | regenerated | abstained | skipped | None
     verify_results: list[VerifyResult]
     result: GroundedAnswer
@@ -254,8 +266,9 @@ def intent(state: GraphState) -> dict:
     out: dict = {"user_name": getattr(chat, "display_name", None) if chat else None}
     if clarify_on and chat is not None and chat.pending_clarification:
         # The reply to the one clarifying question: retrieve as question plus
-        # reply, never clarify again, and skip the intent gate (a terse reply
-        # such as "loans" is not off-topic here).
+        # reply, never clarify again, and skip the intent gate and chat lane
+        # (a terse reply such as "loans" is not off-topic here). The
+        # injection guard is not skipped: every message is screened.
         original = chat.pending_clarification
         chat.pending_clarification = None
         out.update(
@@ -263,6 +276,21 @@ def intent(state: GraphState) -> dict:
             original_question=original,
             clarification_round=True,
         )
+        if chat_lane_enabled():
+            guard = injection_check(state["query"])
+            out["guard_result"] = guard
+            if guard.blocked:
+                return {
+                    **out,
+                    "lane": "blocked",
+                    "social": True,
+                    **_served(
+                        "none|guard=injection",
+                        REFUSAL,
+                        (guard.prompt_tokens, guard.completion_tokens),
+                        guard.latency_ms,
+                    ),
+                }
         return out
     if not gate_on:
         return out
@@ -392,31 +420,48 @@ def route_after_intent(state: GraphState) -> str:
 
 
 def clarify(state: GraphState) -> dict:
-    """One clarifying question for a plain-language description the grader
-    found nothing for. Dropped, and the turn routes, unless it names no
-    provision or legal category and passes the verdict-leak detector."""
-    original = state.get("original_question") or state["query"]
+    """One clarifying question for a plain-language description the generator
+    abstained on. Dropped, and the turn routes, unless it names no provision
+    or legal category and passes the verdict-leak detector. The abstaining
+    draft's spend stays on the trace with the question's."""
+    original = state.get("raw_query") or state["query"]  # the user's own words
     c = clarifying_question(original)
     chat = load_chat(state["session"], state["chat_session_id"])
     if c.question is None:
         return {"clarify_result": c}
     if chat is not None:
         chat.pending_clarification = original  # persisted by the turn's commit
+    draft = state.get("generated") or GenerationStep(None, None, None, None)
+    step = state["retrieved"]
     return {
         "clarify_result": c,
         "clarifying": True,
+        # A question carries no citations: the slice leaves the served set
+        # (the candidates stay on the retrieval trace, none marked used).
+        "retrieved": RetrievalStep(
+            all_fused=step.all_fused,
+            fused=[],
+            retrieval_config=step.retrieval_config,
+            latency_ms=step.latency_ms,
+        ),
         "generated": GenerationStep(
-            c.question, c.prompt_tokens, c.completion_tokens, c.latency_ms
+            c.question,
+            (draft.prompt_tokens or 0) + (c.prompt_tokens or 0) or None,
+            (draft.completion_tokens or 0) + (c.completion_tokens or 0) or None,
+            (draft.latency_ms or 0) + c.latency_ms or None,
         ),
     }
 
 
-def route_after_grade_or_clarify(state: GraphState) -> str:
-    if state.get("grade_outcome") != "abstain":
-        return "generate"
+def route_after_verify(state: GraphState) -> str:
+    """The clarifying trigger (ADR-24): the turn was understood as a system
+    description, the generator's own draft was the abstention (not a leak or
+    a misgrounding the verifier turned into one), and this thread has not
+    asked yet. Everything else goes straight to decide."""
     if (
         clarify_followup_enabled()
         and _explain_route(state)
+        and state.get("generator_abstained")
         and not state.get("clarification_round")
     ):
         return "clarify"
@@ -439,6 +484,11 @@ def rewrite(state: GraphState) -> dict:
     upstream = state.get("rewrite")
     if upstream is not None and upstream.applied:
         # The route already rewrote this turn (FOLLOWUP_REWRITE); never twice.
+        return {}
+    if state.get("clarification_round"):
+        # ADR-24: the reply turn is already "original question plus reply",
+        # standalone by construction. Measured: rewriting it anyway lost the
+        # gold provision on the facial-recognition reply (recall 1.0 to 0.0).
         return {}
     history = load_history(state["session"], state["chat_session_id"])
     res = rewrite_followup(history, state["query"])
@@ -690,17 +740,21 @@ def _explain_route(state: GraphState) -> bool:
 
 
 def generate(state: GraphState) -> dict:
+    step = pipeline.generate_step(
+        state["query"],
+        state["retrieved"].fused,
+        max_output_tokens=state["max_output_tokens"],
+        parts=state.get("parts") or None,
+        extra_instruction=EXPLAIN_AND_ROUTE_INSTRUCTION
+        if _explain_route(state)
+        else None,
+        framed_question=EXPLAIN_FRAMED_QUESTION if _explain_route(state) else None,
+    )
     return {
-        "generated": pipeline.generate_step(
-            state["query"],
-            state["retrieved"].fused,
-            max_output_tokens=state["max_output_tokens"],
-            parts=state.get("parts") or None,
-            extra_instruction=EXPLAIN_AND_ROUTE_INSTRUCTION
-            if _explain_route(state)
-            else None,
-            framed_question=EXPLAIN_FRAMED_QUESTION if _explain_route(state) else None,
-        )
+        "generated": step,
+        "generator_abstained": bool(
+            step.answer_text is not None and pipeline.is_abstention(step.answer_text)
+        ),
     }
 
 
@@ -919,13 +973,13 @@ def build_graph() -> StateGraph:
         "retrieve", route_after_retrieve, {"grade": "grade", "decide": "decide"}
     )
     g.add_conditional_edges(
-        "grade",
-        route_after_grade_or_clarify,
-        {"generate": "generate", "decide": "decide", "clarify": "clarify"},
+        "grade", route_after_grade, {"generate": "generate", "decide": "decide"}
+    )
+    g.add_edge("generate", "verify")
+    g.add_conditional_edges(
+        "verify", route_after_verify, {"clarify": "clarify", "decide": "decide"}
     )
     g.add_edge("clarify", "decide")
-    g.add_edge("generate", "verify")
-    g.add_edge("verify", "decide")
     g.add_edge("decide", END)
     return g
 

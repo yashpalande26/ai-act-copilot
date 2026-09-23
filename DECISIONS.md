@@ -1,6 +1,75 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-24: Clarifying follow-up fires on the generator's explain-mode abstention; the reply is one more pass through the normal path; flag still off (2026-09-23)
+Context: ADR-22 built the one clarifying question but hung it off the grader's abstention,
+which never fires: the grader finds some passage relevant to any vague AI description and
+the generator abstains instead. The follow-up therefore never asked, and the property
+valuation line held only because the generator abstained on its own.
+Decision: (1) Trigger relocated (app/generation/graph.py, route_after_verify): the question
+is asked when the turn was understood as a plain-language system description AND the
+generator's own draft was the abstention. A leak or a misgrounding the verify node turns
+into an abstention does not qualify; the grader's abstention no longer routes to clarify.
+Off-topic and general chat never reach the trigger (chat lane). The user's own words are
+kept on chat_session.pending_clarification; one question per thread, ever. (2) The reply
+turn: the marker is cleared, the injection guard still screens the message, the intent
+gate and chat lane are skipped (a terse reply such as "loans" is not off-topic here), the
+rewrite node passes through (the combined text is standalone by construction; measured:
+rewriting it lost the gold on the facial-recognition reply), and question plus reply go
+through understand, retrieve, grade, generate and verify exactly once. Whatever that pass
+decides stands: a grounded explain-and-route answer, the route to the assessment, or the
+grounded refusal for a reply that drifted. No give-up logic, no second question. (3) The
+explain instruction (app/generation/understand.py, EXPLAIN_AND_ROUTE_INSTRUCTION) was
+revised because the trigger is only as good as the abstention it fires on. Probe, 3 draws
+per item: with the old wording ("the type of system closest to the one described") the
+function-less descriptions drew loosely related provisions instead of abstaining ("we
+have an AI model in our company" answered on general-purpose AI models 3/3; "an AI thing
+for my clinic" on public-assistance eligibility 3/3); with the new wording, which says a
+description naming neither function nor area matches no provision and forbids
+substituting the nearest provision, all five abstained 3/3 while the three already-clear
+items still answered 3/3 on the gold and the two law-silent items still abstained 3/3.
+The "what determines whether a system falls within it" sentence is now required in the
+provision's own words, because the verifier withheld the old generic restatement 3/3 on
+the emergency-triage reply (now 1/3). (4) A clarifying turn serves no citations: the
+clarify node empties the served slice; the candidates stay on the retrieval trace.
+Evidence: Clarify set, 14 sequences in six buckets, graph called directly, two full runs
+after the instruction change (runs 2 and 3; run 1 was the diagnosis). Run 3, the file of
+record (evals/runs/clarify_relocated_j2.json): verdict leaks 0 across every question and
+answer; law-silent items (property valuation for bridge lending, crop yield from satellite
+images) both asked, both routed after the reply, 0 provisions asserted; fired only on
+abstaining system descriptions 6/6; every generated question passed the provision, legal
+category and verdict-leak checks; second clarification 0; marker cleared 6/6; underspecified
+asked 4/4 and grounded on the second pass 3/4 (job screening to Annex III 4(a), loan
+decision to 5(b), CCTV face identification to 1(a)); the fourth (emergency triage) retrieved
+5(d), answered on it, and the gpt-4o-mini verifier withheld both drafts (verify=abstained);
+in run 2 the same item passed after one regeneration and the CCTV item was the one lost,
+to the rewrite that (2) now skips. Already-clear 0/3 asked, 3/3 grounded on turn 1;
+off-topic 0/3 fired (two answered by the chat lane, the pizza oven refused through rag);
+drift item not understood as a system, so never asked. The school item ("something with AI
+for our school") answered on Annex III point 3 in run 2 and run 3 and abstained 3/3 in one
+probe variant: its gold was revised to an area_only bucket where either path must hold the
+rules (held). On-topic set, 47 items, flag on: 0 leaks; the 39 items outside
+plain_language identical to the ADR-23 baseline on recall, precision, abstention and
+citation accuracy except three, and four repeats of those three with the flag off and on
+show the differences are the pipeline's own variance and not the flag: the multi-turn
+follow-up "Can it change the classification rules too?" was false-blocked by the ADR-23
+injection guard in two of seven draws (both full runs with the flag on, none of the four
+repeats under either setting, not the baseline), a guard finding recorded in the backlog;
+the two multi-hop items' precision varies with the decompose plan under both settings
+(0.569 or 0.917; 0.361, 0.375 or 1.0), recall and citations 1.0 every time. In the
+plain_language bucket the four items
+that abstained at baseline (property valuation, shop chatbot, payment fraud, spam filter)
+now ask the question, the three that answered still answer on the gold.
+Consequences: CLARIFY_FOLLOWUP stays OFF by default. The task rule was enable only on a
+full pass; 12 of 13 gates hold and the 13th failed on a verifier coin flip over a correct,
+grounded answer, which is the ADR-20(b) paraphrase problem, not this feature's. Enabling
+is Yash's call: either accept "gold retrieved, answer withheld by the verifier" as a pass
+for this gate, or fix the verifier first. The explain-instruction change is live for every
+plain-language turn regardless of the flag: function-less descriptions now abstain and
+route instead of listing provisions. Each fired question costs one gpt-4o abstaining draft
+plus one gpt-4o-mini call; the reply turn is a normal turn.
+Status: Accepted (trigger, reply handling, instruction); flag Deferred pending Yash.
+
 ## ADR-23: A conversational chat lane beside the cited rag lane; the law only ever via rag (2026-09-22)
 Context: ADR-22's intent gate answered social messages from fixed templates and refused
 common knowledge with the grounded-refusal copy. Both read as brittle next to the cited

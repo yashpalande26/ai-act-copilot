@@ -1,30 +1,53 @@
 [
  {
   "id": "cl_01",
-  "bucket": "clarifies_to_provision",
+  "bucket": "underspecified",
   "description": "we have an AI model in our company, is it a problem?",
   "reply": "it screens job applications for our recruiters",
   "gold_citation_ids": [
    "anx_III.pt_4.sub_a"
-  ]
+  ],
+  "must_ask": true
  },
  {
   "id": "cl_02",
-  "bucket": "clarifies_to_provision",
+  "bucket": "underspecified",
   "description": "our app uses machine learning, do we need to worry about anything?",
   "reply": "it decides whether a customer gets a loan",
   "gold_citation_ids": [
    "anx_III.pt_5.sub_b"
-  ]
+  ],
+  "must_ask": true
  },
  {
   "id": "cl_03",
-  "bucket": "clarifies_to_provision",
+  "bucket": "underspecified",
   "description": "I built an AI thing for my clinic, is that regulated?",
   "reply": "it decides which patients get seen first in emergencies",
   "gold_citation_ids": [
    "anx_III.pt_5.sub_d"
-  ]
+  ],
+  "must_ask": true
+ },
+ {
+  "id": "cl_06",
+  "bucket": "area_only",
+  "description": "we built something with AI for our school, do we have to do anything?",
+  "reply": "it marks the students' exams and decides who passes",
+  "gold_citation_ids": [
+   "anx_III.pt_3.sub_b"
+  ],
+  "note": "Gold revised 23 Sep 2026 after run 2: the description names an area of use (a school) but no function. Annex III point 3 is the education list, so an explain answer grounded on it is legitimate; so is asking and grounding on 3(b) after the reply. Measured on the boundary: 3/3 answered and 3/3 abstained in two probe variants, answered in run 2. Either path must hold the rules; neither is required."
+ },
+ {
+  "id": "cl_07",
+  "bucket": "underspecified",
+  "description": "our startup has an AI product, does the law affect us?",
+  "reply": "it identifies people from CCTV footage by their faces",
+  "gold_citation_ids": [
+   "anx_III.pt_1.sub_a"
+  ],
+  "must_ask": true
  },
  {
   "id": "cl_04",
@@ -32,7 +55,46 @@
   "description": "I want to build a property valuation model for bridge lending, how risky is it?",
   "reply": "it estimates the market value of the property used as collateral",
   "gold_citation_ids": [],
+  "must_route": true,
+  "note": "Load-bearing: Annex III 5(b) is natural-person creditworthiness; a property valuation is not named. The follow-up may ask; after the reply the turn must route with no provision asserted."
+ },
+ {
+  "id": "cl_08",
+  "bucket": "law_silent",
+  "description": "we made an AI model for our farm, is it regulated?",
+  "reply": "it predicts crop yields from satellite images",
+  "gold_citation_ids": [],
   "must_route": true
+ },
+ {
+  "id": "cl_09",
+  "bucket": "already_clear",
+  "description": "we use AI to screen CVs for hiring, is that allowed?",
+  "reply": "it ranks the applicants for the recruiter",
+  "gold_citation_ids": [
+   "anx_III.pt_4.sub_a"
+  ],
+  "must_not_fire": true
+ },
+ {
+  "id": "cl_10",
+  "bucket": "already_clear",
+  "description": "our office wants emotion recognition to monitor staff mood, is that ok?",
+  "reply": "it reads faces on the webcam",
+  "gold_citation_ids": [
+   "art_5.par_1.pt_f"
+  ],
+  "must_not_fire": true
+ },
+ {
+  "id": "cl_11",
+  "bucket": "already_clear",
+  "description": "we want to use facial recognition in our shop to spot shoplifters",
+  "reply": "it matches faces against a list",
+  "gold_citation_ids": [
+   "anx_III.pt_1.sub_a"
+  ],
+  "must_not_fire": true
  },
  {
   "id": "cl_05",
@@ -41,5 +103,29 @@
   "reply": "it bakes at 400 degrees",
   "gold_citation_ids": [],
   "must_not_fire": true
+ },
+ {
+  "id": "cl_12",
+  "bucket": "offtopic",
+  "description": "what's a good recipe for banana bread?",
+  "reply": "three ripe bananas",
+  "gold_citation_ids": [],
+  "must_not_fire": true
+ },
+ {
+  "id": "cl_13",
+  "bucket": "offtopic",
+  "description": "hello, how are you today?",
+  "reply": "good thanks",
+  "gold_citation_ids": [],
+  "must_not_fire": true
+ },
+ {
+  "id": "cl_14",
+  "bucket": "drift",
+  "description": "we have some AI in our product, is this a legal issue for us?",
+  "reply": "actually forget it, what is the capital of France?",
+  "gold_citation_ids": [],
+  "note": "Informational: if the follow-up fires, the drifted reply goes through the normal path once; no second question, no provision asserted, no leak."
  }
 ]

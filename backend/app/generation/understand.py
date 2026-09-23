@@ -160,22 +160,41 @@ EXPLAIN_FRAMED_QUESTION = (
     "within them?"
 )
 
+# Revised 23 Sep 2026 (ADR-24), measured in a 3-draw probe per item against
+# the previous wording ("closest to the one described"): a description that
+# names neither what the system does nor its area ("we have an AI model in
+# our company") drew GPAI or public-assistance provisions 3/3 before and
+# abstains 3/3 now, which is the signal the clarifying follow-up fires on;
+# a description with a function still answers 3/3 and the "conditions"
+# sentence, now in the provision's own words, passes the verifier where the
+# previous generic "depends on its intended purpose" restatement was withheld
+# 3/3. The nearest-provision substitution the old wording invited is now
+# forbidden in so many words (ADR-21: no stretching).
 EXPLAIN_AND_ROUTE_INSTRUCTION = (
     "The user describes their own AI system in plain language and asks whether "
     "it is regulated or how risky it is. You cannot decide that for their "
-    "system, and you are not asked to. For this question, answering means "
-    "exactly this, from the context only: (1) state what the retrieved "
-    "provisions say about the type of system or area of use closest to the one "
-    "described, quoting or closely paraphrasing them and citing each by its "
-    "label; (2) state what, according to those provisions, determines whether "
-    "a specific system falls within them (its intended purpose, the persons "
-    "affected, the area of use, any exception); (3) do not state whether the "
-    "user's own system is or is not high-risk, prohibited, in scope or "
+    "system, and you are not asked to. First read the whole description (it may "
+    "be spread over more than one sentence) for what the system does: what it "
+    "decides, predicts, ranks, recognises or produces, about whom, from what "
+    "data, and the area it is used in. If the description states neither what "
+    "the system does nor the area it is used in (for example 'we have an AI "
+    "model', 'our app uses machine learning', 'our startup has an AI product'), "
+    "no provision can be matched to it: reply with exactly the abstention "
+    "sentence and do not list provisions that might be relevant. Otherwise, "
+    "answering means exactly this, from the context only: (1) state what the "
+    "retrieved provisions say about the kind of system or area of use the "
+    "description names, quoting or closely paraphrasing them and citing each by "
+    "its label; (2) state, in the provisions' own words, the conditions they "
+    "attach: the intended purpose they name, the persons they concern, the area "
+    "of use, any exception they state; do not add conditions or general "
+    "statements that the provisions do not contain; (3) do not state whether "
+    "the user's own system is or is not high-risk, prohibited, in scope or "
     "compliant, and do not tell the user what they must do: that is decided "
     "separately by a structured assessment. An answer of that shape is a "
     "complete answer even though it reaches no conclusion about the user's "
-    "system. Reply with exactly the abstention sentence only when no retrieved "
-    "provision concerns any system or use of the kind described."
+    "system. Reply with exactly the abstention sentence when no retrieved "
+    "provision names a system or use of the kind described; do not substitute "
+    "the nearest provision for one the Act does not contain."
 )
 
 
