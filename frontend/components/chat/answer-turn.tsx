@@ -22,13 +22,17 @@ import {
 } from "@/lib/scope-copy";
 import type { ChatTurn } from "@/lib/types";
 
+/** The assistant column: the mark, then whatever the turn is. */
 function Bubble({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex gap-4">
-      <span className="bg-brand-solid text-brand-on mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg">
-        <ScaleIcon className="size-4" aria-hidden />
+    <div className="flex gap-3.5 sm:gap-4">
+      <span
+        className="bg-brand-solid text-brand-on mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg shadow-[inset_0_1px_0_oklch(1_0_0/0.12),var(--shadow-xs)]"
+        aria-hidden
+      >
+        <ScaleIcon className="size-4" />
       </span>
-      <div className="min-w-0 flex-1 space-y-5">{children}</div>
+      <div className="min-w-0 flex-1 space-y-4">{children}</div>
     </div>
   );
 }
@@ -36,7 +40,7 @@ function Bubble({ children }: { children: React.ReactNode }) {
 export function UserTurn({ question }: { question: string }) {
   return (
     <div className="flex justify-end">
-      <p className="bg-muted type-body max-w-[85%] rounded-2xl rounded-br-md px-4.5 py-3 whitespace-pre-wrap sm:max-w-[75%]">
+      <p className="bg-surface-sunken border-hairline type-body text-ink max-w-[85%] rounded-2xl rounded-br-md border px-4.5 py-3 whitespace-pre-wrap sm:max-w-[75%]">
         {question}
       </p>
     </div>
@@ -75,7 +79,7 @@ function AbstentionTurn({ scope }: { scope: boolean }) {
         </div>
         {scope ? (
           <>
-            <p className="type-body text-ink-soft mt-3">{SCOPE_MESSAGE}</p>
+            <p className="type-body text-ink-soft mt-3 text-pretty">{SCOPE_MESSAGE}</p>
             <p className="type-eyebrow text-ink-faint mt-5">You can ask, for example</p>
             <ul className="mt-2 space-y-1.5">
               {SCOPE_EXAMPLES.map((q) => (
@@ -88,8 +92,8 @@ function AbstentionTurn({ scope }: { scope: boolean }) {
           </>
         ) : (
           <>
-            <p className="type-body text-ink-soft mt-3">{REFUSAL_LEAD}</p>
-            <p className="type-body text-ink-soft mt-2">{REFUSAL_MESSAGE}</p>
+            <p className="type-body text-ink-soft mt-3 text-pretty">{REFUSAL_LEAD}</p>
+            <p className="type-body text-ink-soft mt-2 text-pretty">{REFUSAL_MESSAGE}</p>
           </>
         )}
         <p className="type-micro text-ink-faint mt-4">Informational, not legal advice.</p>
@@ -117,19 +121,27 @@ function ErrorTurn({ kind, message }: Extract<ChatTurn, { role: "error" }>) {
 
   return (
     <Bubble>
-      <div className="border-border bg-muted/30 rounded-2xl border p-5 sm:p-6">
+      <div className="border-hairline bg-surface-sunken/50 rounded-2xl border p-5 sm:p-6" role="alert">
         <div className="flex items-center gap-2.5">
           <Icon className="text-ink-soft size-[18px]" aria-hidden />
           <h3 className="type-h3">{title}</h3>
         </div>
-        <p className="type-body text-ink-soft mt-3">{message}</p>
+        <p className="type-body text-ink-soft mt-3 text-pretty">{message}</p>
       </div>
     </Bubble>
   );
 }
 
-/** `question` is the user message this turn answers; it rides along into the
- *  assessment's describe box via the CTA. Rendering is otherwise unchanged. */
+/**
+ * `question` is the user message this turn answers; it rides along into the
+ * assessment's describe box via the CTA.
+ *
+ * A grounded answer is one card (24 Sep 2026): an optional note strip (how
+ * the question was understood), the answer prose, the cited provisions
+ * behind their disclosure, and the assessment footer. One raised surface
+ * instead of prose floating between two unrelated boxes, so the reader sees
+ * where an answer starts and ends and what belongs to it.
+ */
 export function AssistantTurn({ turn, question }: { turn: ChatTurn; question?: string }) {
   if (turn.role === "error") return <ErrorTurn {...turn} />;
   if (turn.role !== "assistant") return null;
@@ -139,7 +151,7 @@ export function AssistantTurn({ turn, question }: { turn: ChatTurn; question?: s
   if (turn.result.social) {
     return (
       <Bubble>
-        <div className="type-body whitespace-pre-wrap" data-testid="social-turn">
+        <div className="type-body pt-1 whitespace-pre-wrap" data-testid="social-turn">
           {turn.result.answer}
         </div>
       </Bubble>
@@ -148,34 +160,45 @@ export function AssistantTurn({ turn, question }: { turn: ChatTurn; question?: s
   if (turn.result.clarifying) {
     return (
       <Bubble>
-        <div className="type-body whitespace-pre-wrap" data-testid="clarifying-turn">
-          {turn.result.answer}
+        <div data-testid="clarifying-turn">
+          <div className="border-accent-solid/50 type-body text-ink border-l-2 pl-4 whitespace-pre-wrap">
+            {turn.result.answer}
+          </div>
+          <p className="type-micro text-ink-faint mt-3 text-pretty">
+            Your answer helps the copilot find the provision that covers this kind of system. The classification
+            of your system itself comes from the assessment.
+          </p>
         </div>
-        <p className="type-micro text-ink-faint">
-          Your answer helps the copilot find the provision that covers this kind of system. The classification
-          of your system itself comes from the assessment.
-        </p>
       </Bubble>
     );
   }
 
+  const notes = [
+    turn.result.rewritten_query ? (
+      <p key="rewritten" className="type-micro text-ink-faint" data-testid="rewritten-query">
+        Understood as: <span className="text-ink-soft">{turn.result.rewritten_query}</span>
+      </p>
+    ) : null,
+    turn.result.system_description ? (
+      <p key="system" className="type-micro text-ink-faint text-pretty" data-testid="system-description-note">
+        You described your own system. What follows is what the Act says about that type of system, cited.
+        Whether your system falls within it is decided by the assessment, not here.
+      </p>
+    ) : null,
+  ].filter(Boolean);
+
   return (
     <Bubble>
-      {turn.result.rewritten_query ? (
-        <p className="type-micro text-ink-faint" data-testid="rewritten-query">
-          Understood as: <span className="text-ink-soft">{turn.result.rewritten_query}</span>
-        </p>
-      ) : null}
-      {turn.result.system_description ? (
-        <p className="type-micro text-ink-faint" data-testid="system-description-note">
-          You described your own system. What follows is what the Act says about that type of system, cited. Whether your
-          system falls within it is decided by the assessment, not here.
-        </p>
-      ) : null}
-      <div className="type-body whitespace-pre-wrap">{turn.result.answer}</div>
-
-      <CitationsDisclosure citations={turn.result.citations} />
-      <AssessCta text={question} variant={turn.result.system_description ? "system" : "answer"} />
+      <article className="card-raised overflow-hidden rounded-2xl" data-testid="answer-card">
+        {notes.length > 0 ? (
+          <div className="border-hairline bg-surface-sunken/40 space-y-1 border-b px-5 py-3 sm:px-6">{notes}</div>
+        ) : null}
+        <div className="type-body text-ink px-5 py-5 text-pretty whitespace-pre-wrap sm:px-6">
+          {turn.result.answer}
+        </div>
+        <CitationsDisclosure answer={turn.result.answer} citations={turn.result.citations} />
+        <AssessCta text={question} variant={turn.result.system_description ? "system" : "answer"} />
+      </article>
     </Bubble>
   );
 }
@@ -215,14 +238,20 @@ export function PendingTurn({ startedAt }: { startedAt?: number } = {}) {
 
   return (
     <Bubble>
-      <div role="status" aria-live="polite" data-testid="pending-turn" data-phase={phase} className="space-y-3">
+      <div
+        role="status"
+        aria-live="polite"
+        data-testid="pending-turn"
+        data-phase={phase}
+        className="card-raised space-y-3 rounded-2xl px-5 py-4 sm:px-6"
+      >
         <div className="pending-track" aria-hidden>
           <span className="pending-sweep" />
         </div>
         {phase === "bar" ? (
           <span className="sr-only">Working on your question</span>
         ) : (
-          <p className="type-meta text-ink-soft max-w-prose">{PENDING_COPY[phase]}</p>
+          <p className="type-meta text-ink-soft max-w-prose text-pretty">{PENDING_COPY[phase]}</p>
         )}
       </div>
     </Bubble>

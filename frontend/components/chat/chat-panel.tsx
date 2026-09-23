@@ -132,7 +132,7 @@ export function ChatPanel({
               </h1>
               <p className="type-lead text-ink-soft mt-4 max-w-[38rem] text-pretty">
                 Ask about obligations, prohibited practices, or whether a system
-                is high-risk. Every answer cites the provisions it came from.
+                is high-risk. Every answer cites the provisions it relies on.
               </p>
               {loadError ? (
                 <p className="type-meta text-ink-soft mt-6" role="status">
@@ -153,7 +153,7 @@ export function ChatPanel({
                       </span>
                       <span className="type-eyebrow text-ink-faint">{eyebrow}</span>
                     </span>
-                    <span className="type-meta text-ink mt-3 font-medium">{q}</span>
+                    <span className="type-meta text-ink mt-3 font-medium text-pretty">{q}</span>
                     <span className="type-micro text-ink-faint group-hover:text-accent-solid mt-4 inline-flex items-center gap-1 transition-colors">
                       Ask
                       <ArrowRightIcon className="size-3 transition-transform group-hover:translate-x-0.5" aria-hidden />
@@ -181,7 +181,7 @@ export function ChatPanel({
               </div>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-7 sm:space-y-8">
               {turns.map((turn, i) =>
                 turn.role === "user" ? (
                   <UserTurn key={turn.id} question={turn.question} />
@@ -209,7 +209,7 @@ export function ChatPanel({
               submit(question);
             }}
           >
-            <div className="border-hairline-strong bg-card focus-within:border-accent-solid/60 focus-within:ring-ring/20 flex items-end gap-2 rounded-2xl border p-2 shadow-[var(--shadow-sm)] transition-shadow focus-within:ring-4">
+            <div className="border-hairline-strong bg-card focus-within:border-accent-solid/60 focus-within:ring-ring/25 flex items-end gap-2 rounded-2xl border p-2 shadow-[var(--shadow-sm)] transition-[box-shadow,border-color] focus-within:ring-2">
               <Textarea
                 ref={inputRef}
                 value={question}
@@ -224,7 +224,7 @@ export function ChatPanel({
                 disabled={pending || loading}
                 aria-label="Your question about the EU AI Act"
                 placeholder="Ask about an obligation, a practice, or a system type"
-                className="type-body max-h-40 min-h-[2.75rem] resize-none border-0 bg-transparent py-2.5 shadow-none focus-visible:ring-0 dark:bg-transparent"
+                className="type-body max-h-40 min-h-[2.75rem] resize-none border-0 bg-transparent px-3 py-2.5 shadow-none focus-visible:ring-0 dark:bg-transparent"
               />
               <Button
                 type="submit"
@@ -238,13 +238,26 @@ export function ChatPanel({
             </div>
           </form>
           <div className="mt-2.5 flex items-center justify-between gap-4">
-            <LegalNotice variant="inline" />
-            <span
-              className={`type-micro shrink-0 font-mono ${tooLong ? "text-destructive" : "text-muted-foreground/60"}`}
-              aria-live={tooLong ? "polite" : "off"}
-            >
-              {question.length}/{MAX_CHARS}
-            </span>
+            <div className="min-w-0 flex-1">
+              <LegalNotice variant="inline" />
+            </div>
+            <div className="type-micro text-ink-faint flex shrink-0 items-center gap-3">
+              {/* Enter sends, as in every chat; the half worth showing is the other one. */}
+              <span className="hidden whitespace-nowrap sm:inline">
+                <kbd className="border-hairline bg-surface-sunken rounded border px-1 py-px font-mono text-[0.7rem]">Shift</kbd>+
+                <kbd className="border-hairline bg-surface-sunken rounded border px-1 py-px font-mono text-[0.7rem]">Enter</kbd> for a new line
+              </span>
+              {/* The counter appears once it matters: past three quarters of the limit. */}
+              {question.length > MAX_CHARS * 0.75 || tooLong ? (
+                <span
+                  className={`font-mono tabular-nums ${tooLong ? "text-destructive" : ""}`}
+                  aria-live={tooLong ? "polite" : "off"}
+                  data-testid="char-counter"
+                >
+                  {question.length}/{MAX_CHARS}
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
