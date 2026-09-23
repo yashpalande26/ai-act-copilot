@@ -422,3 +422,13 @@ def test_lane_off_keeps_the_intent_gate_templates(monkeypatch):
     assert trace.retrieval_config == "none|intent=social:greeting|path=graph"
     monkeypatch.delenv("CHAT_LANE", raising=False)
     assert config.chat_lane_enabled() is (config.CHAT_LANE_DEFAULT == "1")
+
+
+def test_guard_prompt_tests_whom_the_verb_is_aimed_at():
+    # ADR-30: the false-block fix is a contract in the prompt, not a keyword list
+    from app.generation.chat_lane import GUARD_PROMPT
+
+    assert "whom the verb is aimed at" in GUARD_PROMPT
+    assert "can it change the classification rules too?" in GUARD_PROMPT
+    assert "ignore the retrieved passages" in GUARD_PROMPT  # a real attempt stays named
+    assert "\u2014" not in GUARD_PROMPT
