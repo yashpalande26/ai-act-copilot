@@ -7,7 +7,12 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.config import agentic_rag_enabled, app_env, xref_expansion_enabled
+from app.config import (
+    agentic_rag_enabled,
+    app_env,
+    recital_map_enabled,
+    xref_expansion_enabled,
+)
 from app.db.models import ChatSession, Citation, Message, QueryTrace, RetrievalTrace
 from app.generation.provider import (
     PROVIDER_ERRORS,
@@ -185,7 +190,13 @@ def _lexical_leg(
                 file=sys.stderr,
             )
             return [], "vector_only_degraded"
-        results = bm25_search(session, query, corpus_version_id, top_k=breadth)
+        results = bm25_search(
+            session,
+            query,
+            corpus_version_id,
+            top_k=breadth,
+            **({"exclude_recitals": True} if recital_map_enabled() else {}),
+        )
         return results, "hybrid_bm25"
     except StaleIndexError as exc:
         print(
@@ -405,7 +416,14 @@ def _hybrid_candidates(
     vector_error: BaseException | None = None
     try:
         vector_results = vector_search(
-            session, query, corpus_version_id, top_k=breadth, min_similarity=0.0
+            session,
+            query,
+            corpus_version_id,
+            top_k=breadth,
+            min_similarity=0.0,
+            # ADR-33: the keyword travels only when the flag is on, so the
+            # flag-off call is byte-identical to before (tests fake both legs).
+            **({"exclude_recitals": True} if recital_map_enabled() else {}),
         )
         vector_failed = False
     except Exception as exc:  # noqa: BLE001 - uptime beats a hard failure when a correct fallback exists; the distinct banner keeps real bugs visible
@@ -703,6 +721,97 @@ def demote_recitals(
     return out + deferred
 
 
+def attach_mapped_recitals(
+    session: Session,
+    corpus_version_id: int,
+    all_fused: list[FusedResult],
+    size: int,
+) -> tuple[list[FusedResult], str]:
+    """ADR-33. For the operative provisions in the slice, the recitals the map
+    links to them, at most MAX_RECITALS_IN_CONTEXT, placed directly AFTER the
+    operative slice: the served context grows by that many passages and no
+    operative chunk is displaced (measured on the first cheap run, 23 Sep
+    2026: displacing the tail evicted Article 15(1) from the Section 2
+    question and Article 26(6), the very provision Recital 91 was attached
+    for). Returns the new list and a tag such as "explicit:1,semantic:1" (""
+    when nothing was added); served_size() reads the grown slice back."""
+    from app.retrieval import recital_map
+
+    ids = [f.result.citation_id for f in all_fused[:size]]
+    chosen = recital_map.recitals_for_context(
+        recital_map.edges_for(session, corpus_version_id), ids
+    )
+    if not chosen:
+        return all_fused, ""
+    present = {f.result.citation_id for f in all_fused}
+    wanted = [rec for rec, _ in chosen if rec not in present]
+    by_root = (
+        fetch_provision_chunks(session, corpus_version_id, wanted) if wanted else {}
+    )
+    extra: list[FusedResult] = []
+    kinds: dict[str, int] = {}
+    for rec, edge in chosen:
+        for sr in by_root.get(rec, []):
+            # fetch_provision_chunks returns SearchResult rows; the slice holds
+            # FusedResult entries. Score 0 and no leg ranks: the trace shows the
+            # recital came through the map, not through fusion.
+            extra.append(
+                FusedResult(
+                    result=sr, rrf_score=0.0, vector_rank=None, lexical_rank=None
+                )
+            )
+            kinds[edge.kind] = kinds.get(edge.kind, 0) + 1
+            break  # one chunk per recital
+    if not extra:
+        return all_fused, ""
+    tag = ",".join(f"{k}:{v}" for k, v in sorted(kinds.items()))
+    return [*all_fused[:size], *extra, *all_fused[size:]], tag
+
+
+def served_size(all_fused: list[FusedResult], size: int) -> int:
+    """The operative slice plus the recitals attach_mapped_recitals placed
+    right behind it (the flag-on pool holds no other recitals)."""
+    n = 0
+    for f in all_fused[size:]:
+        if not is_recital_result(f):
+            break
+        n += 1
+    return size + n
+
+
+def _with_recital_tags(retrieval_config: str, tag: str, recitals: int) -> str:
+    """The recmap and recitals segments describe the served slice; drop any
+    earlier pair (a refit) and append the current one."""
+    kept = [
+        seg
+        for seg in retrieval_config.split("|")
+        if not seg.startswith(("recmap=", "recitals="))
+    ]
+    config = "|".join(kept)
+    if tag:
+        config += f"|recmap={tag}"
+    if recitals:
+        config += f"|recitals={recitals}"
+    return config
+
+
+def refit_mapped_recitals(
+    session: Session,
+    corpus_version_id: int,
+    pool: list[FusedResult],
+    size: int,
+    retrieval_config: str,
+) -> tuple[list[FusedResult], int, str]:
+    """ADR-33. After a reorder or a cut (the grader) the operative slice can
+    differ from the one the recitals were chosen for. Drop every recital and
+    attach again for the slice actually served, so a recital never appears
+    without the provision it explains. Returns (list, served size, config)."""
+    operative = [f for f in pool if not is_recital_result(f)]
+    operative, tag = attach_mapped_recitals(session, corpus_version_id, operative, size)
+    served = served_size(operative, size)
+    return operative, served, _with_recital_tags(retrieval_config, tag, served - size)
+
+
 def retrieve_step(
     session: Session,
     query: str,
@@ -736,10 +845,23 @@ def retrieve_step(
             breadth=breadth,
         )
     retrieval_latency_ms = int((time.monotonic() - retrieval_start) * 1000)
-    all_fused = demote_recitals(all_fused)
-    served_recitals = sum(is_recital_result(f) for f in all_fused[:final_context_size])
-    if served_recitals:
-        retrieval_config += f"|recitals={served_recitals}"
+    served = final_context_size
+    if recital_map_enabled():
+        # ADR-33: the pool held no recitals; the ones that explain a provision
+        # in the slice come in through the map, behind the operative slice,
+        # at most two, and the served context grows by that many.
+        all_fused, added = attach_mapped_recitals(
+            session, corpus_version_id, all_fused, final_context_size
+        )
+        served = served_size(all_fused, final_context_size)
+        retrieval_config = _with_recital_tags(
+            retrieval_config, added, served - final_context_size
+        )
+    else:
+        all_fused = demote_recitals(all_fused)
+        served_recitals = sum(is_recital_result(f) for f in all_fused[:served])
+        if served_recitals:
+            retrieval_config += f"|recitals={served_recitals}"
     # Equivalent to the old rrf_rank_and_fuse(..., top_k=final_context_size):
     # rrf_rank_and_fuse sorts the full candidate set by rrf_score BEFORE
     # trimming to top_k, and rrf_score doesn't depend on top_k at all - so
@@ -749,7 +871,7 @@ def retrieve_step(
     # true top final_context_size of the final ordering.
     return RetrievalStep(
         all_fused=all_fused,
-        fused=all_fused[:final_context_size],
+        fused=all_fused[:served],
         retrieval_config=retrieval_config,
         latency_ms=retrieval_latency_ms,
     )

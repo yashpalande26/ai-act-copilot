@@ -16,7 +16,10 @@ session is rolled back). Two ways to run them:
 
 `--cheap` is the preset for the left column on the agentic and risk-tier
 runners: smoke subset, mini judge, mini verifier unless `VERIFY_MODEL` is
-already set. A cheap or non-default run prints a NOTE line saying so.
+already set. With `--only <ids>` the named items are the subset (the smoke
+subset is not applied on top; before 23 Sep 2026 the two intersected and a
+`--cheap --only` run silently ran nothing). A cheap or non-default run prints
+a NOTE line saying so.
 
 ```
 # cheap: which way is the change pointing?

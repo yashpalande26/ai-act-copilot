@@ -33,6 +33,7 @@ def vector_search(
     corpus_version_id: int,
     top_k: int = 5,
     min_similarity: float = 0.0,
+    exclude_recitals: bool = False,
 ) -> list[SearchResult]:
     query_embedding = embed_query(query)
     distance = Chunk.embedding.cosine_distance(query_embedding).label("distance")
@@ -43,9 +44,11 @@ def vector_search(
         .join(Provision, Chunk.provision_id == Provision.id)
         .outerjoin(Ancestor, Chunk.parent_provision_id == Ancestor.id)
         .where(Chunk.corpus_version_id == corpus_version_id)
-        .order_by(distance.asc())
-        .limit(top_k)
     )
+    if exclude_recitals:
+        # ADR-33: recitals reach the context through the recital map only.
+        stmt = stmt.where(Provision.unit_type != "recital")
+    stmt = stmt.order_by(distance.asc()).limit(top_k)
 
     results: list[SearchResult] = []
     for chunk, provision, ancestor, dist in session.execute(stmt).all():
@@ -180,8 +183,12 @@ def bm25_search(
     query: str,
     corpus_version_id: int,
     top_k: int = 10,
+    exclude_recitals: bool = False,
 ) -> list[SearchResult]:
     """BM25 retrieval over the on-disk bm25s index for this corpus_version.
+    With exclude_recitals (ADR-33) recital chunks are dropped after ranking
+    and the leg is deepened so it still returns up to top_k operative
+    chunks: the same candidate universe the vector leg draws from.
 
     Returns SearchResult (the same shape vector_search returns), with
     `similarity` holding the BM25 score rather than a cosine similarity - both
@@ -199,8 +206,9 @@ def bm25_search(
         return []
 
     query_tokens = tokenize_query(query)
+    depth = min(top_k * 3 if exclude_recitals else top_k, len(loaded.chunk_ids))
     doc_indices, scores = loaded.retriever.retrieve(
-        query_tokens, k=min(top_k, len(loaded.chunk_ids)), show_progress=False
+        query_tokens, k=depth, show_progress=False
     )
 
     # retrieve() returns one row per query; we always pass exactly one.
@@ -219,6 +227,8 @@ def bm25_search(
         .outerjoin(Ancestor, Chunk.parent_provision_id == Ancestor.id)
         .where(Chunk.id.in_(score_by_chunk_id))
     )
+    if exclude_recitals:
+        stmt = stmt.where(Provision.unit_type != "recital")
     hydrated = {
         chunk.id: SearchResult(
             chunk_id=chunk.id,
@@ -234,7 +244,9 @@ def bm25_search(
     # WHERE id IN (...) returns rows in ARBITRARY order, so rebuild the BM25
     # ranking explicitly - relying on DB order here would silently reorder
     # results and corrupt every rank-based metric downstream.
-    return [hydrated[cid] for cid, _ in ranked if cid in hydrated]
+    # Excluding recitals ranked deeper (depth above); the leg is still cut to
+    # top_k so it is the same length as the vector leg it is fused with.
+    return [hydrated[cid] for cid, _ in ranked if cid in hydrated][:top_k]
 
 
 class FusedResult(BaseModel):

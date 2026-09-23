@@ -132,6 +132,7 @@ from app.config import (
     clarify_followup_enabled,
     intent_gate_enabled,
     query_understanding_enabled,
+    recital_map_enabled,
 )
 from app.db.models import ChatSession
 from app.generation import answer as pipeline
@@ -561,7 +562,7 @@ def _retrieve_part(
     if not graded.ok:
         return step, calls  # grader failure: the part is served as retrieved
     if graded.relevant:
-        return _graded_step(step, graded, context_size), calls
+        return _graded_step(state, step, graded), calls
     wider = pipeline.retrieve_step(
         state["session"],
         sub_query,
@@ -577,7 +578,7 @@ def _retrieve_part(
     if not regraded.ok:
         return step, calls
     if regraded.relevant:
-        return _graded_step(wider, regraded, context_size), calls
+        return _graded_step(state, wider, regraded), calls
     return None, calls
 
 
@@ -611,6 +612,15 @@ def retrieve(state: GraphState) -> dict:
             )
             return {"retrieved": empty, "parts": parts, "part_retrieve_calls": calls}
         size = state["final_context_size"]
+        if recital_map_enabled():
+            # ADR-33: a decomposed turn serves operative provisions only. The
+            # per-part recitals were chosen for their own part's slice; the
+            # interleave can keep one and drop its provision, and the parts
+            # prompt has no group for a recital of the merged context.
+            parts = [
+                (sq, [f for f in fs if not pipeline.is_recital_result(f)])
+                for sq, fs in parts
+            ]
         fused = interleave([f for _, f in parts], size)
         kept = {f.result.chunk_id for f in fused}
         parts = [(sq, [f for f in fs if f.result.chunk_id in kept]) for sq, fs in parts]
@@ -655,12 +665,31 @@ def retrieve(state: GraphState) -> dict:
 
 
 def _graded_step(
-    step: RetrievalStep, result: GradeResult, context_size: int
+    state: GraphState, step: RetrievalStep, result: GradeResult
 ) -> RetrievalStep:
     """The slice with relevant passages first, capped at the normal context
-    size; the wider candidate list follows in the trace order."""
-    ordered = pipeline.demote_recitals(reorder(step.fused, result.relevant))
+    size; the wider candidate list follows in the trace order. ADR-33: the
+    cut can change which operative provisions are served (the widen path),
+    so the mapped recitals are chosen again for the served slice rather than
+    carried over from the slice they were chosen for."""
+    context_size = state["final_context_size"]
+    ordered = reorder(step.fused, result.relevant)
     rest = [f for f in step.all_fused if f not in step.fused]
+    if recital_map_enabled():
+        pool, served, config = pipeline.refit_mapped_recitals(
+            state["session"],
+            state["corpus_version_id"],
+            [*ordered, *rest],
+            context_size,
+            step.retrieval_config,
+        )
+        return RetrievalStep(
+            all_fused=pool,
+            fused=pool[:served],
+            retrieval_config=config,
+            latency_ms=step.latency_ms,
+        )
+    ordered = pipeline.demote_recitals(ordered)
     return RetrievalStep(
         all_fused=[*ordered, *rest],
         fused=ordered[:context_size],
@@ -680,14 +709,13 @@ def grade(state: GraphState) -> dict:
         # passages. The parts' outcome is recorded by decompose=applied.
         return {}
     step = state["retrieved"]
-    context_size = state["final_context_size"]
     first = grade_context(state["query"], step.fused)
     results = [first]
     if not first.ok:
         return {"grade_outcome": "skipped", "grade_results": results}
     if first.relevant:
         return {
-            "retrieved": _graded_step(step, first, context_size),
+            "retrieved": _graded_step(state, step, first),
             "grade_outcome": "proceed",
             "grade_results": results,
         }
@@ -721,7 +749,7 @@ def grade(state: GraphState) -> dict:
         return {"grade_outcome": "skipped", "grade_results": results}
     if second.relevant:
         return {
-            "retrieved": _graded_step(wider, second, context_size),
+            "retrieved": _graded_step(state, wider, second),
             "grade_outcome": "widened",
             "grade_results": results,
         }

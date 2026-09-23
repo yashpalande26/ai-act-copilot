@@ -202,3 +202,33 @@ def test_bm25_search_against_real_corpus():
         assert len({r.chunk_id for r in results}) == len(results)
     finally:
         session.close()
+
+
+def test_bm25_search_excluding_recitals_still_returns_at_most_top_k(
+    tmp_path, monkeypatch
+):
+    """ADR-33. Excluding recitals ranks deeper so the leg is not starved, but
+    the leg must still be top_k long: RRF fuses it with a top_k vector leg,
+    and a longer lexical list would credit ranks the other leg never sees
+    (measured: 67 rows against 25 on one question, before this test)."""
+    from app.db.models import Chunk, Provision
+    from app.retrieval import search as search_module
+
+    _build_tiny_index(tmp_path, monkeypatch)
+
+    def _row(chunk_id, citation_id, unit_type="article"):
+        chunk = Chunk(chunk_text="t")
+        chunk.id = chunk_id
+        provision = Provision(citation_id=citation_id, unit_type=unit_type)
+        return (chunk, provision, None)
+
+    session = MagicMock()
+    session.execute.return_value.all.return_value = [
+        _row(101, "art_1"),
+        _row(102, "art_2"),
+        _row(103, "art_3"),
+    ]
+    results = search_module.bm25_search(
+        session, "risk system", corpus_version_id=7, top_k=2, exclude_recitals=True
+    )
+    assert len(results) <= 2

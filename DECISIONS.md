@@ -1,6 +1,109 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-33: A recital-to-provision map; recitals leave the retrieval pool and arrive as explanation of a provision in context (2026-09-23)
+Context: ADR-32 put the 180 recitals into the fused pool and demoted them after fusion.
+That kept them off rank 0 but let them displace operative candidates upstream (up to 12
+of the 25 fused candidates on one item, 7 of 15 in a served slice) and tied "which
+recital" to query similarity rather than to the provision being explained. A recital is
+the reason behind a rule; it should arrive because its rule is in the context.
+Decision: (1) Map. provision_reference rows from a recital row to an operative citation
+id, raw_text "recital_map:explicit" or "recital_map:semantic:<cosine>", built by
+scripts/build_recital_map.py (dry run by default) and read by app.retrieval.recital_map.
+Explicit edges: the recital's own text parsed by the verifier's reference parser and
+resolved to the most specific citation id the corpus has (29 recitals, 54 edges, mostly
+article-level: Recital 38 names Articles 8, 10 and 16). Semantic edges, only for recitals
+with no explicit reference and at most one per recital: the recital chunk's nearest
+operative chunk by cosine over the existing embeddings, kept when the similarity is at
+least 0.75 and the choice is unambiguous: the runner-up at least 0.02 behind, or the top
+two siblings or child and parent under one provision, in which case the edge goes to
+that parent (Recital 58 sits 0.006 between Annex III points 5(a) and 5, so it maps to
+point 5, which covers 5(b)); two close candidates from different articles give no edge.
+Result: 103 semantic edges, 48 recitals unlinked as ambiguous or below the floor, 132 of
+180 linked. Spot-checks of the semantic edges, all read against the texts: Recital 58 to
+Annex III point 5, 31 to Article 5(1)(c), 44 to 5(1)(f), 132 to Article 50(1), 50 to
+Article 6(1), 13 to Article 3(4), 29 to 5(1)(a), 168 to Article 99(1), 57 to Annex III
+4(b), 134 to Article 50(4), 30 to 5(1)(g), 60 to Annex III 7(d), 129 to Article 48, 81 to
+Article 17; Recital 87 to Article 25(3) rather than the Article 6(1) route I had guessed,
+which on reading is the closer fit. (2) Retrieval, behind RECITAL_MAP inside AGENTIC_RAG:
+both legs exclude recital chunks (the vector leg by a unit_type filter, the BM25 leg by
+ranking three times deeper, dropping recitals and cutting back to the leg length, so the
+two legs stay the same universe and the same length; the first cheap run had the cut
+missing and fused a 67-row lexical leg against a 25-row vector leg, which moved the lift
+question's Annex I point out of its slice); after fusion, ranking and cross-reference
+expansion, the operative ids in the slice are matched against edge targets and at most
+two recitals are placed directly behind the operative slice, so the served context grows
+to at most 17 passages and no operative chunk is displaced (the first cheap run displaced
+the two lowest: Article 15(1) left the Section 2 question, and Article 26(6) left the
+logging question after Recital 91 had been attached for it, the one orphan the new gate
+caught). Selection order, measured into shape
+on the spot-check questions: specific matches (the provision itself, a point-level parent,
+a direct child) before bare-root matches; within a band the provision's position in the
+context, because the top-ranked provision is what the question is about (with strength
+first, the social-scoring recital rode Article 5(1)(c) at position 1 onto the
+creditworthiness question ahead of Recital 58 at position 0, and two Article 25(3)
+recitals at position 4 beat Recital 50 at position 2 on the lift question); then the more
+specific match (Recital 31 names 5(1)(c) itself, Recitals 40 and 41 name 5(1)); then
+explicit before semantic. Recitals whose explicit edges fan out over more than four
+provisions are not candidates: they survey the Act. After the grader's reorder or cut
+(the widen path serves the first fifteen of a wider graded slice) the recitals are dropped
+and chosen again for the slice actually served, so a recital cannot outlive the provision
+it was attached for. A decomposed turn (Stage 4) serves operative provisions only: the
+per-part recitals were chosen for their own part's slice, the interleave could keep one
+and cut its provision, and the parts prompt has no group to show a recital of the merged
+context in; a known limitation, not measured by the on-topic set, which has no multi-hop
+"why" item. The ADR-32 demotion remains for the flag-off path and still runs after the
+grader's reorder there. Tags |recmap=explicit:n,semantic:m and |recitals=N describe the
+served slice and are rewritten on a refit. (3) Every ADR-32 safeguard stays: the explanatory label in
+the prefix, the system-prompt rule, the deterministic recital-only check in the verifier.
+The eval runner adds an absolute gate: a recital in a served context whose linked
+provision is not in that context (must be 0 with the map on).
+Spot-checks after the fixes (retrieval only, map on, served context 17): creditworthiness
+question, Recital 58 then 31 with Annex III 5(b) at rank 0; social scoring, 31 then 40;
+workplace emotion recognition, 44 then 40; the lift safety component, 50 then 55 on the
+spot-check phrasing and 50 then 79 on the eval item, with Article 6(1) at ranks 0 to 2
+and Annex I Section A point 4 back at rank 8; the three items the first cheap run moved
+(logging retention, Section 2 requirements, the lift) serve exactly the ADR-32 baseline's
+fifteen operative chunks plus one or two recitals. No recital anywhere but positions 15
+and 16.
+Evidence (gate, 23 Sep 2026): run file evals/runs/adr33_recmap_on_agentic_j2.json, the
+52-item on-topic set, gpt-4o verifier, gpt-4o-mini judge, RECITAL_MAP on, against the
+saved ADR-32 baseline (adr32_recitals_on_agentic_j2.json). Absolute gates all 0: verdict
+leaks 0, recital cited as the only provision 0, recital at context rank 0 on a direct item
+0, recital served without its linked provision 0; the four "why" items ground on and name
+both the recital and the operative provision (58 with Annex III 5(b), 31 with 5(1)(c), 44
+with 5(1)(f), 132 with 50(1)). Shared items: context recall 0.977 to 0.977, faithfulness
+4.356 to 4.429, answer relevance 4.533 to 4.548, citation accuracy 0.907 to 0.837. Per
+bucket (baseline / this run): single-hop citation 0.917 / 0.917; multi-turn 1.0 / 0.875;
+multi-hop 1.0 / 1.0 with faithfulness 4.625 / 5.0; reference 1.0 / 0.75; plain-language
+0.571 / 0.429; why 1.0 / 1.0. Direct items carried 1.32 recitals on average (28 of 41
+served at least one) and named one only once. The citation drop is four items: the
+penalties follow-up (ag_mt_05) and "what does Chapter III require?" (ag_xr_02) now abstain,
+the bridge-lending question (ag_pl_01) abstains instead of clarifying, and the shop
+facial-recognition question (ag_pl_07) clarifies instead of answering. Targeted draws on
+those items (two flag on, two flag off, gate verifier): ag_mt_05 and ag_xr_02 abstained in
+every flag-on draw and answered in every flag-off draw; ag_pl_01 and ag_pl_07 moved both
+ways under both flags, ordinary draw noise. A controlled generator experiment on the two
+systematic items (same question, same fourteen operative passages, gpt-4o at temperature
+0) found the cause is generator marginality under a perturbed context, not the recitals
+as such: the penalties item abstained with the two recitals last (3 of 3), with them
+replacing the tail so the total stays fifteen (3 of 3), and with two unrelated operative
+passages appended instead (1 of 1), answered with recitals first (which the rank-0 gate
+forbids), and once abstained on the operative passages alone; the Chapter III item
+answered 3 of 3 with recitals last in the experiment yet abstained 3 of 3 in the pipeline.
+Two fixes were tried and rejected: a system-prompt sentence saying a recital never makes
+a question unanswerable (no effect, reverted) and recitals inside a fifteen-passage total
+(no effect). No third fix without a design decision.
+Status: BUILT, RECITAL_MAP OFF. The absolute gates pass and the "why" grounding is
+delivered, but the value gate is not clean on the one full draw (citation accuracy on
+shared items down, two marginal direct items abstain). Options, Yash to pick: (1) two
+further gate draws for the ADR-26 majority rule, flipping if citation accuracy holds on
+two of three, since the deficit is two knife-edge items and faithfulness and relevance
+rose; (2) attach recitals only on explanation questions, which needs a "why" signal the
+graph does not have today and leaves direct items without recitals; (3) keep ADR-32
+demotion in production and shelve the map. Known limitation either way: decomposed turns
+serve no recitals.
+
 ## ADR-32: The 180 recitals join the corpus as explanatory, non-binding passages; a recital is never the rule (2026-09-23)
 Context: The consolidated text the corpus is built from (CELEX 02024R1689-20260727) has no
 preamble, so every "why" question about the Act was unanswerable from the corpus. The

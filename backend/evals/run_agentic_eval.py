@@ -68,6 +68,7 @@ from app.generation.verify import (
     recital_only_citation,
     references_in,
 )
+from app.retrieval import recital_map
 from evals import judge
 from evals.judge import judge_answer_relevance, judge_faithfulness
 from evals.metrics import (
@@ -224,7 +225,9 @@ def main() -> None:
     )
     args = ap.parse_args()
     if args.cheap:
-        args.subset = args.subset or "smoke"
+        # --only names the items itself; forcing the smoke subset on top of it
+        # intersected the two and silently ran nothing (23 Sep 2026).
+        args.subset = args.subset or (None if args.only else "smoke")
         args.judge_model = "gpt-4o-mini"
         os.environ.setdefault("VERIFY_MODEL", "openai:gpt-4o-mini")
     judge.JUDGE_MODEL = args.judge_model
@@ -307,6 +310,9 @@ def main() -> None:
         user = AppUser(email=f"agentic-eval-{uuid4()}@example.com")
         session.add(user)
         session.flush()
+        edges_by_recital: dict[str, list] = {}
+        for e in recital_map.load_edges(session, cv.id):
+            edges_by_recital.setdefault(e.recital, []).append(e)
         print(
             f"set {args.set.name} ({len(items)} items)  corpus {cv.consolidated_date}"
             f"  AGENTIC_RAG={'1' if flag else '0'}  AGENTIC_REWRITE={'1' if node else '0'}"
@@ -441,6 +447,18 @@ def main() -> None:
                 "names_provision": [] if abstained else references_in(res.answer),
                 # ADR-32: recitals in the served context and in the answer
                 "recitals_in_context": sum(is_recital(c) for c in context_ids),
+                # ADR-33: a recital in the slice must have a linked provision in the slice
+                "recitals_without_provision": [
+                    c
+                    for c in context_ids
+                    if is_recital(c)
+                    and not any(
+                        recital_map._matches(e.target, o)
+                        for e in edges_by_recital.get(c, [])
+                        for o in context_ids
+                        if not is_recital(o)
+                    )
+                ],
                 "recital_at_rank0": bool(context_ids) and is_recital(context_ids[0]),
                 "names_recital": []
                 if abstained
@@ -589,12 +607,22 @@ def main() -> None:
                 f"  applied outside multi_hop (must be 0): {len(fired_outside)} {fired_outside}"
             )
         recital_only = [t["id"] for t in traces if t["recital_only"]]
+        orphan = [
+            (t["id"], t["recitals_without_provision"])
+            for t in traces
+            if t["recitals_without_provision"]
+        ]
+        print(
+            f"\n== RECITAL MAP (ADR-33) ==  RECITAL_MAP={'on' if config.recital_map_enabled() else 'off'}"
+            f"  recital in context without its linked provision (must be 0 when on): {len(orphan)} {orphan[:6]}"
+            f"  map edges loaded: {sum(len(v) for v in edges_by_recital.values())}"
+        )
         direct = [t for t in traces if t["bucket"] not in ("why", "unanswerable")]
         rec0 = [t["id"] for t in direct if t["recital_at_rank0"]]
         print(
             f"\n== RECITALS (ADR-32) ==  recital cited as the only provision (must be 0): {len(recital_only)} {recital_only}"
             f"  recital at context rank 0 on a direct-provision item (must be 0): {len(rec0)} {rec0}"
-            f"  mean recitals in the 15-slice, direct items: {round(sum(t['recitals_in_context'] for t in direct) / max(len(direct), 1), 2)}"
+            f"  mean recitals in the served context, direct items: {round(sum(t['recitals_in_context'] for t in direct) / max(len(direct), 1), 2)}"
         )
         why = [t for t in traces if t["bucket"] == "why"]
         if why:
@@ -695,6 +723,7 @@ def main() -> None:
                         "subset": args.subset,
                         "judge_model": None if args.no_judge else args.judge_model,
                         "verify_model": config.verify_model(),
+                        "recital_map": config.recital_map_enabled(),
                         "corpus": str(cv.consolidated_date),
                         "pooled": pooled,
                         "buckets": buckets,

@@ -349,6 +349,26 @@ def clarify_followup_enabled() -> bool:
     )
 
 
+# Recital map default (ADR-33, 23 Sep 2026). OFF until the gate passes.
+RECITAL_MAP_DEFAULT = "0"
+
+
+def recital_map_enabled() -> bool:
+    """ADR-33: recitals leave the fused retrieval pool (both legs draw from
+    operative provisions only) and reach the context only through the
+    recital-to-provision map: when an operative provision is in the context,
+    the recitals linked to it (explicit citation in the recital's own text
+    first, then a single conservative semantic link) are added as
+    explanation, at most two, directly behind the operative slice (the served
+    context grows to at most 17 passages; no operative chunk is displaced).
+    Off means the ADR-32 behaviour (recitals in the pool, demoted). Effective
+    inside the graph only."""
+    return (
+        agentic_rag_enabled()
+        and os.environ.get("RECITAL_MAP", RECITAL_MAP_DEFAULT) == "1"
+    )
+
+
 # Risk-tier framing default (ADR-27, 23 Sep 2026). OFF: on the 14-item
 # risk-tier set, 3 draws, every absolute gate was 0 (leaks, stretches,
 # out-of-context citations, high-risk regression, property valuation) and the
