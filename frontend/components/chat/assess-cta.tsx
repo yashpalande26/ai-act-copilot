@@ -11,9 +11,12 @@ export function assessHref(text?: string): string {
 }
 
 /**
- * The funnel from a chat turn to the assessment. Deterministic and free: it is
- * present after every answer and inside every refusal, so no classifier
- * decides who sees it. The chat's own behaviour is untouched; this is a link
+ * The funnel from a chat turn to the assessment. Deterministic and free: no
+ * classifier decides who sees it, the turn's own shape does. It appears only
+ * under a grounded answer ("answer") or a plain-language system explanation
+ * ("system"); never under a refusal, a scope notice, a greeting, a chat-lane
+ * reply or a clarifying question (23 Sep 2026: it used to sit under every
+ * assistant message). The chat's own behaviour is untouched; this is a link
  * to a different, deterministic path that starts from the same text.
  */
 export function AssessCta({
@@ -22,7 +25,7 @@ export function AssessCta({
 }: {
   /** The user's most recent message, pre-filled into the describe box. */
   text?: string;
-  variant: "answer" | "refusal" | "system";
+  variant: "answer" | "system";
 }) {
   const href = assessHref(text);
   if (variant === "system") {
@@ -42,18 +45,6 @@ export function AssessCta({
           <ArrowRightIcon className="size-3.5" aria-hidden />
         </Link>
       </div>
-    );
-  }
-  if (variant === "refusal") {
-    return (
-      <p className="type-meta text-ink-soft mt-4" data-testid="assess-cta-refusal">
-        If you were describing your own system, the full assessment is the better route: it works
-        from your description and a short questionnaire, not from a search of the text.{" "}
-        <Link href={href} className="text-grounded inline-flex items-center gap-1 font-medium hover:underline">
-          Assess this system
-          <ArrowRightIcon className="size-3.5" aria-hidden />
-        </Link>
-      </p>
     );
   }
   return (

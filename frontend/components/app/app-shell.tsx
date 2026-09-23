@@ -157,7 +157,11 @@ export function AppShell({
   }, [open]);
 
   return (
-    <div className="bg-paper flex h-dvh min-h-0">
+    // h-screen first, dvh where supported: a browser without dvh (older
+    // Safari, Firefox, Android in-app browsers) otherwise gives this root no
+    // height at all, the chat panel then sizes to its messages, the composer
+    // sits mid-page and the whole document scrolls (23 Sep 2026).
+    <div className="bg-paper flex h-screen min-h-0 supports-[height:100dvh]:h-dvh">
       <aside
         aria-label="Navigation"
         className="border-hairline bg-sidebar hidden w-[16.5rem] shrink-0 border-r md:flex md:flex-col"

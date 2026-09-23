@@ -105,7 +105,10 @@ export function ChatPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex-1 overflow-y-auto">
+      {/* The transcript is the only scroll region: min-h-0 lets it shrink inside
+          the flex column, overscroll-contain keeps a wheel or swipe at the end of
+          the list from scrolling the document behind it. */}
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" data-testid="transcript">
         <div className="mx-auto w-full max-w-[52rem] px-5 py-8 md:px-10 md:py-12">
           {loading ? (
             <div className="space-y-8" role="status" aria-live="polite" aria-label="Loading chat">
@@ -198,7 +201,7 @@ export function ChatPanel({
         </div>
       </div>
 
-      <div className="border-hairline bg-paper/90 border-t backdrop-blur-md">
+      <div className="border-hairline bg-paper/90 shrink-0 border-t backdrop-blur-md">
         <div className="mx-auto w-full max-w-[52rem] px-5 py-4 md:px-10">
           <form
             onSubmit={(e) => {

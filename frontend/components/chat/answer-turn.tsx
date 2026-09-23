@@ -50,10 +50,13 @@ export function UserTurn({ question }: { question: string }) {
  *   refusal the retrieved provisions did not answer the question; the lead
  *          says so, and the same scope copy follows. The refusal itself is
  *          unchanged upstream; this is presentation.
- * Both show what CAN be asked and the route to an assessment. Caution tone
- * stays reserved for the genuine refusal.
+ * Both show what CAN be asked. Neither carries the assessment CTA (23 Sep
+ * 2026): the CTA belongs to a grounded answer about a system or a provision,
+ * not to a refusal, a scope notice, a greeting or a chat-lane reply, where it
+ * read as an unrelated pitch under every message. Caution tone stays
+ * reserved for the genuine refusal.
  */
-function AbstentionTurn({ question, scope }: { question?: string; scope: boolean }) {
+function AbstentionTurn({ scope }: { scope: boolean }) {
   return (
     <Bubble>
       <div
@@ -89,7 +92,6 @@ function AbstentionTurn({ question, scope }: { question?: string; scope: boolean
             <p className="type-body text-ink-soft mt-2">{REFUSAL_MESSAGE}</p>
           </>
         )}
-        <AssessCta text={question} variant="refusal" />
         <p className="type-micro text-ink-faint mt-4">Informational, not legal advice.</p>
       </div>
     </Bubble>
@@ -132,7 +134,7 @@ export function AssistantTurn({ turn, question }: { turn: ChatTurn; question?: s
   if (turn.role === "error") return <ErrorTurn {...turn} />;
   if (turn.role !== "assistant") return null;
   if (turn.result.abstained) {
-    return <AbstentionTurn question={question} scope={Boolean(turn.result.scope_notice)} />;
+    return <AbstentionTurn scope={Boolean(turn.result.scope_notice)} />;
   }
   if (turn.result.social) {
     return (
