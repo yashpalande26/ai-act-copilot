@@ -109,6 +109,8 @@ def test_passage_block_carries_the_heading_the_retriever_attached():
     )
     assert "\u2014" not in SYSTEM_PROMPT
     assert config.verify_model() == "openai:gpt-4o"
+    # ADR-26: a dropped limitation is named as a changed element
+    assert "drops a condition, exception or limitation" in SYSTEM_PROMPT
 
 
 # --- verdicts -----------------------------------------------------------------

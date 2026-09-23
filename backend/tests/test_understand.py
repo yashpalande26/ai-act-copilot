@@ -203,6 +203,8 @@ def test_prompts_have_no_em_dash_and_forbid_verdicts():
         "—" not in understand.SYSTEM_PROMPT and "—" not in EXPLAIN_AND_ROUTE_INSTRUCTION
     )
     assert "never a classification" in understand.SYSTEM_PROMPT
+    # ADR-26: the vaguest description is named as a system description
+    assert "even when it does not say what the system does" in understand.SYSTEM_PROMPT
     assert (
         "do not state whether the user's own system"
         in EXPLAIN_AND_ROUTE_INSTRUCTION.lower()

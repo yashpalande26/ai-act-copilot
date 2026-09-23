@@ -296,23 +296,23 @@
  },
  {
   "id": "pp_04",
-  "kind": "valid_paraphrase",
-  "expected_misgrounded": false,
+  "kind": "changed_element",
+  "expected_misgrounded": true,
   "context_ids": [
    "art_66.pt_h"
   ],
   "answer": "Cooperation with Union institutions and expert groups should be prioritised in the fields of product safety, cybersecurity, competition, digital and media services, financial services, consumer protection, data and fundamental rights protection, according to Article 66, point (h).",
-  "note": "ADR-20(b): the Article 66(h) paraphrase gpt-4o rejected twice"
+  "note": "Gold corrected 23 Sep 2026 (ADR-26): 'in particular in the fields of' names the fields where cooperation is expected; 'should be prioritised' turns that into a priority duty the passage does not state. A changed element, so the withhold is correct. Was the ADR-20(b) 'faithful paraphrase'."
  },
  {
   "id": "pp_05",
-  "kind": "valid_paraphrase",
-  "expected_misgrounded": false,
+  "kind": "changed_element",
+  "expected_misgrounded": true,
   "context_ids": [
    "art_75.par_2"
   ],
   "answer": "If market surveillance authorities have sufficient reason to consider general-purpose AI systems non-compliant with the Regulation's requirements, they shall cooperate with the AI Office to carry out compliance evaluations and inform the Board and other market surveillance authorities accordingly (Article 75, paragraph 2).",
-  "note": "ADR-20 Stage 3 run: regenerated once by gpt-4o; the summary drops the clause on direct use for a high-risk purpose without changing the obligation"
+  "note": "Gold corrected 23 Sep 2026 (ADR-26): the passage limits the rule to general-purpose AI systems that can be used directly by deployers for at least one high-risk purpose; the summary drops that clause and so widens the rule to all general-purpose AI systems. A changed scope element, so the withhold is correct."
  },
  {
   "id": "pp_06",

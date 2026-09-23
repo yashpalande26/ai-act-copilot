@@ -316,12 +316,19 @@ def clarify_model() -> str:
 # one failing gate: 3/4 underspecified grounded on the second pass; the fourth
 # retrieved the gold provision and answered on it, and the gpt-4o-mini
 # verifier withheld the answer twice. ADR-25 (same day) moved the verifier to
-# gpt-4o with passage headings: the triage reply then grounded in 3 of 4
-# draws, and the clarify set was 11 of 13 because the understand step judged
-# the vaguest description ("we have an AI model in our company") not a
-# system description in both runs. Still not a full pass, so still off; the
-# open items are in PROJECT_BRIEF (ADR-24/25 follow-up).
-CLARIFY_FOLLOWUP_DEFAULT = "0"
+# gpt-4o with passage headings; ADR-26 named the function-less description in
+# the understand prompt and the dropped-limitation case in the verifier
+# prompt. "1" since the ADR-26 split gate of 23 Sep 2026 (three full clarify
+# draws, evals/runs/clarify_adr26_draw*_j2.json): every absolute gate 0 over
+# all draws (verdict leaks, law-silent stretched to a provision, firing on
+# anything but an abstaining system description, second question, question
+# failing its check, marker left set, already-clear asked, off-topic fired;
+# probe false accepts 0 of 24 traps on every draw); every value gate by
+# majority (the vaguest item understood 3/3 and grounded 3/3, triage 3/3,
+# CCTV reply 2/3, already-clear 3/3, 3/3, 2/3). On-topic set: 0 leaks,
+# faithfulness 0.872 to 0.877, citation accuracy 0.868 held. Only effective
+# inside AGENTIC_RAG, which stays off in production.
+CLARIFY_FOLLOWUP_DEFAULT = "1"
 
 
 def clarify_followup_enabled() -> bool:

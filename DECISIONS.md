@@ -1,6 +1,59 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-26: Clarifying follow-up on under a split gate; two probe golds corrected; understand and verifier prompts firmed (2026-09-23)
+Context: ADR-25 left three things open: whether the Article 66(h) and 75(2) probes were
+valid paraphrases, the understand step's coin flip on function-less descriptions (which
+decides whether the follow-up fires at all), and a flag rule that required every gate on
+every draw of a non-deterministic pipeline. Yash ruled on the first, and set a split gate:
+absolute gates must be 0 with no exceptions; value gates pass by majority of three draws.
+Decision: (1) Probe gold corrected (evals/misgrounding_probes.json): pp_04 turns "in
+particular in the fields of" into a priority duty, pp_05 drops the clause limiting Article
+75(2) to general-purpose AI systems usable directly by deployers for a high-risk purpose
+and so widens the rule. Both change an element; both are now correct-withhold probes
+(kind changed_element), making the set 24 misgrounded and 22 valid. (2) The verifier
+prompt names the case the corrected gold exposed: dropping a condition, exception or
+limitation so that the rule covers more than the passage says is unsupported, while
+leaving out an example or a detail that does not change who or what the rule covers is
+still faithful. Before the clause gpt-4o accepted pp_05 on 1 draw in 3; after it, 0 in 3.
+A tightening, not a loosening. (3) The understand prompt names the function-less
+description as a system description ("we have an AI model in our company, is it a
+problem?": the user is asking about their own system and has not described it yet) and
+asks for general terms for it. Measured over 3 draws each: before, that item was understood
+1/3 and "we have some AI in our product" 0/3; after, six vague items 3/3, five already-clear
+items 3/3, five off-topic and six legal questions 0/3, so nothing outside the intended
+class moved. (4) CLARIFY_FOLLOWUP_DEFAULT is "1" inside AGENTIC_RAG.
+Evidence: Probe gate, gpt-4o with headings, 3 draws (evals/runs/verify_probes_adr26_gpt-
+4o.json): 24/24 traps caught on every draw, 0/22 valid withheld on any draw. Clarify set,
+three full draws (evals/runs/clarify_adr26_draw3_j2.json is the surviving file; draws 1 and
+2 are in the run logs, their JSON was overwritten by a shell quoting slip and the split
+gate was rebuilt from the logs). Absolute gates, summed over the three draws: verdict leaks
+0, law-silent stretched 0, fired on anything but an abstaining system description 0,
+second clarification 0, question failing its check 0, marker left set 0, already-clear
+asked 0, off-topic fired 0, law-silent not routed 0. Value gates by item: the four
+underspecified items understood 3/3, asked 3/3 and grounded on the second pass 3/3, 3/3,
+3/3 (triage) and 2/3 (CCTV faces: one draw's second pass abstained with the gold in
+context); the school item answered on Annex III point 3 3/3; already-clear grounded 3/3,
+3/3 and 2/3 (the shop facial-recognition item once withheld by the verifier,
+verify=abstained, gold in context); law-silent asked and routed
+with no provision 3/3 and 3/3; the drift item now fires (its opener is a vague system
+description), and the drifted reply went through the normal path to the grounded refusal
+with no second question 3/3. Per draw: underspecified asked 4/4, 4/4, 4/4 and grounded
+4/4, 3/4, 4/4. On-topic set, 47 items, versus the ADR-25 run: 0 verdict leaks,
+faithfulness 0.872 to 0.877, citation accuracy 0.868 to 0.868, context recall 0.974 to
+0.974, answered 43 to 43; verifier passed 33 and withheld 1 (the Article 66(h) answer,
+now a correct withhold by the corrected gold); the only deterministic differences are the
+two multi-hop precisions that move with the decompose plan under every configuration.
+Consequences: Inside AGENTIC_RAG a function-less system description now gets one
+clarifying question instead of the abstention, and the reply is answered, routed or
+refused by the normal path. The drift bucket shows the cost of the understand change: a
+message that merely mentions having AI in a product now enters explain mode and, if the
+generator abstains, is asked what the system does; the reply decides the rest. Probe and
+clarify numbers are majority-of-three where the gate says so; the run-to-run variance
+seen all day (understand, verifier, guard, decompose) is now recorded per draw rather than
+averaged away. AGENTIC_RAG stays off in production pending the progress affordance.
+Status: Accepted; CLARIFY_FOLLOWUP on inside AGENTIC_RAG.
+
 ## ADR-25: The citation verifier is gpt-4o with passage headings; prompt loosening rejected; clarify flag still off (2026-09-23)
 Context: ADR-20(b) recorded the verifier withholding faithful paraphrases; ADR-24 lost its
 last gate to the same thing (the triage reply, generated on Annex III 5(d), withheld twice

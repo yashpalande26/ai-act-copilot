@@ -12,8 +12,10 @@ own catches, tokens and latency. Nothing is generated and nothing persists.
 
 VALIDITY: probes written by the person who wrote the verifier prompt, against
 provisions they had just read (24 in Stage 3; 22 added for ADR-25: twelve
-valid paraphrases, seven of them the real withheld answers from the ADR-20 and
-ADR-24 runs, and ten false-accept traps). They prove the verifier can catch
+paraphrases, seven of them the real withheld answers from the ADR-20 and ADR-24
+runs, and ten false-accept traps; ADR-26 re-read two of the paraphrases,
+Article 66(h) and Article 75(2), as element changes and moved them to the
+correct-withhold set, so the set is 22 valid and 24 misgrounded). They prove the verifier can catch
 the listed KINDS of misgrounding and accept the listed kinds of paraphrase,
 not how often real answers misground; that is what the agentic eval's verify
 outcomes measure. --repeats N runs every probe N times because gpt-4o-mini at

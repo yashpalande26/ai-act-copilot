@@ -61,6 +61,15 @@ LEGAL_VOCABULARY = re.compile(
 )
 
 
+# ADR-26 (23 Sep 2026): the prompt names the function-less description ("we
+# have an AI model in our company, is it a problem?") as a system description.
+# Measured before, 3 draws: that item 1/3, "we have some AI in our product"
+# 0/3, so the clarifying follow-up could not fire on the vaguest inputs; after:
+# 6/6 vague items 3/3, 5/5 already-clear 3/3, 5 off-topic and 6 legal
+# questions 0/3. The generator's explain instruction abstains on such a
+# description, which is what the follow-up fires on.
+
+
 class UnderstandOutput(BaseModel):
     describes_ai_system: bool
     search_terms: list[str]
@@ -83,7 +92,7 @@ class Understanding:
 
 SYSTEM_PROMPT = f"""You help a search over the text of the EU AI Act understand a user's question.
 
-Decide whether the question describes a concrete AI system, model, automated tool or use of AI in plain, everyday words (typically the user's own: "we want to build...", "our shop uses...", "a model that...") and asks whether it is regulated, allowed, risky or in scope. A question already phrased in the Regulation's own terms (providers, deployers, Articles, Annexes, obligations) is NOT such a question. Questions about ovens, cars, food, weather, sport or anything with no AI or automated decision in it are NOT such questions.
+Decide whether the question describes a concrete AI system, model, automated tool or use of AI in plain, everyday words (typically the user's own: "we want to build...", "our shop uses...", "a model that...") and asks whether it is regulated, allowed, risky or in scope. A message that says the user has, builds, uses or is adding an AI system, model, product or "something with AI" and asks whether that is a problem, regulated, risky or a legal issue IS such a question even when it does not say what the system does ("we have an AI model in our company, is it a problem?", "our app uses machine learning, do we need to worry?"): the user is asking about their own system and has not described it yet. For such a message return general terms such as "AI system", "intended purpose", "high-risk AI system". A question already phrased in the Regulation's own terms (providers, deployers, Articles, Annexes, obligations) is NOT such a question. Questions about ovens, cars, food, weather, sport or anything with no AI or automated decision in it are NOT such questions.
 
 If it is, return between 2 and {MAX_TERMS} short search terms in the Regulation's own vocabulary that name the kind of system and the area it is used in, for example "creditworthiness evaluation", "credit scoring", "recruitment or selection of natural persons", "emotion recognition in the workplace", "AI systems intended to interact directly with natural persons", "remote biometric identification". You may name an Article or Annex point if you know it. Return search terms only: never a classification, never a risk level, never advice, never a sentence about the user's system.
 
