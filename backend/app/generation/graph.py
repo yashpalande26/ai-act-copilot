@@ -162,9 +162,9 @@ from app.generation.grade import (
 from app.generation.intent import IntentResult, classify, social_reply
 from app.generation.rewrite import RewriteResult, load_history, rewrite_followup
 from app.generation.understand import (
-    EXPLAIN_AND_ROUTE_INSTRUCTION,
     EXPLAIN_FRAMED_QUESTION,
     Understanding,
+    explain_instruction,
     understand_query,
     verdict_leaks,
 )
@@ -745,9 +745,7 @@ def generate(state: GraphState) -> dict:
         state["retrieved"].fused,
         max_output_tokens=state["max_output_tokens"],
         parts=state.get("parts") or None,
-        extra_instruction=EXPLAIN_AND_ROUTE_INSTRUCTION
-        if _explain_route(state)
-        else None,
+        extra_instruction=explain_instruction() if _explain_route(state) else None,
         framed_question=EXPLAIN_FRAMED_QUESTION if _explain_route(state) else None,
     )
     return {
@@ -792,7 +790,7 @@ def verify(state: GraphState) -> dict:
                 state["query"],
                 fused,
                 max_output_tokens=state["max_output_tokens"],
-                extra_instruction=EXPLAIN_AND_ROUTE_INSTRUCTION
+                extra_instruction=explain_instruction()
                 + " A previous draft was rejected because it stated a conclusion "
                 "about the user's own system: "
                 + "; ".join(f'"{x}"' for x in leaks[:3])
@@ -837,9 +835,7 @@ def verify(state: GraphState) -> dict:
         state["query"],
         fused,
         max_output_tokens=state["max_output_tokens"],
-        extra_instruction=(
-            EXPLAIN_AND_ROUTE_INSTRUCTION + " " if _explain_route(state) else ""
-        )
+        extra_instruction=(explain_instruction() + " " if _explain_route(state) else "")
         + regeneration_instruction(first),
         parts=state.get("parts") or None,
     )

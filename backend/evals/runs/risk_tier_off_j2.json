@@ -1,0 +1,696 @@
+{
+ "flags": {
+  "agentic": true,
+  "risk_tier_framing": false,
+  "clarify": false,
+  "verify_model": "openai:gpt-4o"
+ },
+ "repeats": 1,
+ "absolute": {
+  "verdict leaks": 0,
+  "stretched to a forbidden provision": 0,
+  "named a provision not in context": 0,
+  "high_risk item not grounded on its gold": 1,
+  "law_silent item answered or naming a provision": 0
+ },
+ "rows": [
+  {
+   "id": "rt_tr_01",
+   "bucket": "transparency",
+   "draw": 1,
+   "question": "we're building a customer-service chatbot for our online shop that answers customers' questions, does the AI Act apply to us?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "customer service chatbot",
+    "automated decision-making",
+    "AI systems for customer support",
+    "Article 6"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|anchor=dense|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_2.par_10",
+    "art_6.par_1a",
+    "art_2.par_8",
+    "art_2.par_12",
+    "anx_III.pt_6.sub_d",
+    "art_17.par_1.pt_j",
+    "art_6.par_3.pt_c",
+    "anx_III.pt_5.sub_a",
+    "art_26.par_11",
+    "anx_III.pt_6.sub_e",
+    "art_5.par_1.pt_bb",
+    "anx_III.pt_6.sub_a",
+    "anx_III.pt_4.sub_b",
+    "anx_III.pt_5.sub_c"
+   ],
+   "gold_recall": 1.0,
+   "abstained": true,
+   "clarifying": false,
+   "route": true,
+   "named": [],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+   ],
+   "answer": "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+  },
+  {
+   "id": "rt_tr_02",
+   "bucket": "transparency",
+   "draw": 1,
+   "question": "I want to build an EU AI Act copilot: it answers users' questions from the official text of the Act and helps them see which part of the Act their system comes under",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "high-risk AI systems",
+    "compliance with the EU AI Act",
+    "classification of AI systems"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_86.par_1",
+    "art_26.par_11",
+    "art_6.par_4",
+    "art_16.pt_l",
+    "art_21.par_1",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_8.sub_b",
+    "anx_IV.pt_2.sub_c",
+    "art_6.par_1.pt_a",
+    "art_6.par_3.pt_d",
+    "art_42.par_2",
+    "art_41.par_4",
+    "art_40.par_1",
+    "art_86.par_2"
+   ],
+   "gold_recall": 1.0,
+   "abstained": true,
+   "clarifying": false,
+   "route": true,
+   "named": [],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+   ],
+   "answer": "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+  },
+  {
+   "id": "rt_tr_03",
+   "bucket": "transparency",
+   "draw": 1,
+   "question": "a voice assistant inside our banking app that talks to customers and answers their questions about their accounts",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "customer support AI",
+    "automated decision-making in banking",
+    "voice recognition technology",
+    "financial services AI applications"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|path=graph",
+   "context_ids": [
+    "anx_III.pt_1.sub_c",
+    "art_26.par_11",
+    "art_17.par_1.pt_j",
+    "anx_III.pt_5.sub_b",
+    "art_5.par_1.pt_d",
+    "anx_III.pt_5.sub_a",
+    "art_75a.par_4.pt_d",
+    "art_75.par_1c",
+    "anx_III.pt_4.sub_b",
+    "art_66.pt_k",
+    "art_75.par_2a.pt_c",
+    "art_75.par_1b",
+    "anx_III.pt_4.sub_a",
+    "anx_III.pt_6.sub_a",
+    "art_67.par_9"
+   ],
+   "gold_recall": 0.0,
+   "abstained": true,
+   "clarifying": false,
+   "route": true,
+   "named": [],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+   ],
+   "answer": "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+  },
+  {
+   "id": "rt_tr_04",
+   "bucket": "transparency",
+   "draw": 1,
+   "question": "a tool that generates realistic videos of real people saying things they never said, which our marketing team wants to publish",
+   "understood": true,
+   "search_terms": [
+    "deepfake technology",
+    "AI-generated content",
+    "manipulation of audiovisual media",
+    "disinformation",
+    "AI systems intended to interact directly with natural persons"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_3.pt_60",
+    "art_5.par_1.pt_ba",
+    "art_50.par_4",
+    "art_5.par_1a.pt_a",
+    "art_50.par_2",
+    "art_5.par_1a.pt_b",
+    "art_111.par_4",
+    "art_5.par_1.pt_bb",
+    "anx_III.pt_8.sub_b",
+    "art_50.par_1",
+    "art_5.par_1b",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_3.sub_a",
+    "art_60.par_4.pt_a",
+    "anx_III.pt_4.sub_a"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_5.par_1.pt_ba",
+    "art_50.par_4"
+   ],
+   "gold_named": [
+    "art_50.par_4"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions address AI systems that generate or manipulate realistic images, videos, or audio content, whic"
+   ],
+   "answer": "The retrieved provisions address AI systems that generate or manipulate realistic images, videos, or audio content, which could include the kind of system described by the user. According to Article 5, paragraph 1, point (ba), it is prohibited to place on the market, put into service, or use an AI system that generates or manipulates realistic images, videos, or audio of an identifiable natural pe"
+  },
+  {
+   "id": "rt_nl_01",
+   "bucket": "not_listed",
+   "draw": 1,
+   "question": "we run a spam filter with machine learning, do we need to do anything?",
+   "understood": true,
+   "search_terms": [
+    "spam detection",
+    "AI systems intended to interact directly with natural persons",
+    "automated decision-making",
+    "high-risk AI system",
+    "machine learning for content moderation"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|path=graph",
+   "context_ids": [
+    "art_14.par_1",
+    "art_6.par_3.pt_c",
+    "anx_III.pt_4.sub_a",
+    "anx_III.pt_3.sub_b",
+    "art_50.par_2",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_4.sub_b",
+    "anx_III.pt_5.sub_b",
+    "anx_III.pt_6.sub_e",
+    "anx_III.pt_8.sub_b",
+    "anx_III.pt_5.sub_c",
+    "anx_III.pt_3.sub_a",
+    "anx_III.pt_6.sub_a",
+    "anx_III.pt_7.sub_d",
+    "anx_III.pt_7.sub_b"
+   ],
+   "gold_recall": null,
+   "abstained": true,
+   "clarifying": false,
+   "route": true,
+   "named": [],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+   ],
+   "answer": "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+  },
+  {
+   "id": "rt_nl_02",
+   "bucket": "not_listed",
+   "draw": 1,
+   "question": "an internal search tool that finds documents on our company drive using machine learning, is that regulated?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "document retrieval",
+    "machine learning for information retrieval",
+    "internal search tools",
+    "automated document classification"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|anchor=dense|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|path=graph",
+   "context_ids": [
+    "art_14.par_1",
+    "art_74.par_12",
+    "anx_III.pt_3.sub_b",
+    "art_18.par_3",
+    "anx_XII.pt_2.sub_a",
+    "anx_IV.pt_1.sub_f",
+    "anx_III.pt_8.sub_a",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_8.sub_b",
+    "art_75.par_1.pt_b",
+    "anx_III.pt_7.sub_a",
+    "anx_III.pt_7.sub_d",
+    "art_77.par_1",
+    "anx_III.pt_6.sub_e",
+    "anx_III.pt_6.sub_b"
+   ],
+   "gold_recall": null,
+   "abstained": true,
+   "clarifying": false,
+   "route": true,
+   "named": [],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+   ],
+   "answer": "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+  },
+  {
+   "id": "rt_nl_03",
+   "bucket": "not_listed",
+   "draw": 1,
+   "question": "an AI spell-checker and grammar corrector built into our word processor, does the Act affect it?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "text generation",
+    "automated text processing",
+    "language processing",
+    "AI systems for content creation"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|anchor=dense|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_50.par_2",
+    "art_111.par_4",
+    "art_59.par_1.pt_f",
+    "anx_III.pt_3.sub_b",
+    "art_5.par_8",
+    "anx_III.pt_8.sub_a",
+    "art_5.par_1.pt_ba",
+    "anx_XIII.pt_(d)",
+    "art_14.par_3.pt_a",
+    "art_2.par_3",
+    "art_7.par_2.pt_c",
+    "art_7.par_2.pt_f",
+    "art_4a.par_1",
+    "art_2.par_1.pt_g"
+   ],
+   "gold_recall": null,
+   "abstained": true,
+   "clarifying": false,
+   "route": true,
+   "named": [],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+   ],
+   "answer": "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+  },
+  {
+   "id": "rt_nl_04",
+   "bucket": "not_listed",
+   "draw": 1,
+   "question": "a model that forecasts weekly demand for our warehouse stock, is it covered by the AI Act?",
+   "understood": true,
+   "search_terms": [
+    "predictive analytics",
+    "demand forecasting",
+    "AI systems intended to interact directly with natural persons",
+    "high-risk AI system",
+    "supply chain management"
+   ],
+   "cfg": "hybrid_bm25|actor=none|anchor=dense|understand=applied|decompose=skipped|intent=on_topic|grade=widened|path=graph",
+   "context_ids": [
+    "art_52.par_1",
+    "art_75.par_1.pt_a",
+    "art_51.par_1",
+    "art_51.par_2",
+    "art_3.pt_63",
+    "art_52.par_2",
+    "art_51.par_1.pt_a",
+    "art_53.par_4",
+    "art_55.par_2",
+    "art_41.par_3",
+    "art_40.par_1",
+    "art_55.par_1.pt_d",
+    "art_53.par_1",
+    "anx_XII.pt_1.sub_h",
+    "art_7.par_2.pt_b"
+   ],
+   "gold_recall": null,
+   "abstained": true,
+   "clarifying": false,
+   "route": true,
+   "named": [],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+   ],
+   "answer": "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+  },
+  {
+   "id": "rt_hr_01",
+   "bucket": "high_risk",
+   "draw": 1,
+   "question": "we use AI to screen CVs for hiring, is that allowed?",
+   "understood": true,
+   "search_terms": [
+    "recruitment or selection of natural persons",
+    "AI systems intended to interact directly with natural persons",
+    "high-risk AI system",
+    "automated CV screening",
+    "employment decision-making"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "anx_III.pt_4.sub_a",
+    "anx_III.pt_4.sub_b",
+    "art_2.par_11",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_3.sub_a",
+    "anx_III.pt_5.sub_c",
+    "anx_III.pt_8.sub_b",
+    "anx_III.pt_5.sub_b",
+    "art_5.par_1.pt_d",
+    "anx_III.pt_3.sub_b",
+    "anx_III.pt_7.sub_b",
+    "anx_III.pt_6.sub_e",
+    "anx_III.pt_6.sub_a",
+    "anx_III.pt_5.sub_d",
+    "art_26.par_11"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_4.sub_a"
+   ],
+   "gold_named": [
+    "anx_III.pt_4.sub_a"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "AI systems intended to be used for the recruitment or selection of natural persons, such as to analyse and filter job ap"
+   ],
+   "answer": "AI systems intended to be used for the recruitment or selection of natural persons, such as to analyse and filter job applications, are classified as high-risk AI systems under Annex III, point 4(a) of the EU AI Act. This classification applies to AI systems used specifically for recruitment purposes, including placing targeted job advertisements and evaluating candidates."
+  },
+  {
+   "id": "rt_hr_02",
+   "bucket": "high_risk",
+   "draw": 1,
+   "question": "our bank uses a model to score customers' creditworthiness for consumer loans, does the AI Act apply?",
+   "understood": true,
+   "search_terms": [
+    "creditworthiness evaluation",
+    "credit scoring",
+    "high-risk AI system",
+    "financial services"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "anx_III.pt_5.sub_b",
+    "art_74.par_6",
+    "art_19.par_2",
+    "art_18.par_3",
+    "art_5.par_1.pt_c",
+    "art_66.pt_h",
+    "anx_III.pt_5.sub_a",
+    "anx_III.pt_5.sub_d",
+    "art_2.par_8",
+    "art_9.par_2.pt_b",
+    "art_53.par_2",
+    "art_6.par_1",
+    "art_9.par_8",
+    "art_2.par_6",
+    "art_2.par_10"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_5.sub_b"
+   ],
+   "gold_named": [
+    "anx_III.pt_5.sub_b"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions state that AI systems intended to be used to evaluate the creditworthiness of natural persons o"
+   ],
+   "answer": "The retrieved provisions state that AI systems intended to be used to evaluate the creditworthiness of natural persons or establish their credit score are considered high-risk AI systems, with the exception of AI systems used for the purpose of detecting financial fraud (Annex III, point 5(b)). The conditions attached are that the AI system is intended for evaluating creditworthiness or establishi"
+  },
+  {
+   "id": "rt_hr_03",
+   "bucket": "high_risk",
+   "draw": 1,
+   "question": "our office wants emotion recognition to monitor staff mood, is that ok?",
+   "understood": true,
+   "search_terms": [
+    "emotion recognition in the workplace",
+    "AI systems intended to interact directly with natural persons",
+    "monitoring staff mood",
+    "high-risk AI system",
+    "biometric data processing"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|anchor=dense|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_3.pt_39",
+    "anx_III.pt_1.sub_c",
+    "art_50.par_3",
+    "art_5.par_1.pt_f",
+    "anx_III.pt_4.sub_b",
+    "art_3.pt_35",
+    "art_72.par_1",
+    "art_72.par_2",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_1.sub_a",
+    "anx_III.pt_3.sub_b",
+    "anx_III.pt_6.sub_e",
+    "anx_III.pt_5.sub_c",
+    "art_29.par_3",
+    "art_75a.par_4.pt_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_1.sub_c",
+    "art_5.par_1.pt_f"
+   ],
+   "gold_named": [
+    "art_5.par_1.pt_f",
+    "anx_III.pt_1.sub_c"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions state that AI systems intended to be used for emotion recognition are considered high-risk (Ann"
+   ],
+   "answer": "The retrieved provisions state that AI systems intended to be used for emotion recognition are considered high-risk (Annex III, point 1(c)). Additionally, the use of AI systems to infer emotions of a natural person in the areas of workplace and education institutions is prohibited, except where the use of the AI system is intended for medical or safety reasons (Article 5, paragraph 1, point (f)). "
+  },
+  {
+   "id": "rt_hr_04",
+   "bucket": "high_risk",
+   "draw": 1,
+   "question": "we want to use facial recognition in our shop to spot shoplifters",
+   "understood": true,
+   "search_terms": [
+    "remote biometric identification",
+    "surveillance in retail",
+    "AI systems intended to interact directly with natural persons",
+    "high-risk AI system"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=abstained|path=graph",
+   "context_ids": [
+    "art_3.pt_35",
+    "art_50.par_3",
+    "art_3.pt_39",
+    "anx_III.pt_1.sub_a",
+    "art_5.par_1.pt_e",
+    "anx_III.pt_6.sub_d",
+    "art_3.pt_41",
+    "art_5.par_3",
+    "art_3.pt_34",
+    "anx_III.pt_6.sub_e",
+    "anx_III.pt_5.sub_b",
+    "anx_III.pt_1.sub_c",
+    "anx_III.pt_3.sub_a",
+    "anx_III.pt_5.sub_c",
+    "anx_III.pt_7.sub_b"
+   ],
+   "gold_recall": 1.0,
+   "abstained": true,
+   "clarifying": false,
+   "route": true,
+   "named": [],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions mention that AI systems for remote biometric identification, such as facial recognition, are co",
+    "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+   ],
+   "answer": "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+  },
+  {
+   "id": "rt_ls_01",
+   "bucket": "law_silent",
+   "draw": 1,
+   "question": "I want to build a property valuation model for bridge lending, how risky is it?",
+   "understood": true,
+   "search_terms": [
+    "high-risk AI system",
+    "creditworthiness evaluation",
+    "financial services"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|path=graph",
+   "context_ids": [
+    "art_74.par_6",
+    "art_6.par_1",
+    "art_9.par_2.pt_b",
+    "art_19.par_2",
+    "art_18.par_3",
+    "art_17.par_4",
+    "anx_III.pt_5.sub_b",
+    "anx_III.pt_5.sub_a",
+    "art_52.par_6",
+    "anx_III.pt_5.sub_d",
+    "art_51.par_1",
+    "anx_IV.pt_2.sub_c",
+    "anx_XII.pt_1.sub_d",
+    "art_3.pt_14",
+    "art_53.par_1.pt_b"
+   ],
+   "gold_recall": null,
+   "abstained": true,
+   "clarifying": false,
+   "route": true,
+   "named": [],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+   ],
+   "answer": "I don't have enough information in the retrieved EU AI Act provisions to answer this question."
+  },
+  {
+   "id": "rt_pr_01",
+   "bucket": "prohibited",
+   "draw": 1,
+   "question": "a system that scores citizens on their social behaviour over time and uses the score to decide who gets access to public services",
+   "understood": true,
+   "search_terms": [
+    "social scoring",
+    "high-risk AI system",
+    "automated decision-making",
+    "evaluation of social behaviour"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_5.par_1.pt_c",
+    "anx_III.pt_5.sub_a",
+    "anx_III.pt_5.sub_b",
+    "anx_III.pt_4.sub_b",
+    "anx_III.pt_3.sub_d",
+    "art_5.par_1.pt_b",
+    "art_7.par_2.pt_h",
+    "art_14.par_4.pt_b",
+    "anx_III.pt_5",
+    "art_6.par_3.pt_c",
+    "anx_III.pt_7.sub_b",
+    "art_5.par_2",
+    "art_26.par_11",
+    "art_5.par_7",
+    "art_112.par_13"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_5.sub_a",
+    "art_5.par_1.pt_c"
+   ],
+   "gold_named": [
+    "art_5.par_1.pt_c"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions state that AI systems used for the evaluation or classification of natural persons based on the"
+   ],
+   "answer": "The retrieved provisions state that AI systems used for the evaluation or classification of natural persons based on their social behaviour, with the social score leading to detrimental or unfavourable treatment in unrelated social contexts or treatment that is unjustified or disproportionate, are prohibited (Article 5, paragraph 1, point (c)). Additionally, AI systems intended to be used by publi"
+  }
+ ]
+}

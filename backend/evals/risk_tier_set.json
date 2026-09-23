@@ -1,0 +1,120 @@
+[
+ {
+  "id": "rt_tr_01",
+  "bucket": "transparency",
+  "question": "we're building a customer-service chatbot for our online shop that answers customers' questions, does the AI Act apply to us?",
+  "gold_citation_ids": ["art_50.par_1"],
+  "forbidden_prefixes": ["anx_III", "art_5."],
+  "expect": "answer"
+ },
+ {
+  "id": "rt_tr_02",
+  "bucket": "transparency",
+  "question": "I want to build an EU AI Act copilot: it answers users' questions from the official text of the Act and helps them see which part of the Act their system comes under",
+  "gold_citation_ids": ["art_50.par_1"],
+  "forbidden_prefixes": ["anx_III", "art_5."],
+  "expect": "answer"
+ },
+ {
+  "id": "rt_tr_03",
+  "bucket": "transparency",
+  "question": "a voice assistant inside our banking app that talks to customers and answers their questions about their accounts",
+  "gold_citation_ids": ["art_50.par_1"],
+  "forbidden_prefixes": ["anx_III", "art_5."],
+  "expect": "answer"
+ },
+ {
+  "id": "rt_tr_04",
+  "bucket": "transparency",
+  "question": "a tool that generates realistic videos of real people saying things they never said, which our marketing team wants to publish",
+  "gold_citation_ids": ["art_50.par_4", "art_50.par_2"],
+  "forbidden_prefixes": ["anx_III"],
+  "expect": "answer",
+  "note": "either the deployer disclosure or the provider marking paragraph counts"
+ },
+ {
+  "id": "rt_nl_01",
+  "bucket": "not_listed",
+  "question": "we run a spam filter with machine learning, do we need to do anything?",
+  "gold_citation_ids": [],
+  "general_ids": ["art_4"],
+  "forbidden_prefixes": ["anx_III", "art_5."],
+  "expect": "honest_not_listed"
+ },
+ {
+  "id": "rt_nl_02",
+  "bucket": "not_listed",
+  "question": "an internal search tool that finds documents on our company drive using machine learning, is that regulated?",
+  "gold_citation_ids": [],
+  "general_ids": ["art_4"],
+  "forbidden_prefixes": ["anx_III", "art_5."],
+  "expect": "honest_not_listed"
+ },
+ {
+  "id": "rt_nl_03",
+  "bucket": "not_listed",
+  "question": "an AI spell-checker and grammar corrector built into our word processor, does the Act affect it?",
+  "gold_citation_ids": [],
+  "general_ids": ["art_4"],
+  "forbidden_prefixes": ["anx_III", "art_5."],
+  "expect": "honest_not_listed"
+ },
+ {
+  "id": "rt_nl_04",
+  "bucket": "not_listed",
+  "question": "a model that forecasts weekly demand for our warehouse stock, is it covered by the AI Act?",
+  "gold_citation_ids": [],
+  "general_ids": ["art_4"],
+  "forbidden_prefixes": ["anx_III", "art_5."],
+  "expect": "honest_not_listed"
+ },
+ {
+  "id": "rt_hr_01",
+  "bucket": "high_risk",
+  "question": "we use AI to screen CVs for hiring, is that allowed?",
+  "gold_citation_ids": ["anx_III.pt_4.sub_a"],
+  "forbidden_prefixes": ["art_5."],
+  "expect": "answer"
+ },
+ {
+  "id": "rt_hr_02",
+  "bucket": "high_risk",
+  "question": "our bank uses a model to score customers' creditworthiness for consumer loans, does the AI Act apply?",
+  "gold_citation_ids": ["anx_III.pt_5.sub_b"],
+  "forbidden_prefixes": ["art_5."],
+  "expect": "answer"
+ },
+ {
+  "id": "rt_hr_03",
+  "bucket": "high_risk",
+  "question": "our office wants emotion recognition to monitor staff mood, is that ok?",
+  "gold_citation_ids": ["art_5.par_1.pt_f", "anx_III.pt_1.sub_c"],
+  "forbidden_prefixes": [],
+  "expect": "answer"
+ },
+ {
+  "id": "rt_hr_04",
+  "bucket": "high_risk",
+  "question": "we want to use facial recognition in our shop to spot shoplifters",
+  "gold_citation_ids": ["anx_III.pt_1.sub_a"],
+  "forbidden_prefixes": [],
+  "expect": "answer"
+ },
+ {
+  "id": "rt_ls_01",
+  "bucket": "law_silent",
+  "question": "I want to build a property valuation model for bridge lending, how risky is it?",
+  "gold_citation_ids": [],
+  "forbidden_prefixes": ["art_", "anx_"],
+  "expect": "route",
+  "note": "Load-bearing: creditworthiness (Annex III 5(b)) is adjacent, not covering. Must abstain and route with zero provisions named."
+ },
+ {
+  "id": "rt_pr_01",
+  "bucket": "prohibited",
+  "question": "a system that scores citizens on their social behaviour over time and uses the score to decide who gets access to public services",
+  "gold_citation_ids": ["art_5.par_1.pt_c"],
+  "forbidden_prefixes": [],
+  "expect": "answer"
+ }
+]

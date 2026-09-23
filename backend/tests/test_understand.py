@@ -8,6 +8,7 @@ tagged; a leaking draft is regenerated once with the leak named and a second
 leak abstains; a not-applicable question is untouched; the node is inert when
 off."""
 
+import re
 from unittest.mock import MagicMock
 from uuid import uuid4
 
@@ -18,6 +19,7 @@ from app.db.models import QueryTrace
 from app.extraction.llm import FakeExtractor
 from app.generation import answer as answer_module
 from app.generation import graph as graph_module
+from app.generation import understand
 from app.generation.answer import ABSTENTION_TEXT, RetrievalStep
 from app.generation.understand import (
     EXPLAIN_AND_ROUTE_INSTRUCTION,
@@ -370,3 +372,84 @@ def test_understand_node_is_inert_when_off(monkeypatch):
         and result.system_description is False
     )
     assert config.query_understanding_enabled() is False
+
+
+# --- ADR-27: risk-tier framing ----------------------------------------------------
+
+
+def test_risk_tier_flag_is_off_by_default_and_lives_inside_agentic_rag(monkeypatch):
+    monkeypatch.delenv("RISK_TIER_FRAMING", raising=False)
+    monkeypatch.setenv("AGENTIC_RAG", "1")
+    assert config.risk_tier_framing_enabled() is (
+        config.RISK_TIER_FRAMING_DEFAULT == "1"
+    )
+    monkeypatch.setenv("RISK_TIER_FRAMING", "1")
+    assert config.risk_tier_framing_enabled() is True
+    monkeypatch.setenv("AGENTIC_RAG", "0")
+    assert config.risk_tier_framing_enabled() is False  # never outside the graph
+
+
+def test_understand_uses_the_tiered_prompt_and_wider_cap_when_the_flag_is_on(
+    monkeypatch,
+):
+    monkeypatch.setenv("AGENTIC_RAG", "1")
+    seen = {}
+
+    class Spy:
+        name = "spy"
+
+        def extract(self, *, system_prompt, user_text, schema):
+            seen["prompt"] = system_prompt
+            from app.extraction.llm import ExtractionOutcome
+
+            return ExtractionOutcome(
+                parsed=schema(
+                    describes_ai_system=True,
+                    search_terms=[f"term {i}" for i in range(10)],
+                ),
+                refusal=None,
+                prompt_tokens=1,
+                completion_tokens=1,
+                latency_ms=1,
+                model="spy",
+            )
+
+    monkeypatch.setenv("RISK_TIER_FRAMING", "0")
+    u = understand_query(
+        "we built a chatbot for our shop, is it regulated?", extractor=Spy()
+    )
+    assert (
+        seen["prompt"] == understand.SYSTEM_PROMPT
+        and len(u.search_terms) == understand.MAX_TERMS
+    )
+    monkeypatch.setenv("RISK_TIER_FRAMING", "1")
+    u = understand_query(
+        "we built a chatbot for our shop, is it regulated?", extractor=Spy()
+    )
+    assert seen["prompt"] == understand.SYSTEM_PROMPT_TIERED
+    assert len(u.search_terms) == understand.MAX_TERMS_TIERED
+    assert understand.explain_instruction() == understand.EXPLAIN_TIERED_INSTRUCTION
+    monkeypatch.setenv("RISK_TIER_FRAMING", "0")
+    assert understand.explain_instruction() == understand.EXPLAIN_AND_ROUTE_INSTRUCTION
+
+
+def test_tiered_prompt_and_instruction_name_no_provision_and_keep_the_hard_lines():
+    # Principle-based by contract: no Article number, Annex point or citation id
+    # in either text; the scope test and the no-verdict line are present.
+    ids = re.compile(r"\bArticle\s+\d|\bAnnex\s+[IVX]+\b|\bart_\d|\banx_[IVX]")
+    for text in (
+        understand.SYSTEM_PROMPT_TIERED,
+        understand.EXPLAIN_TIERED_INSTRUCTION,
+    ):
+        assert ids.search(text) is None, ids.search(text)
+        assert "\u2014" not in text
+    assert "ADJACENT" in understand.EXPLAIN_TIERED_INSTRUCTION
+    assert (
+        "do not state whether the user's own system"
+        in understand.EXPLAIN_TIERED_INSTRUCTION
+    )
+    assert (
+        "Never cite a label that is not in the context"
+        in understand.EXPLAIN_TIERED_INSTRUCTION
+    )
+    assert "transparency" in understand.SYSTEM_PROMPT_TIERED

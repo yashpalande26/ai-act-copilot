@@ -349,6 +349,34 @@ def clarify_followup_enabled() -> bool:
     )
 
 
+# Risk-tier framing default (ADR-27, 23 Sep 2026). OFF: on the 14-item
+# risk-tier set, 3 draws, every absolute gate was 0 (leaks, stretches,
+# out-of-context citations, high-risk regression, property valuation) and the
+# transparency provision was retrieved on the first pass 12/12, but the value
+# gate failed: the not-listed items abstained 12/12 (the adjacent-provision
+# rule that keeps property valuation routed also silences a spam filter) and
+# the copilot item abstained 3/3 with the covering provision first in
+# context; on-topic citation accuracy moved 0.868 to 0.842 on one item.
+RISK_TIER_FRAMING_DEFAULT = "0"
+
+
+def risk_tier_framing_enabled() -> bool:
+    """ADR-27: for a plain-language system description, the understand step
+    emits search terms across every tier the description plausibly implies
+    (prohibited practices, high-risk areas, transparency obligations for
+    systems that interact with people or generate content, obligations on
+    all AI systems) and the generator answers on any retrieved provision
+    whose stated scope covers the described function, at the type level,
+    abstaining and routing only when no provision's scope covers the use or
+    the only match is adjacent (same area, different function). Never a
+    verdict, never a provision outside the context. Effective inside the
+    graph only."""
+    return (
+        agentic_rag_enabled()
+        and os.environ.get("RISK_TIER_FRAMING", RISK_TIER_FRAMING_DEFAULT) == "1"
+    )
+
+
 def chat_model() -> str:
     return os.environ.get("CHAT_LANE_MODEL", "openai:gpt-4o-mini")
 

@@ -1,6 +1,82 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-27: Risk-tier framing built behind RISK_TIER_FRAMING; retrieval fixed, generation not yet; flag off (2026-09-23)
+Context: A read-only trace of "I want to build EU AI act copilot?" showed two failures.
+On turn 1 the understand step produced high-risk vocabulary only ("AI system for
+compliance; AI systems for legal advice") and the transparency provision for systems that
+interact with people was not among the 25 fused candidates. On the reply turn that
+provision sat at fused rank 1, the grader marked it relevant, and the generator abstained
+anyway: the ADR-24 explain instruction asks about "the kind of system or area of use the
+description names", which reads as a high-risk category test. The brief: make the copilot
+a general risk-tier explainer, by principle, with no provision id in the logic.
+Decision: (1) RISK_TIER_FRAMING (config.risk_tier_framing_enabled, inside AGENTIC_RAG,
+default "0"). (2) Under it, understand_query uses SYSTEM_PROMPT_TIERED (cap 8 terms):
+terms across every level the description plausibly touches, the practice (if it resembles
+a forbidden one), the area and function (if they resemble a listed high-risk use),
+transparency (whenever the system talks to, answers, advises or assists people, or
+generates content), the obligations that apply to every provider and deployer (always one
+term), the general-purpose model rules. (3) Under it, the generator's explain instruction
+is EXPLAIN_TIERED_INSTRUCTION, selected by understand.explain_instruction() at the three
+call sites in the graph: sort each retrieved provision by its own stated scope into
+COVERS (names that kind of system, function, output or behaviour, or applies to every
+system; a system that answers or chats with people is one that interacts directly with
+natural persons, a system that produces text or media is one that generates content),
+ADJACENT (same area, different function, or same function in a different setting or for
+a different actor) and unrelated; answer from COVERS at whatever level, never from
+ADJACENT; when COVERS holds only general obligations, say that none of the retrieved
+provisions names the use and state the general obligations, unless an adjacent provision
+was retrieved, in which case abstain so the structured assessment decides; never a verdict
+on the user's system, never a label outside the context. Neither text names an Article,
+Annex point or citation id (asserted by a unit test with a regex, and by grep). (4) Eval:
+evals/risk_tier_set.json, 14 items in five buckets (transparency 4: shop chatbot, the
+copilot, a banking voice assistant, a deep-fake video tool; not_listed 4: spam filter,
+document search, spell-checker, demand forecaster; high_risk 4 with their existing gold;
+law_silent 1: property valuation; prohibited 1: social scoring), each with gold ids and
+forbidden prefixes; evals/run_risk_tier_eval.py runs single turns through the graph with
+CLARIFY_FOLLOWUP=0 (the generator's own first-turn decision is what is under test),
+--repeats, and a split gate; it writes its JSON after every draw, because a dropped pooler
+connection lost 39 draws of the first run.
+Evidence: Flag off, 1 draw (risk_tier_off_j2.json): transparency answered 1 of 4 (the
+deep-fake tool), the transparency provision in context 3 of 4; not_listed abstained 4 of
+4; high_risk grounded 3 of 4; property valuation routed with 0 provisions; social scoring
+answered on its provision. Flag on, first wording (39 of 42 draws in the run log before
+the crash): the transparency provision in context 12 of 12, high-risk grounded 12 of 12,
+property valuation routed 3 of 3, 0 leaks, 0 stretches, but the chatbot, copilot and
+assistant abstained 8 of 9 and not_listed 12 of 12; the wording told the model to abstain
+whenever ANY adjacent provision was retrieved, and with fifteen passages one always is.
+Flag on, second wording (the code as committed; risk_tier_on_j2.json, 3 draws):
+ABSOLUTE all 0 over 42 draws (verdict leaks 0, stretched to a forbidden provision 0,
+provision not in context 0, high_risk not grounded 0 of 12, property valuation answered or
+naming a provision 0 of 3). VALUE: transparency by majority 3 of 4 items (shop chatbot 2/3,
+banking assistant 2/3, deep-fake tool 3/3 naming the deployer disclosure paragraph; the
+copilot 0/3, abstaining with the transparency provision at fused rank 0 on every draw);
+prohibited 2/3; not_listed 0 of 4 items (12 of 12 draws abstained, including two items
+that had the AI-literacy obligation in context). The two not_listed failures are the
+tension the brief carries: the same rule that keeps property valuation routed (an adjacent
+provision means abstain) is what the model applies to a spam filter whose context holds
+some Annex III entry. On-topic set, 47 items, versus the ADR-26 run: 0 leaks; the 39
+items outside plain_language identical except one decompose precision; faithfulness 0.877
+to 0.874; citation accuracy 0.868 to 0.842, one item, the shop facial-recognition
+description, which answered on its gold at baseline and under the tiered instruction
+abstained and asked the clarifying question (the same text answered 3 of 3 in the
+risk-tier run: a draw, but the gate is per run). One observation the forbidden lists did
+not catch: under the flag the shop facial-recognition answer also cites the provision on
+systems interacting with natural persons, which is a reading of "interacts" the verifier
+accepted and a human might not.
+Consequences: RISK_TIER_FRAMING stays OFF. The retrieval half of the goal is met and
+measured (transparency provision retrieved first pass 12/12); the generation half is not:
+the tiered instruction answers on transparency for three of four interactive systems and
+never produces the honest not-listed answer. Next, in order: (a) resolve the not-listed
+versus law-silent tension by rule rather than wording, for example define ADJACENT
+narrowly as a provision naming the same area of use, and measure property valuation and
+the four not-listed items together; (b) find why the copilot description abstains with
+the covering provision first in context (the description says "answers users' questions",
+the bridge sentence says that is interaction, the model still abstains 3/3); (c) decide
+whether "interacts directly with natural persons" should be cited for a camera system.
+All prompt work; no provision id may enter the logic.
+Status: Built; flag Deferred (value gate failed).
+
 ## ADR-26: Clarifying follow-up on under a split gate; two probe golds corrected; understand and verifier prompts firmed (2026-09-23)
 Context: ADR-25 left three things open: whether the Article 66(h) and 75(2) probes were
 valid paraphrases, the understand step's coin flip on function-less descriptions (which
