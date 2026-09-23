@@ -447,11 +447,19 @@ def main() -> None:
                 "names_provision": [] if abstained else references_in(res.answer),
                 # ADR-32: recitals in the served context and in the answer
                 "recitals_in_context": sum(is_recital(c) for c in context_ids),
-                # ADR-33: a recital in the slice must have a linked provision in the slice
+                # ADR-34: did the deterministic detector call this an
+                # explanation question (on the question retrieval ran on)?
+                "explanation_intent": recital_map.is_explanation_query(
+                    served_rewrite or q
+                ),
+                # ADR-33: on an expansion turn a recital in the slice must have
+                # a linked provision in the slice (a direct turn under ADR-34
+                # runs the ADR-32 pool, whose recitals are not map-chosen)
                 "recitals_without_provision": [
                     c
                     for c in context_ids
                     if is_recital(c)
+                    and recital_map.is_explanation_query(served_rewrite or q)
                     and not any(
                         recital_map._matches(e.target, o)
                         for e in edges_by_recital.get(c, [])
@@ -618,6 +626,15 @@ def main() -> None:
             f"  map edges loaded: {sum(len(v) for v in edges_by_recital.values())}"
         )
         direct = [t for t in traces if t["bucket"] not in ("why", "unanswerable")]
+        why_items = [t for t in traces if t["bucket"] == "why"]
+        missed = [t["id"] for t in why_items if not t["explanation_intent"]]
+        false_fire = [
+            t["id"] for t in traces if t["bucket"] != "why" and t["explanation_intent"]
+        ]
+        print(
+            f"\n== EXPLANATION INTENT (ADR-34) ==  why items detected: {len(why_items) - len(missed)}/{len(why_items)} missed {missed}"
+            f"  non-why items detected (must be 0): {len(false_fire)} {false_fire}"
+        )
         rec0 = [t["id"] for t in direct if t["recital_at_rank0"]]
         print(
             f"\n== RECITALS (ADR-32) ==  recital cited as the only provision (must be 0): {len(recital_only)} {recital_only}"

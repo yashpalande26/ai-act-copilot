@@ -132,7 +132,6 @@ from app.config import (
     clarify_followup_enabled,
     intent_gate_enabled,
     query_understanding_enabled,
-    recital_map_enabled,
 )
 from app.db.models import ChatSession
 from app.generation import answer as pipeline
@@ -612,15 +611,20 @@ def retrieve(state: GraphState) -> dict:
             )
             return {"retrieved": empty, "parts": parts, "part_retrieve_calls": calls}
         size = state["final_context_size"]
-        if recital_map_enabled():
-            # ADR-33: a decomposed turn serves operative provisions only. The
-            # per-part recitals were chosen for their own part's slice; the
-            # interleave can keep one and drop its provision, and the parts
-            # prompt has no group for a recital of the merged context.
-            parts = [
-                (sq, [f for f in fs if not pipeline.is_recital_result(f)])
-                for sq, fs in parts
-            ]
+        # ADR-33/34: a part whose sub-question took the recital expansion
+        # serves operative provisions only. Its recitals were chosen for its
+        # own slice; the interleave can keep one and drop its provision, and
+        # the parts prompt has no group for a recital of the merged context.
+        # A direct part keeps the ADR-32 pool recitals it was served with.
+        parts = [
+            (
+                sq,
+                [f for f in fs if not pipeline.is_recital_result(f)]
+                if pipeline.recital_expansion_applies(sq)
+                else fs,
+            )
+            for sq, fs in parts
+        ]
         fused = interleave([f for _, f in parts], size)
         kept = {f.result.chunk_id for f in fused}
         parts = [(sq, [f for f in fs if f.result.chunk_id in kept]) for sq, fs in parts]
@@ -675,7 +679,7 @@ def _graded_step(
     context_size = state["final_context_size"]
     ordered = reorder(step.fused, result.relevant)
     rest = [f for f in step.all_fused if f not in step.fused]
-    if recital_map_enabled():
+    if pipeline.recital_expansion_applies(state["query"]):
         pool, served, config = pipeline.refit_mapped_recitals(
             state["session"],
             state["corpus_version_id"],

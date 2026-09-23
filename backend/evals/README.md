@@ -41,8 +41,10 @@ fields (context recall, predicted abstention, citation accuracy) must match
 on every shared item, the judged metrics are printed side by side, and items
 missing from the baseline are listed rather than compared. Do not regenerate
 the flag-off run to compare; the saved file is the baseline. Current
-baselines: `adr32_recitals_on_agentic_j2.json` (on-topic, 52 items with the why
-bucket; `adr30_guard_on_agentic_j2.json` is the 48-item run before the recitals),
+baselines: `adr34_recmap_intent_on_agentic_j2.json` (on-topic, 52 items, the
+production flags as of ADR-34; `adr32_recitals_on_agentic_j2.json` is the run
+before the recital map and `adr30_guard_on_agentic_j2.json` the 48-item run
+before the recitals),
 `risk_tier_off_j2.json` (risk-tier, flag off), `clarify_adr26_draw3_j2.json`
 (clarify), `verify_probes_adr26_gpt-4o.json` (verifier), `guard_probes_adr30.json`
 (guard).

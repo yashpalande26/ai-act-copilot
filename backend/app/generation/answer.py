@@ -162,6 +162,7 @@ def _lexical_leg(
     query: str,
     corpus_version_id: int,
     breadth: int = RETRIEVAL_CANDIDATE_BREADTH,
+    exclude_recitals: bool = False,
 ) -> tuple[list[SearchResult], str]:
     """BM25 retrieval with a safe fallback. Returns (results, retrieval_config).
 
@@ -195,7 +196,10 @@ def _lexical_leg(
             query,
             corpus_version_id,
             top_k=breadth,
-            **({"exclude_recitals": True} if recital_map_enabled() else {}),
+            # ADR-33/34: the keyword travels only when a recital expansion
+            # turn asks for it, so every other call is byte-identical to
+            # before (tests fake both legs with fixed signatures).
+            **({"exclude_recitals": True} if exclude_recitals else {}),
         )
         return results, "hybrid_bm25"
     except StaleIndexError as exc:
@@ -396,6 +400,7 @@ def _hybrid_candidates(
     *,
     min_similarity: float,
     breadth: int = RETRIEVAL_CANDIDATE_BREADTH,
+    exclude_recitals: bool = False,
 ) -> tuple[list[FusedResult], list[SearchResult], str]:
     """The two legs and their RRF fusion for ONE query, before the actor prior
     and the dense anchor. Returns (fused, vector_results, retrieval_config).
@@ -421,9 +426,7 @@ def _hybrid_candidates(
             corpus_version_id,
             top_k=breadth,
             min_similarity=0.0,
-            # ADR-33: the keyword travels only when the flag is on, so the
-            # flag-off call is byte-identical to before (tests fake both legs).
-            **({"exclude_recitals": True} if recital_map_enabled() else {}),
+            **({"exclude_recitals": True} if exclude_recitals else {}),
         )
         vector_failed = False
     except Exception as exc:  # noqa: BLE001 - uptime beats a hard failure when a correct fallback exists; the distinct banner keeps real bugs visible
@@ -433,7 +436,11 @@ def _hybrid_candidates(
         )
         vector_results, vector_failed, vector_error = [], True, exc
     lexical_results, retrieval_config = _lexical_leg(
-        session, query, corpus_version_id, breadth=breadth
+        session,
+        query,
+        corpus_version_id,
+        breadth=breadth,
+        exclude_recitals=exclude_recitals,
     )
     if vector_failed and not lexical_results:
         # No leg can serve: the vector leg failed and BM25 has nothing
@@ -540,6 +547,7 @@ def retrieve_candidates(
     dense_anchor_floor: float | None | str = "default",
     final_context_size: int = 15,
     breadth: int = RETRIEVAL_CANDIDATE_BREADTH,
+    exclude_recitals: bool = False,
 ) -> tuple[list[FusedResult], str]:
     """The production candidate list: vector + BM25, RRF, actor prior, dense
     anchor. One function so the evals measure exactly what /ask serves.
@@ -550,6 +558,7 @@ def retrieve_candidates(
         corpus_version_id,
         min_similarity=min_similarity,
         breadth=breadth,
+        exclude_recitals=exclude_recitals,
     )
     return _rank_candidates(
         all_fused,
@@ -602,6 +611,7 @@ def retrieve_candidates_dual(
     dense_anchor_floor: float | None | str = "default",
     final_context_size: int = 15,
     breadth: int = RETRIEVAL_CANDIDATE_BREADTH,
+    exclude_recitals: bool = False,
 ) -> tuple[list[FusedResult], str]:
     """Stage 1b (22 Sep 2026): a rewritten follow-up retrieves on BOTH the
     user's raw follow-up and the standalone rewrite. Each query runs the
@@ -620,6 +630,7 @@ def retrieve_candidates_dual(
         corpus_version_id,
         min_similarity=min_similarity,
         breadth=breadth,
+        exclude_recitals=exclude_recitals,
     )
     rw_fused, rw_vec, rw_cfg = _hybrid_candidates(
         session,
@@ -627,6 +638,7 @@ def retrieve_candidates_dual(
         corpus_version_id,
         min_similarity=min_similarity,
         breadth=breadth,
+        exclude_recitals=exclude_recitals,
     )
     all_fused = fuse_query_candidates(raw_fused, rw_fused, top_k=breadth)
     # A degraded leg on either query is a degraded turn.
@@ -719,6 +731,20 @@ def demote_recitals(
         else:
             out.append(f)
     return out + deferred
+
+
+def recital_expansion_applies(query: str) -> bool:
+    """ADR-34: the map expands recitals only for an explanation question
+    ("why ...", "the reason behind ...") and only inside the flag. A direct
+    provision lookup under the flag runs the ADR-32 path unchanged: recitals
+    in the pool, demoted. Measured reason: with recitals attached on every
+    turn, two marginal direct items (the penalties follow-up, "what does
+    Chapter III require?") abstained in every flag-on draw and answered in
+    every flag-off draw, while the recitals earn their place on the "why"
+    items only."""
+    from app.retrieval.recital_map import is_explanation_query
+
+    return recital_map_enabled() and is_explanation_query(query)
 
 
 def attach_mapped_recitals(
@@ -827,6 +853,9 @@ def retrieve_step(
     runs on both and fuses (retrieve_candidates_dual). The plain path never
     passes it, nor a non-default `breadth` (the grader's single widen does)."""
     retrieval_start = time.monotonic()
+    # ADR-34: decided once per turn on the question retrieval runs on (the
+    # standalone rewrite of a follow-up), and reused by the grader's refit.
+    expand = recital_expansion_applies(query)
     if raw_query is not None and raw_query != query:
         all_fused, retrieval_config = retrieve_candidates_dual(
             session,
@@ -835,6 +864,7 @@ def retrieve_step(
             corpus_version_id,
             min_similarity=min_similarity,
             breadth=breadth,
+            exclude_recitals=expand,
         )
     else:
         all_fused, retrieval_config = retrieve_candidates(
@@ -843,10 +873,11 @@ def retrieve_step(
             corpus_version_id,
             min_similarity=min_similarity,
             breadth=breadth,
+            exclude_recitals=expand,
         )
     retrieval_latency_ms = int((time.monotonic() - retrieval_start) * 1000)
     served = final_context_size
-    if recital_map_enabled():
+    if expand:
         # ADR-33: the pool held no recitals; the ones that explain a provision
         # in the slice come in through the map, behind the operative slice,
         # at most two, and the served context grows by that many.
@@ -858,6 +889,9 @@ def retrieve_step(
             retrieval_config, added, served - final_context_size
         )
     else:
+        # ADR-32 path, also for a direct question under the flag (ADR-34):
+        # byte-identical to flag off, trace string included, so the plain-path
+        # equivalence tests hold and a direct turn cannot drift.
         all_fused = demote_recitals(all_fused)
         served_recitals = sum(is_recital_result(f) for f in all_fused[:served])
         if served_recitals:

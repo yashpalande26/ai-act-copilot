@@ -31,6 +31,7 @@ semantic, earlier context positions before later, one recital once, capped.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from sqlalchemy import select
@@ -50,6 +51,32 @@ class Edge:
     target: str  # citation id of the operative provision
     kind: str  # explicit | semantic
     score: float | None  # cosine similarity for semantic edges
+
+
+# Explanation intent (ADR-34, 23 Sep 2026). The map expands recitals only for
+# a question that asks for the reason behind a rule. Deterministic and narrow
+# on purpose: every eval set was read for cue words before this list was
+# fixed. "why" anywhere; "reason(s) for/behind/why" (not "sufficient reason
+# to consider", a market-surveillance trigger in Article 75); "rationale";
+# "how come"; "reasoning/thinking/logic behind". Deliberately absent:
+# "purpose" and "goal" (intended purpose, "for what specific purpose", "what
+# is the goal of" are all direct lookups in the sets), "justify" (the Act's
+# own "duly justified"), and bare "explain" (an explanation of an obligation
+# is still a lookup).
+_EXPLANATION_CUES = re.compile(
+    r"\bwhy\b"
+    r"|\breasons?\s+(?:for|behind|why)\b"
+    r"|\brationale\b"
+    r"|\bhow come\b"
+    r"|\b(?:reasoning|thinking|logic)\s+behind\b",
+    re.IGNORECASE,
+)
+
+
+def is_explanation_query(query: str) -> bool:
+    """True when the question asks for the reason or rationale behind a rule
+    rather than for the rule itself."""
+    return bool(_EXPLANATION_CUES.search(query))
 
 
 def resolve_to_corpus(ref: str, corpus_ids: set[str]) -> str | None:

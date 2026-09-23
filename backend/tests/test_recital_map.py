@@ -228,7 +228,12 @@ def test_graded_step_refits_after_the_grader_cut(monkeypatch):
         retrieval_config="hybrid_bm25|recmap=semantic:1|recitals=1",
         latency_ms=1,
     )
-    state = {"final_context_size": 2, "session": None, "corpus_version_id": 1}
+    state = {
+        "final_context_size": 2,
+        "session": None,
+        "corpus_version_id": 1,
+        "query": "why must providers do this?",
+    }
     graded = graph_module._graded_step(
         state, step, GradeResult(relevant=(0, 3), attempted=True, ok=True)
     )
@@ -260,7 +265,9 @@ def test_decomposed_turns_serve_operative_provisions_only(monkeypatch):
     monkeypatch.setattr(graph_module, "_retrieve_part", fake_part)
     out = graph_module.retrieve(
         {
-            "plan": Plan(sub_queries=("a?", "b?"), source="split"),
+            "plan": Plan(
+                sub_queries=("why is a banned?", "why is b banned?"), source="split"
+            ),
             "final_context_size": 15,
         }
     )
@@ -271,3 +278,118 @@ def test_decomposed_turns_serve_operative_provisions_only(monkeypatch):
         for _, fs in out["parts"]
         for c in [f.result.citation_id for f in fs]
     )
+
+
+# --- explanation intent (ADR-34) -------------------------------------------
+
+EXPLANATION = [
+    "why is a creditworthiness scoring system treated as high-risk?",
+    "why does the AI Act prohibit social scoring?",
+    "why is emotion recognition at the workplace banned?",
+    "why do people have to be told they are interacting with an AI system?",
+    "And why is that?",
+    "What is the reason for banning social scoring?",
+    "what's the rationale behind Article 5?",
+    "how come chatbots must disclose that they are AI?",
+    "what is the reasoning behind classifying credit scoring as high-risk?",
+]
+DIRECT = [
+    "what are the penalties?",
+    "What are the penalties for not affixing the CE marking to a high-risk AI system?",
+    "what does Chapter III require?",
+    "For what specific purpose can 'real-time' remote biometric identification systems be deployed?",
+    "What is the goal of considering the effects and possible interaction of the requirements?",
+    "What action should market surveillance authorities take if they have sufficient reason to consider a model a risk?",
+    "what rules apply if we change the intended purpose of the system later?",
+    "which article covers reasonably foreseeable misuse?",
+    "list the obligations of providers of high-risk AI systems",
+    "What characteristics make a model general-purpose in the first place?",
+    "who is a provider?",
+]
+
+
+def test_explanation_intent_separates_why_from_direct_lookups():
+    from app.retrieval.recital_map import is_explanation_query
+
+    assert [q for q in EXPLANATION if not is_explanation_query(q)] == []
+    assert [q for q in DIRECT if is_explanation_query(q)] == []
+
+
+def test_expansion_applies_only_inside_the_flag_and_only_on_explanation(monkeypatch):
+    from app.generation import answer
+
+    monkeypatch.setenv("AGENTIC_RAG", "1")
+    monkeypatch.setenv("RECITAL_MAP", "1")
+    assert answer.recital_expansion_applies("why is social scoring banned?")
+    assert not answer.recital_expansion_applies("what are the penalties?")
+    monkeypatch.setenv("RECITAL_MAP", "0")
+    assert not answer.recital_expansion_applies("why is social scoring banned?")
+
+
+def test_graded_step_uses_the_flag_off_path_for_a_direct_query(monkeypatch):
+    """A direct question under the flag is ADR-32 exactly: reorder, demote,
+    no refit and no map lookup."""
+    from app.generation import answer
+    from app.generation import graph as graph_module
+    from app.generation.answer import RetrievalStep
+    from app.generation.grade import GradeResult
+
+    monkeypatch.setenv("AGENTIC_RAG", "1")
+    monkeypatch.setenv("RECITAL_MAP", "1")
+
+    def boom(*a, **k):
+        raise AssertionError("refit must not run on a direct query")
+
+    monkeypatch.setattr(answer, "refit_mapped_recitals", boom)
+    fused = [_fr(991, "rec_91"), _fr(1, "art_1"), _fr(2, "art_2")]
+    step = RetrievalStep(
+        all_fused=fused, fused=fused, retrieval_config="hybrid_bm25", latency_ms=1
+    )
+    state = {
+        "final_context_size": 3,
+        "session": None,
+        "corpus_version_id": 1,
+        "query": "what are the penalties?",
+    }
+    graded = graph_module._graded_step(
+        state, step, GradeResult(relevant=(0,), attempted=True, ok=True)
+    )
+    # relevant first (the recital), then demotion keeps the operative head
+    assert [f.result.citation_id for f in graded.fused] == ["art_1", "art_2", "rec_91"]
+
+
+def test_decomposed_turn_strips_recitals_only_for_explanation_parts(monkeypatch):
+    from app.generation import graph as graph_module
+    from app.generation.answer import RetrievalStep
+    from app.generation.decompose import Plan
+
+    monkeypatch.setenv("AGENTIC_RAG", "1")
+    monkeypatch.setenv("RECITAL_MAP", "1")
+    part_a = [
+        _fr(1, "art_1"),
+        _fr(903, "rec_3"),
+    ]  # explanation part: recital attached by the map
+    part_b = [
+        _fr(2, "art_2"),
+        _fr(991, "rec_91"),
+    ]  # direct part: recital came through the pool
+    slices = iter([part_a, part_b])
+
+    def fake_part(state, sq):
+        fused = next(slices)
+        return RetrievalStep(
+            all_fused=fused, fused=fused, retrieval_config="hybrid_bm25", latency_ms=1
+        ), 1
+
+    monkeypatch.setattr(graph_module, "_retrieve_part", fake_part)
+    out = graph_module.retrieve(
+        {
+            "plan": Plan(
+                sub_queries=("why is X banned?", "what are the penalties?"),
+                source="split",
+            ),
+            "final_context_size": 15,
+        }
+    )
+    served = [f.result.citation_id for f in out["retrieved"].fused]
+    assert "rec_3" not in served and "rec_91" in served

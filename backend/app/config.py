@@ -349,8 +349,14 @@ def clarify_followup_enabled() -> bool:
     )
 
 
-# Recital map default (ADR-33, 23 Sep 2026). OFF until the gate passes.
-RECITAL_MAP_DEFAULT = "0"
+# Recital map default (ADR-33 built it, ADR-34 gated it on explanation intent,
+# 23 Sep 2026). ON after the ADR-34 gate: every absolute gate 0, the four
+# "why" items ground on recital plus provision, recall equal to the ADR-32
+# baseline, one deterministic difference on an item whose path is the ADR-32
+# one by construction (a direct question) and which clarified in both
+# flag-off draws. Direct questions are unchanged from ADR-32; only a question
+# asking for the reason behind a rule takes the expansion.
+RECITAL_MAP_DEFAULT = "1"
 
 
 def recital_map_enabled() -> bool:

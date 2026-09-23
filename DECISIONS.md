@@ -1,6 +1,77 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-34: The recital expansion runs only on explanation questions; a direct lookup under RECITAL_MAP is ADR-32 exactly (2026-09-23)
+Context: ADR-33's gate passed every absolute check and grounded all four "why" items, but
+two marginal direct items (the penalties follow-up, "what does Chapter III require?")
+abstained in every flag-on draw and answered in every flag-off draw, and citation
+accuracy on shared items fell from 0.907 to 0.837. The controlled experiment found the
+cause is generator marginality under a perturbed context: any two extra passages, recital
+or not, tipped those items. The recitals earn their place on the "why" items and cost
+something on direct items, where 28 of 41 served one and only one answer named one.
+Decision: expand recitals through the map only when the question asks for the reason
+behind a rule. (1) Detector, app/retrieval/recital_map.is_explanation_query, deterministic
+and narrow: "why" anywhere; "reason(s) for/behind/why"; "rationale"; "how come";
+"reasoning/thinking/logic behind". Every eval set was read for cue words before the list
+was fixed: "purpose" and "goal" are absent because "intended purpose", "for what specific
+purpose" and "what is the goal of considering" are direct lookups in the sets; "sufficient
+reason to consider" (Article 75) does not match because the pattern needs for/behind/why
+after "reason"; "justify" is absent because of the Act's own "duly justified"; bare
+"explain" is absent because an explanation of an obligation is still a lookup. A mini
+classifier was not needed: on the 52 agentic items, every history turn, the 14 broad and
+14 risk-tier questions the detector fires on the four "why" items and on nothing else.
+(2) Gate, answer.recital_expansion_applies(query) = flag on and detector true, decided
+once per turn on the question retrieval runs on (the standalone rewrite of a follow-up)
+and reused by the grader's refit and the decompose merge. When it is false the turn runs
+the ADR-32 path unchanged: both legs include recitals, demotion after fusion, no map
+lookup, and a trace string identical to flag off (a |recmap=direct audit tag was carried
+through the gate run and then removed: the plain-path equivalence tests assert that the
+graph and the plain path write byte-identical rows, trace included, and that invariant is
+worth more than the tag; an expansion turn is still visible through |recmap=explicit:n,
+semantic:m). When true, the ADR-33
+path: recitals excluded from both legs, at most two linked recitals behind the operative
+slice, refit after the grader's cut. Verified offline: the five direct items ADR-33 had
+moved retrieve byte-identical contexts flag on and flag off; the "why" items still carry
+Recitals 58 and 31, and 132 and 14. (3) Every ADR-32 safeguard stays: explanatory label,
+system-prompt rule, verifier recital-only check, rank-0 gate. The eval runner reports the
+detector (why items detected, non-why items detected, the latter must be 0) and applies
+the orphan gate to expansion turns only, since a direct turn's recitals come from the
+pool and are not map-chosen. Rejected: a system-prompt sentence that a recital never makes
+a question unanswerable (ADR-33, no effect); recitals inside a fifteen-passage total
+(ADR-33, no effect); a mini classifier for intent (a heuristic separates every eval case
+at zero cost and zero latency, and a paid classifier would add a third model call to
+every turn for four questions in fifty-two).
+Evidence (gate, 23 Sep 2026): run file evals/runs/adr34_recmap_intent_on_agentic_j2.json,
+the 52-item on-topic set, gpt-4o verifier, gpt-4o-mini judge, RECITAL_MAP on, against the
+saved ADR-32 baseline. Detector on the served questions: 4 of 4 "why" items, 0 of 48
+others; end to end no direct item carried an expansion tag and 33 of 41 carried the
+gate run's |recmap=direct audit tag (the rest left the retrieval path before the tag,
+clarifying or routed; the tag was removed after the gate, see above).
+Absolute gates all 0: verdict leaks, recital as the only citation, recital at rank 0 on a
+direct item, recital served without its linked provision on an expansion turn. The four
+"why" items ground on and name both the recital and the operative provision (58 with
+Annex III 5(b), 31 with 5(1)(c), 44 with 5(1)(f), 132 with 50(1)). Shared items: context
+recall 0.977 to 0.977, citation accuracy 0.907 to 0.884, faithfulness 4.356 to 4.341,
+answer relevance 4.533 to 4.568. Per bucket (baseline / this run): single-hop citation
+0.917 / 0.917; multi-turn 1.0 / 1.0; multi-hop 1.0 / 1.0, faithfulness 4.625 / 4.75;
+reference 1.0 / 1.0; plain-language 0.571 / 0.429, faithfulness 4.5 / 5.0; why 1.0 / 1.0.
+The two ADR-33 regressors answer again with correct citations (the penalties follow-up
+abstained once in a cheap draw on a context identical to flag-off, its own noise on the
+ADR-32 path). Direct items carry 1.88 recitals on average against 1.85 in the baseline,
+the ADR-32 pool behaviour. One deterministic difference: the shop facial-recognition
+question (ag_pl_07) clarifies instead of answering. Not attributable to the flag: its
+trace shows the ADR-32 path (the gate run's |recmap=direct tag, three demoted pool
+recitals), its context
+differs from the baseline only through the plain-language understand step, an LLM call
+that varies between runs, and it clarified in both flag-off draws taken for ADR-33. The
+0.023 citation-accuracy gap is that single item out of 43 answerable ones.
+Status: ACCEPTED, RECITAL_MAP_DEFAULT = "1" (inside AGENTIC_RAG). Judgement call,
+flagged: the strict single-draw reading shows citation accuracy 0.023 below the baseline
+on one item whose retrieval path the flag does not touch; the flip rests on that path
+identity plus the two flag-off draws, and reverts with one line if Yash reads the gate
+more strictly. The run file is the new on-topic baseline. Known limitation carried from
+ADR-33: a decomposed turn serves no recitals on an expansion part.
+
 ## ADR-33: A recital-to-provision map; recitals leave the retrieval pool and arrive as explanation of a provision in context (2026-09-23)
 Context: ADR-32 put the 180 recitals into the fused pool and demoted them after fusion.
 That kept them off rank 0 but let them displace operative candidates upstream (up to 12
@@ -94,15 +165,12 @@ answered 3 of 3 with recitals last in the experiment yet abstained 3 of 3 in the
 Two fixes were tried and rejected: a system-prompt sentence saying a recital never makes
 a question unanswerable (no effect, reverted) and recitals inside a fifteen-passage total
 (no effect). No third fix without a design decision.
-Status: BUILT, RECITAL_MAP OFF. The absolute gates pass and the "why" grounding is
-delivered, but the value gate is not clean on the one full draw (citation accuracy on
-shared items down, two marginal direct items abstain). Options, Yash to pick: (1) two
-further gate draws for the ADR-26 majority rule, flipping if citation accuracy holds on
-two of three, since the deficit is two knife-edge items and faithfulness and relevance
-rose; (2) attach recitals only on explanation questions, which needs a "why" signal the
-graph does not have today and leaves direct items without recitals; (3) keep ADR-32
-demotion in production and shelve the map. Known limitation either way: decomposed turns
-serve no recitals.
+Status: BUILT, gate not clean on its own; superseded by ADR-34, which keeps the map and
+this retrieval path but runs it only on explanation questions (option 2 below, taken the
+same day with a deterministic detector). Options as they stood: (1) two further gate
+draws for the ADR-26 majority rule; (2) attach recitals only on explanation questions;
+(3) keep ADR-32 demotion and shelve the map. Known limitation either way: decomposed
+turns serve no recitals on expansion parts.
 
 ## ADR-32: The 180 recitals join the corpus as explanatory, non-binding passages; a recital is never the rule (2026-09-23)
 Context: The consolidated text the corpus is built from (CELEX 02024R1689-20260727) has no
