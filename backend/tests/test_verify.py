@@ -21,6 +21,7 @@ from app.generation.verify import (
     VerifyOutput,
     missing_references,
     passage_block,
+    recital_only_citation,
     references_in,
     regeneration_instruction,
     verify_answer,
@@ -383,3 +384,98 @@ def test_graph_edges_have_no_loop_and_verify_sits_between_generate_and_decide():
         for s, t in edges
         if s in ("verify", "decide")
     )
+
+
+# --- recitals (ADR-32) --------------------------------------------------------------
+
+
+def test_references_in_reads_recitals_and_the_recital_only_rule_is_deterministic():
+    assert references_in("Recital 58 explains this; see also recital 31.") == [
+        "rec_31",
+        "rec_58",
+    ]
+    assert (
+        recital_only_citation("Recital 58 makes creditworthiness scoring high-risk.")
+        is True
+    )
+    assert (
+        recital_only_citation(
+            "Annex III, point 5(b) lists creditworthiness evaluation; Recital 58 explains why."
+        )
+        is False
+    )
+    assert recital_only_citation("No provision is named here.") is False
+
+
+def test_recital_only_answer_is_misgrounded_and_the_regeneration_names_the_rule():
+    ctx = [
+        _fr(1, "rec_58", "Another area ... creditworthiness ...", label="Recital 58"),
+        _fr(
+            2,
+            "anx_III.pt_5.sub_b",
+            "evaluate the creditworthiness",
+            label="Annex III, point 5(b)",
+        ),
+    ]
+    res = verify_answer(
+        "Recital 58 makes creditworthiness scoring high-risk.",
+        ctx,
+        extractor=FakeExtractor(_out(("a", [0], "supported"))),
+    )
+    assert (
+        res.misgrounded is True
+        and res.recital_only is True
+        and res.missing_references == ()
+    )
+    text = regeneration_instruction(res)
+    assert "recitals are explanatory and non-binding" in text
+    ok = verify_answer(
+        "Annex III, point 5(b) covers creditworthiness evaluation; Recital 58 explains why.",
+        ctx,
+        extractor=FakeExtractor(_out(("a", [1], "supported"), ("b", [0], "supported"))),
+    )
+    assert ok.misgrounded is False and ok.recital_only is False
+
+
+def test_demote_recitals_keeps_a_head_of_operative_provisions_and_caps_recitals():
+    from app.generation.answer import demote_recitals
+
+    ids = [
+        "rec_1",
+        "art_1",
+        "rec_2",
+        "art_2",
+        "art_3",
+        "rec_3",
+        "art_4",
+        "art_5",
+        "rec_4",
+        "art_6",
+    ]
+    fused = [_fr(i, c, "t") for i, c in enumerate(ids)]
+    out = [f.result.citation_id for f in demote_recitals(fused, cap=2, min_rank=5)]
+    assert out[:5] == [
+        "art_1",
+        "art_2",
+        "art_3",
+        "art_4",
+        "art_5",
+    ]  # operative order kept
+    assert out[5:] == [
+        "rec_1",
+        "rec_2",
+        "art_6",
+        "rec_3",
+        "rec_4",
+    ]  # two admitted in fused order, rest behind
+    # no recitals: identity
+    plain = [_fr(i, c, "t") for i, c in enumerate(["art_1", "art_2"])]
+    assert [f.result.citation_id for f in demote_recitals(plain)] == ["art_1", "art_2"]
+    # fewer operative than the head: recitals still capped, nothing lost
+    few = [_fr(i, c, "t") for i, c in enumerate(["rec_1", "rec_2", "rec_3", "art_1"])]
+    assert [f.result.citation_id for f in demote_recitals(few, cap=2, min_rank=5)] == [
+        "art_1",
+        "rec_1",
+        "rec_2",
+        "rec_3",
+    ]

@@ -659,7 +659,7 @@ def _graded_step(
 ) -> RetrievalStep:
     """The slice with relevant passages first, capped at the normal context
     size; the wider candidate list follows in the trace order."""
-    ordered = reorder(step.fused, result.relevant)
+    ordered = pipeline.demote_recitals(reorder(step.fused, result.relevant))
     rest = [f for f in step.all_fused if f not in step.fused]
     return RetrievalStep(
         all_fused=[*ordered, *rest],

@@ -696,5 +696,57 @@
   ],
   "expected_abstention": false,
   "note": "ADR-29: the Annex I product-safety route. Directive 2014/33/EU (lifts and safety components for lifts) is Annex I, Section A, point 4; Article 6(1) makes a safety component of an Annex I product high-risk. Gold is the Annex I item so the new path is what is measured."
+ },
+ {
+  "id": "ag_why_01",
+  "bucket": "why",
+  "source": "authored",
+  "question": "why is a creditworthiness scoring system treated as high-risk?",
+  "history": [],
+  "gold_citation_ids": [
+   "anx_III.pt_5.sub_b",
+   "rec_58"
+  ],
+  "expected_abstention": false,
+  "note": "ADR-32: Recital 58 gives the reason (access to essential services, discrimination); Annex III 5(b) is the rule. The answer must name the operative provision; the recital may only accompany it."
+ },
+ {
+  "id": "ag_why_02",
+  "bucket": "why",
+  "source": "authored",
+  "question": "why does the AI Act prohibit social scoring?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_5.par_1.pt_c",
+   "rec_31"
+  ],
+  "expected_abstention": false,
+  "note": "ADR-32: Recital 31 gives the reason; Article 5(1)(c) is the prohibition. The answer must name the operative provision; the recital may only accompany it."
+ },
+ {
+  "id": "ag_why_03",
+  "bucket": "why",
+  "source": "authored",
+  "question": "why is emotion recognition at the workplace banned?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_5.par_1.pt_f",
+   "rec_44"
+  ],
+  "expected_abstention": false,
+  "note": "ADR-32: Recital 44 gives the reason; Article 5(1)(f) is the prohibition. The answer must name the operative provision; the recital may only accompany it."
+ },
+ {
+  "id": "ag_why_04",
+  "bucket": "why",
+  "source": "authored",
+  "question": "why do people have to be told they are interacting with an AI system?",
+  "history": [],
+  "gold_citation_ids": [
+   "art_50.par_1",
+   "rec_132"
+  ],
+  "expected_abstention": false,
+  "note": "ADR-32: Recital 132 gives the reason; Article 50(1) is the obligation. The answer must name the operative provision; the recital may only accompany it."
  }
 ]

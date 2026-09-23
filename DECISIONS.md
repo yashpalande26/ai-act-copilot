@@ -1,6 +1,97 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-32: The 180 recitals join the corpus as explanatory, non-binding passages; a recital is never the rule (2026-09-23)
+Context: The consolidated text the corpus is built from (CELEX 02024R1689-20260727) has no
+preamble, so every "why" question about the Act was unanswerable from the corpus. The
+recitals carry the reasons; they are not law. Bringing them in risks two things: the
+model presenting a recital as the operative rule, and long, semantically rich recitals
+crowding operative provisions out of the retrieved context.
+Source: the original Official Journal act, CELEX 32024R1689, Regulation (EU) 2024/1689
+of 13 June 2024, OJ L, 2024/1689, 12.7.2024, fetched by hand from
+https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024R1689 (the EUR-Lex
+WAF answered the scripted fetch with its challenge page, ADR-001) and kept at
+backend/data/aiact_32024R1689.html (git-ignored like the consolidated file): 1,264,455
+bytes, SHA-256 b0e61ffeb1cf95cbc35a24f2e53c5fa4ab3729ad375dd31260445167ec06d056,
+180 recitals tagged rct_1 to rct_180, contiguous. Recitals are not amended by a
+consolidation, so the 2024 preamble is the current preamble; the amending act 2026/1744
+has its own preamble, which is not ingested.
+Decision: (1) parse_recitals: one row per recital, unit_type recital, citation id rec_N,
+eid 32024R1689:rct_N so the row names its source document, heading the fixed phrase
+"explanatory, non-binding", the "(N)" marker stripped; the rows join the live
+corpus_version (the retriever filters on one version) through
+scripts/backfill_recitals.py (dry run by default, hash printed, refuses if recitals
+exist). (2) One chunk per recital whatever its length (the longest is 4,443 characters;
+the general 2,000-character splitter is bypassed for recitals so the label never reads
+"Recital 12 (part 1/2)"); the contextual prefix labels each chunk "Recital N
+(explanatory, non-binding)" after the usual EU AI Act lead, so the label travels into the
+embedding, the BM25 index and the passage the generator and the verifier see;
+citation_label renders "Recital N". (3) Safety
+framing. The generation system prompt gains one rule: passages labelled Recital N
+explain the reasons behind a rule and are not the rule; never state a recital as the
+requirement, prohibition or classification; cite it only alongside the Article or Annex
+point that contains the rule. The verifier's reference parser reads "Recital N" to rec_N;
+recital_only_citation is a deterministic check that an answer naming recitals and no
+article or annex is misgrounded, which triggers the one regeneration with an instruction
+naming the rule, then the abstention. (4) Crowding. demote_recitals in the retrieval step
+and after the grader's reorder: the first RECITAL_MIN_RANK = 5 positions of the context
+are operative provisions, at most RECITAL_CAP = 2 recitals enter the slice, in fused
+order, displaced recitals go behind the slice; the served count is tagged
+|recitals=N. Swept offline on the retrieved lists of 24 items (cap, head): none 4.21
+recitals per slice, five direct items with a recital at rank 0, gold mean rank 2.34;
+(4,3) 3.14 and 2.10; (3,5) 2.66 and 1.79; (2,5) 2.10, no recital at rank 0, 1.72, all
+four why items keeping their recital at rank 5 or 6; (1,5) 1.34 but one why item loses
+its recital. (2,5) chosen, the head of five matching the dense-anchor and xref slots;
+Yash may move it (ADR-7 rule). (5) Eval: a why bucket in the on-topic set (four items:
+creditworthiness and Recital 58, social scoring and Recital 31, workplace emotion
+recognition and Recital 44, telling people they face an AI and Recital 132, each with
+the operative provision as co-gold); the runner reports recitals per slice, recital at
+rank 0 on direct items, recital cited as the only provision (absolute gate), and for why
+items whether recital and operative provision are both in context and both named.
+Evidence: Counts: provisions 1,279 to 1,459, chunks 1,156 to 1,336, all embedded (the
+first pass produced 212 chunks by splitting long recitals; rebuilt as 180 the same hour;
+86,601 embedding tokens in total), BM25 1,336 documents; every one of the 180 recitals
+has a row and a chunk. Cheap run (smoke subset plus the first why item, mini judge, mini
+verifier): recital cited alone 0, recital at rank 0 on direct items 0, mean recitals per
+direct slice 1.43, the why item named Annex III 5(b), Article 6(2) and Recital 58 with
+the recital as the reason, the eight shared items identical to the ADR-30 baseline on
+recall, abstention and citations. Test suite 499 passed (parser on a real recital
+fixture, contiguity guard, chunker prefix and no-split rule, reference parser,
+recital-only rule and its regeneration text, demotion rule). Full gate, one run, 52
+items, baseline judge, gpt-4o verifier (evals/runs/adr32_recitals_on_agentic_j2.json):
+absolute gates all 0 (verdict leaks 0, recital cited as the only provision 0, recital at
+context rank 0 on a direct-provision item 0 of 41). Why bucket 4 of 4: each answer names
+the operative provision and its recital, gives the recital as the reason, recall 1.0,
+citation accuracy 1.0, faithfulness 5, verifier passed (Annex III 5(b) with Article 6(2)
+and Recital 58; Article 5(1)(c) and Recital 31; Article 5(1)(f) and Recital 44; Article
+50(1) and Recital 132). On the 48 items shared with the ADR-30 baseline: recall 0.974 to
+0.974, citation accuracy 0.872 to 0.897 (one reference item, "what does Chapter III
+require?", answered where it had abstained, with no recital in its context), faithfulness
+4.35 to 4.29 and relevance 4.55 to 4.49 on the mini judge, no other deterministic
+difference. The faithfulness move is three items: a multi-hop fines item scored 5 to 2 by
+a judge rationale that objects to the Article 99(3) figure because Article 100(2) gives
+a lower one for Union bodies (the answer cites 99(3), the gold, correctly; two recitals
+in context, none named), and two plain-language items 5 to 4 with identical pipeline
+outcomes; two items rose. Crowding, served contexts: direct items carry 1.85 recitals on
+average, 35 of 41 carry at least one, and the head of five is operative on every one.
+One item carries 7: the Article 66(h) cooperation question, where recitals took 12 of
+the 25 fused candidates, so after the two admitted recitals the deferred ones filled
+slots that no operative candidate remained to fill; its outcome equals baseline. Two
+answers outside the why bucket cite a recital, both alongside operative provisions
+(Recital 13 with Article 14 on human oversight; Recital 50 with Articles 6(1)(a) and 25(3)
+on the lift safety component), which is the intended shape.
+Consequences: "Why" questions are answerable from the corpus with the reason attributed
+to a recital and the rule to its provision, and the three lines that keep a recital from
+becoming the rule are code, not hope: the prompt rule, the deterministic verifier check
+with its regeneration, and the retrieval demotion. Costs: 180 long chunks (about 43,000
+embedding tokens per full re-embed), a slightly longer context on most direct items, and
+the tail-fill above on candidate-scarce items. Follow-ups for Yash: whether the cap should
+be strict (deferred recitals never enter the slice, shortening the context instead of
+filling it), whether the fusion breadth should exclude recitals so they cannot displace
+operative candidates before demotion, and whether the eval README's baseline for the
+on-topic set should now be this run (52 items) rather than ADR-30's 48.
+Status: Accepted.
+
 ## ADR-31: Eval runners get a cheap mode; gate mode is unchanged (2026-09-23)
 Context: Every prompt iteration this week paid for a full on-topic run (48 items, judge on,
 about fifteen minutes) and often a flag-off rerun to compare against, when the question

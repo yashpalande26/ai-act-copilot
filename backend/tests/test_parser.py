@@ -6,6 +6,7 @@ from app.ingestion.parser import (
     is_sectioned_annex,
     parse_annex,
     parse_article,
+    parse_recitals,
     parse_sectioned_annex,
 )
 
@@ -138,3 +139,30 @@ def test_annex_i_sections_numbering_and_markers():
         "lifts (OJ L 96, 29.3.2014, p. 251);"
     )
     assert sum(1 for p in points if p.text_content) == 20
+
+
+# --- recitals (ADR-32) --------------------------------------------------------------
+
+
+def test_recital_row_from_the_oj_act_markup():
+    html = _load_fixture("recital_58.html")
+    (rec,) = parse_recitals(html)
+    assert rec.citation_id == "rec_58" and rec.unit_type == "recital"
+    assert rec.eid == "32024R1689:rct_58" and rec.number == "58" and rec.ordinal == 58
+    assert rec.heading == "explanatory, non-binding"
+    assert rec.text_content.startswith(
+        "Another area in which the use of AI systems deserves"
+    )
+    assert not rec.text_content.startswith("(58)")
+    assert "creditworthiness" in rec.text_content
+
+
+def test_recital_numbering_must_be_contiguous_from_one():
+    import pytest
+
+    html = _load_fixture("recital_58.html")
+    # a lone recital 58 in a full parse is a numbering gap: the real parse of the
+    # whole preamble starts at 1, so the fixture is checked through the row API
+    # above; the contiguity guard is exercised here by feeding two copies.
+    with pytest.raises(ValueError):
+        parse_recitals(html.replace('id="rct_58"', 'id="rct_2"') + html)

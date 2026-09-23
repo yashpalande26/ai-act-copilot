@@ -20,6 +20,8 @@ def _render_segments(segments: list[str], *, is_annex: bool) -> str:
             parts.append(f"Annex {seg[4:]}")
         elif seg.startswith("sec_"):
             parts.append(f"Section {seg[4:]}")
+        elif seg.startswith("rec_"):
+            parts.append(f"Recital {seg[4:]}")
         elif seg.startswith("par_"):
             parts.append(f"paragraph {seg[4:]}")
         elif seg.startswith("pt_"):
@@ -85,7 +87,7 @@ def _find_container_ancestor(
     provision: Provision, by_id: dict[int, Provision]
 ) -> Provision:
     current = provision
-    while current.unit_type not in ("article", "annex"):
+    while current.unit_type not in ("article", "annex", "recital"):
         if current.parent_id is None:
             raise ValueError(
                 f"{current.citation_id!r} has no parent and is not an article/annex root"
@@ -100,6 +102,11 @@ def is_leaf(provision: Provision, has_children: bool) -> bool:
     heading, i.e. a single-paragraph article. Article and annex rows that
     merely hold their heading stay containers."""
     if provision.unit_type in LEAF_UNIT_TYPES:
+        return True
+    if provision.unit_type == "recital":
+        # ADR-32: one chunk per recital, its own container; the prefix is
+        # "EU AI Act \u2014 Recital N (explanatory, non-binding):" because the
+        # heading carries that phrase, so the label travels into retrieval.
         return True
     if provision.unit_type == "article" and not has_children:
         text = (provision.text_content or "").strip()
@@ -129,7 +136,9 @@ def chunk_rows_for(
         )
     else:
         provision_label = _relative_label(provision.citation_id, ancestor.citation_id)
-    parts = split_long_text(text)
+    # One chunk per recital whatever its length (ADR-32): a recital is one
+    # argument and its label must stay "Recital N", not "Recital N (part 1/2)".
+    parts = [text] if provision.unit_type == "recital" else split_long_text(text)
     total = len(parts)
     rows: list[Chunk] = []
     for i, part_text in enumerate(parts, start=1):

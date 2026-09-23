@@ -1,7 +1,8 @@
 import copy
 import re
+import warnings
 
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, Tag, XMLParsedAsHTMLWarning
 
 from app.ingestion.models import ParsedProvision
 
@@ -463,3 +464,56 @@ def _validate(
             raise ValueError(
                 f"Empty text_content for {provision.citation_id!r} ({provision.unit_type})"
             )
+
+
+_RECITAL_MARK = re.compile(r"^\((\d+)\)\s*")
+RECITAL_HEADING = "explanatory, non-binding"
+
+
+def parse_recitals(
+    html: str, source_celex: str = "32024R1689"
+) -> list[ParsedProvision]:
+    """The preamble of the ORIGINAL Official Journal act (CELEX 32024R1689),
+    which the consolidated text drops. Each <div class="eli-subdivision"
+    id="rct_N"> is one recital: a two-column table whose first cell holds the
+    "(N)" marker and whose second holds the text. One row per recital,
+    unit_type recital, citation id rec_N, eid <source_celex>:rct_N so the row
+    itself says which document it came from, heading the fixed phrase that
+    labels every recital chunk as explanatory and non-binding (ADR-32).
+    Recitals are never amended by a consolidation, so the 2024 preamble is the
+    current preamble."""
+    with warnings.catch_warnings():
+        # The OJ file is XHTML served as .xml; the HTML parser reads it fine.
+        warnings.simplefilter("ignore", XMLParsedAsHTMLWarning)
+        soup = BeautifulSoup(html, "lxml")
+    provisions: list[ParsedProvision] = []
+    for div in soup.find_all("div", id=re.compile(r"^rct_\d+$")):
+        number = int(div["id"].split("_")[1])
+        cells = div.find_all("td")
+        text = (
+            _clean_text(cells[-1].get_text(" "))
+            if cells
+            else _clean_text(div.get_text(" "))
+        )
+        text = _RECITAL_MARK.sub("", text, count=1)
+        if not text:
+            raise ValueError(f"Recital {number} has no text")
+        provisions.append(
+            ParsedProvision(
+                citation_id=f"rec_{number}",
+                eid=f"{source_celex}:rct_{number}",
+                unit_type="recital",
+                number=str(number),
+                heading=RECITAL_HEADING,
+                text_content=text,
+                parent_citation_id=None,
+                amendment_marker=None,
+                ordinal=number,
+            )
+        )
+    numbers = [int(p.number) for p in provisions]
+    if numbers and numbers != list(range(numbers[0], numbers[0] + len(numbers))):
+        raise ValueError(
+            f"Recital numbering is not contiguous: {numbers[:5]} ... {numbers[-3:]}"
+        )
+    return provisions

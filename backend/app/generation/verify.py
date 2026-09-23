@@ -69,6 +69,7 @@ class VerifyResult:
     ok: bool  # False when the call failed or nothing parseable came back
     missing_references: tuple[str, ...] = ()  # citation ids named but absent
     unsupported_claims: tuple[str, ...] = ()
+    recital_only: bool = False  # ADR-32: recitals cited with no operative provision
     claims_checked: int = 0
     prompt_tokens: int | None = None
     completion_tokens: int | None = None
@@ -96,6 +97,26 @@ _ANNEX = re.compile(
     r"\bAnnex\s+([IVXLC]+)\b(?:,?\s+Section\s+([A-Z0-9]+)\b)?"
     r"(?:,?\s+point\s+(\d+)(?:\s*\(([a-z])\))?)?"
 )
+_RECITAL = re.compile(r"\bRecitals?\s+(\d+)\b", re.IGNORECASE)
+
+
+def is_recital(ref: str) -> bool:
+    """A recital citation id (rec_N): explanatory, never the operative rule
+    (ADR-32)."""
+    return ref.startswith("rec_")
+
+
+def binding_references(refs: list[str]) -> list[str]:
+    """The operative provisions among a list of citation ids: everything that
+    is not a recital."""
+    return [r for r in refs if not is_recital(r)]
+
+
+def recital_only_citation(answer: str) -> bool:
+    """True when the answer names one or more recitals and no article or
+    annex: a recital presented as the rule. Deterministic; ADR-32 hard line."""
+    refs = references_in(answer)
+    return any(is_recital(r) for r in refs) and not binding_references(refs)
 
 
 def references_in(answer: str) -> list[str]:
@@ -121,6 +142,8 @@ def references_in(answer: str) -> list[str]:
         if sub:
             cid += f".sub_{sub}"
         out.append(cid)
+    for m in _RECITAL.finditer(answer):
+        out.append(f"rec_{m.group(1)}")
     return sorted(set(out))
 
 
@@ -180,6 +203,7 @@ def verify_answer(
     """Never raises on model trouble: a failure returns ok=False and the
     caller serves the answer as generated."""
     missing = tuple(missing_references(answer, fused))
+    recital_only = recital_only_citation(answer)
     ex = extractor or get_extractor(verify_model())
     start = time.monotonic()
     try:
@@ -190,10 +214,11 @@ def verify_answer(
         )
     except Exception:  # noqa: BLE001 - the verifier is optional; the turn must still be served
         return VerifyResult(
-            misgrounded=bool(missing),
+            misgrounded=bool(missing) or recital_only,
             attempted=True,
             ok=False,
             missing_references=missing,
+            recital_only=recital_only,
             latency_ms=int((time.monotonic() - start) * 1000),
             model=ex.name,
         )
@@ -201,13 +226,14 @@ def verify_answer(
     base = {
         "attempted": True,
         "missing_references": missing,
+        "recital_only": recital_only,
         "prompt_tokens": out.prompt_tokens,
         "completion_tokens": out.completion_tokens,
         "latency_ms": latency_ms,
         "model": ex.name,
     }
     if out.parsed is None:
-        return VerifyResult(misgrounded=bool(missing), ok=False, **base)
+        return VerifyResult(misgrounded=bool(missing) or recital_only, ok=False, **base)
     ids = [f.result.citation_id for f in fused]
     unsupported: list[str] = []
     for c in out.parsed.claims:
@@ -224,7 +250,7 @@ def verify_answer(
         if c.verdict == "unsupported" or not indexes_ok:
             unsupported.append(c.claim)
     return VerifyResult(
-        misgrounded=bool(missing) or bool(unsupported),
+        misgrounded=bool(missing) or bool(unsupported) or recital_only,
         ok=True,
         unsupported_claims=tuple(unsupported),
         claims_checked=len(out.parsed.claims),
@@ -240,6 +266,12 @@ def regeneration_instruction(result: VerifyResult) -> str:
         for r in result.missing_references
     ]
     problems += [f'the claim "{c}"' for c in result.unsupported_claims]
+    if result.recital_only:
+        problems.append(
+            "a recital cited as if it were the rule: recitals are explanatory and "
+            "non-binding, so name the Article or Annex point in the context that "
+            "contains the rule and cite the recital only alongside it"
+        )
     listed = (
         "; ".join(problems)
         if problems

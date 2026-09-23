@@ -153,3 +153,24 @@ def test_chunk_rows_for_a_sectioned_annex_point_carries_the_section_heading():
         chunk_rows_for(deleted, {1: annex, 2: sec, 4: deleted}, corpus_version_id=1)
         == []
     )
+
+
+def test_recital_is_its_own_leaf_with_the_explanatory_prefix():
+    from app.ingestion.chunker import chunk_rows_for, citation_label, is_leaf
+
+    rec = _P(
+        9,
+        "rec_58",
+        "recital",
+        "Another area in which the use of AI systems deserves special consideration ...",
+        "explanatory, non-binding",
+    )
+    assert is_leaf(rec, has_children=False) is True
+    assert citation_label("rec_58") == "Recital 58"
+    rows = chunk_rows_for(rec, {9: rec}, corpus_version_id=1)
+    assert len(rows) == 1 and rows[0].parent_provision_id == 9
+    assert rows[0].index_text.startswith(
+        "EU AI Act \u2014 Recital 58 (explanatory, non-binding):\nAnother area"
+    )
+    long_rec = _P(10, "rec_12", "recital", "x. " * 1500, "explanatory, non-binding")
+    assert len(chunk_rows_for(long_rec, {10: long_rec}, corpus_version_id=1)) == 1

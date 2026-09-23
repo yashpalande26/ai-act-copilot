@@ -106,7 +106,13 @@ SYSTEM_PROMPT = (
     "rather than as a definition. Abstain only when no provision in the context "
     "bears on the question.\n"
     "When you do answer, reference the relevant provisions by their citation label "
-    '(e.g. "Article 6, paragraph 2") inline in your answer.'
+    '(e.g. "Article 6, paragraph 2") inline in your answer.\n'
+    # ADR-32 (23 Sep 2026): recitals are in the context, labelled as such.
+    "Passages labelled Recital N (explanatory, non-binding) explain the reasons "
+    "behind a rule and are not the rule. Never state a recital as the requirement, "
+    "prohibition or classification; the rule comes from an Article or an Annex. "
+    "When a recital explains why a rule exists, you may cite it alongside the "
+    "Article or Annex point that contains the rule, never on its own."
 )
 
 
@@ -650,6 +656,53 @@ class GenerationStep:
 # else, so that "flag on" and "flag off" cannot drift apart.
 
 
+# Recital demotion (ADR-32, 23 Sep 2026). Recitals are long and semantically
+# rich, so once in the corpus they crowd the dense leg: measured on 12
+# single-hop items, 4.2 recitals per 15-slice, five items with a recital at
+# rank 0, gold mean rank 2.34. The rule below keeps the first RECITAL_MIN_RANK
+# positions for operative provisions and admits at most RECITAL_CAP recitals
+# into the slice, in fused order; displaced recitals move behind the slice.
+# Swept offline on the retrieved lists (cap, head): (4,3) 3.14 recitals and
+# gold rank 2.10; (3,5) 2.66 and 1.79; (2,5) 2.10 and 1.72 with all four
+# "why" items keeping their gold recital at rank 5 or 6; (1,5) 1.34 but one
+# "why" item loses its recital. (2,5) chosen; the head of five matches the
+# dense-anchor and xref slots. Yash may move it (ADR-7 rule).
+RECITAL_CAP = 2
+RECITAL_MIN_RANK = 5
+
+
+def is_recital_result(f: FusedResult) -> bool:
+    return f.result.citation_id.startswith("rec_")
+
+
+def demote_recitals(
+    fused: list[FusedResult],
+    *,
+    cap: int = RECITAL_CAP,
+    min_rank: int = RECITAL_MIN_RANK,
+) -> list[FusedResult]:
+    """Operative provisions fill the first `min_rank` positions; recitals then
+    re-enter in fused order, at most `cap` of them; the rest go behind
+    everything else. Order among operative provisions is unchanged."""
+    head = [f for f in fused if not is_recital_result(f)][:min_rank]
+    head_ids = {id(f) for f in head}
+    out: list[FusedResult] = list(head)
+    deferred: list[FusedResult] = []
+    admitted = 0
+    for f in fused:
+        if id(f) in head_ids:
+            continue
+        if is_recital_result(f):
+            if admitted < cap:
+                out.append(f)
+                admitted += 1
+            else:
+                deferred.append(f)
+        else:
+            out.append(f)
+    return out + deferred
+
+
 def retrieve_step(
     session: Session,
     query: str,
@@ -683,6 +736,10 @@ def retrieve_step(
             breadth=breadth,
         )
     retrieval_latency_ms = int((time.monotonic() - retrieval_start) * 1000)
+    all_fused = demote_recitals(all_fused)
+    served_recitals = sum(is_recital_result(f) for f in all_fused[:final_context_size])
+    if served_recitals:
+        retrieval_config += f"|recitals={served_recitals}"
     # Equivalent to the old rrf_rank_and_fuse(..., top_k=final_context_size):
     # rrf_rank_and_fuse sorts the full candidate set by rrf_score BEFORE
     # trimming to top_k, and rrf_score doesn't depend on top_k at all - so

@@ -62,7 +62,12 @@ from app.generation import graph as graph_module
 from app.generation.answer import generate_grounded_answer, is_abstention
 from app.generation.rewrite import _transcript, introduced_entities
 from app.generation.understand import verdict_leaks
-from app.generation.verify import references_in
+from app.generation.verify import (
+    binding_references,
+    is_recital,
+    recital_only_citation,
+    references_in,
+)
 from evals import judge
 from evals.judge import judge_answer_relevance, judge_faithfulness
 from evals.metrics import (
@@ -85,6 +90,7 @@ BUCKETS = (
     "unanswerable",
     "reference",
     "plain_language",
+    "why",
 )
 
 
@@ -433,6 +439,18 @@ def main() -> None:
                 "must_route": it.get("must_route", False),
                 "route_or_abstain": it.get("route_or_abstain", False),
                 "names_provision": [] if abstained else references_in(res.answer),
+                # ADR-32: recitals in the served context and in the answer
+                "recitals_in_context": sum(is_recital(c) for c in context_ids),
+                "recital_at_rank0": bool(context_ids) and is_recital(context_ids[0]),
+                "names_recital": []
+                if abstained
+                else [r for r in references_in(res.answer) if is_recital(r)],
+                "recital_only": False
+                if abstained or clarifying
+                else recital_only_citation(res.answer),
+                "operative_named": []
+                if abstained
+                else binding_references(references_in(res.answer)),
                 "sub_queries": sub_queries,
                 "verify_outcome": verify_outcome,
                 "verify_unsupported": [list(v.unsupported_claims) for v in verifies],
@@ -569,6 +587,31 @@ def main() -> None:
             fired_outside = [t["id"] for t in decomposed if t["bucket"] != "multi_hop"]
             print(
                 f"  applied outside multi_hop (must be 0): {len(fired_outside)} {fired_outside}"
+            )
+        recital_only = [t["id"] for t in traces if t["recital_only"]]
+        direct = [t for t in traces if t["bucket"] not in ("why", "unanswerable")]
+        rec0 = [t["id"] for t in direct if t["recital_at_rank0"]]
+        print(
+            f"\n== RECITALS (ADR-32) ==  recital cited as the only provision (must be 0): {len(recital_only)} {recital_only}"
+            f"  recital at context rank 0 on a direct-provision item (must be 0): {len(rec0)} {rec0}"
+            f"  mean recitals in the 15-slice, direct items: {round(sum(t['recitals_in_context'] for t in direct) / max(len(direct), 1), 2)}"
+        )
+        why = [t for t in traces if t["bucket"] == "why"]
+        if why:
+            ok = [
+                t["id"]
+                for t in why
+                if t["context_recall"] == 1.0
+                and not t["predicted_abstention"]
+                and t["names_recital"]
+                and t["operative_named"]
+            ]
+            print(
+                f"  why items: recital and operative provision both in context and both named: {len(ok)}/{len(why)} {ok}"
+                + "".join(
+                    f"\n    {t['id']}: recall={t['context_recall']} named={t['names_provision'][:4]} recitals_in_ctx={t['recitals_in_context']}"
+                    for t in why
+                )
             )
         leaks = [(t["id"], t["verdict_leaks"][0]) for t in traces if t["verdict_leaks"]]
         print(
