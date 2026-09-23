@@ -1,0 +1,20 @@
+{
+ "note": "Cheap-mode smoke subset (ADR-31): one or two items per bucket of each set. Directional only; a gate decision needs the full set.",
+ "agentic": [
+  "ag_sh_01",
+  "ag_sh_03",
+  "ag_mt_01",
+  "ag_mh_01",
+  "ag_un_01",
+  "ag_xr_01",
+  "ag_pl_03",
+  "ag_pl_09"
+ ],
+ "risk_tier": [
+  "rt_tr_01",
+  "rt_nl_01",
+  "rt_hr_02",
+  "rt_ls_01",
+  "rt_pr_01"
+ ]
+}

@@ -4,6 +4,9 @@ from pydantic import BaseModel
 
 from app.ingestion.embedder import _get_client
 
+# The judge every saved baseline was scored with (ADR-20 onward). Runners may
+# override it per run (--judge-model, ADR-31); a run judged with a different
+# model is not comparable to those baselines on faithfulness or relevance.
 JUDGE_MODEL = "gpt-4o-mini"
 
 FAITHFULNESS_SYSTEM_PROMPT = """\

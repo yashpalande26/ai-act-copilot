@@ -138,3 +138,25 @@ def test_agentic_set_multi_hop_needs_two_provisions_and_multi_turn_has_history()
 
 def test_agentic_set_no_em_dash():
     assert "\u2014" not in AGENTIC_SET.read_text()
+
+
+# --- cheap-mode smoke subset (ADR-31) --------------------------------------------
+
+SMOKE = Path(__file__).resolve().parents[1] / "evals" / "smoke_subset.json"
+RISK_TIER_SET = Path(__file__).resolve().parents[1] / "evals" / "risk_tier_set.json"
+
+
+def test_smoke_subset_touches_every_bucket_of_both_sets():
+    smoke = json.loads(SMOKE.read_text())
+    agentic = {i["id"]: i["bucket"] for i in json.loads(AGENTIC_SET.read_text())}
+    risk = {i["id"]: i["bucket"] for i in json.loads(RISK_TIER_SET.read_text())}
+    assert set(smoke["agentic"]) <= set(agentic), set(smoke["agentic"]) - set(agentic)
+    assert set(smoke["risk_tier"]) <= set(risk), set(smoke["risk_tier"]) - set(risk)
+    assert {agentic[i] for i in smoke["agentic"]} == BUCKETS
+    assert {risk[i] for i in smoke["risk_tier"]} >= {
+        "transparency",
+        "not_listed",
+        "high_risk",
+        "law_silent",
+    }
+    assert 8 <= len(smoke["agentic"]) + len(smoke["risk_tier"]) <= 15

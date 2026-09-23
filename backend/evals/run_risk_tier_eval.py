@@ -69,8 +69,22 @@ def main() -> None:
     ap.add_argument("--repeats", type=int, default=1)
     ap.add_argument("--only", help="comma-separated item ids")
     ap.add_argument("--json", type=Path)
+    ap.add_argument(
+        "--subset", choices=("smoke",), help="only evals/smoke_subset.json items"
+    )
+    ap.add_argument(
+        "--cheap",
+        action="store_true",
+        help="preset: --subset smoke, VERIFY_MODEL=openai:gpt-4o-mini unless set. Directional only.",
+    )
     args = ap.parse_args()
+    if args.cheap:
+        args.subset = args.subset or "smoke"
+        os.environ.setdefault("VERIFY_MODEL", "openai:gpt-4o-mini")
     items = json.loads((HERE / "risk_tier_set.json").read_text())
+    if args.subset:
+        smoke = set(json.loads((HERE / "smoke_subset.json").read_text())["risk_tier"])
+        items = [i for i in items if i["id"] in smoke]
     if args.only:
         only = set(args.only.split(","))
         items = [i for i in items if i["id"] in only]
@@ -106,6 +120,7 @@ def main() -> None:
         "risk_tier_framing": config.risk_tier_framing_enabled(),
         "clarify": config.clarify_followup_enabled(),
         "verify_model": config.verify_model(),
+        "subset": args.subset,
     }
     rows: list[dict] = []
 

@@ -1,6 +1,30 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-31: Eval runners get a cheap mode; gate mode is unchanged (2026-09-23)
+Context: Every prompt iteration this week paid for a full on-topic run (48 items, judge on,
+about fifteen minutes) and often a flag-off rerun to compare against, when the question
+was only which way a change points. Gate runs must stay full and repeatable.
+Decision: Two flags and a preset on the agentic and risk-tier runners (evals/README.md):
+--subset smoke runs evals/smoke_subset.json (8 agentic items and 5 risk-tier items, one
+or two per bucket, coverage asserted by a test); --judge-model chooses the judge, default
+the model every saved baseline was judged with; --baseline <run file> compares item by
+item against a SAVED run (deterministic fields must match on shared items, judged
+metrics side by side, missing items listed) instead of regenerating flag-off; --cheap
+sets the smoke subset, the gpt-4o-mini judge and VERIFY_MODEL=openai:gpt-4o-mini unless
+already set, and prints a NOTE that the numbers are directional. Run files now record
+judge_model, verify_model and subset. Gate mode is what it was: full set, 3 draws where
+the runner repeats, the saved baseline's judge, the gpt-4o verifier.
+Evidence: No eval was run to build this. The coverage test passes; both parsers expose
+the flags; a zero-item run prints judge, verifier and subset in its header.
+Consequences: One thing surfaced while wiring the judge flag and is stated in the README
+rather than changed: the judge has been gpt-4o-mini since ADR-20, so every saved
+baseline is a mini-judged baseline. The brief's "default gpt-4o for the gate" would make
+every saved baseline incomparable on the judged metrics; the default therefore stays at
+the baseline judge, gpt-4o is selectable, and switching the gate judge is a decision that
+starts with re-baselining the on-topic set. Yash's call.
+Status: Accepted.
+
 ## ADR-30: Injection guard judges whom the verb is aimed at; false blocks on on-topic follow-ups removed (2026-09-23)
 Context: The ADR-23 guard (gpt-4o-mini, one structured call before every message) had
 been false-blocking a legitimate multi-turn follow-up, "Can it change the classification

@@ -49,6 +49,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from sqlalchemy import select
 
+from app import config
 from app.config import (
     agentic_grade_enabled,
     agentic_rag_enabled,
@@ -62,6 +63,7 @@ from app.generation.answer import generate_grounded_answer, is_abstention
 from app.generation.rewrite import _transcript, introduced_entities
 from app.generation.understand import verdict_leaks
 from app.generation.verify import references_in
+from evals import judge
 from evals.judge import judge_answer_relevance, judge_faithfulness
 from evals.metrics import (
     abstention_f1,
@@ -74,6 +76,7 @@ from evals.metrics import (
 
 HERE = Path(__file__).resolve().parent
 SET_PATH = HERE / "agentic_set.json"
+SMOKE_PATH = HERE / "smoke_subset.json"
 CONTEXT = 15
 BUCKETS = (
     "single_hop",
@@ -83,6 +86,62 @@ BUCKETS = (
     "reference",
     "plain_language",
 )
+
+
+def compare_to_baseline(path: Path, traces: list[dict], judge_model: str) -> None:
+    """Item-by-item comparison against a SAVED run file (ADR-31): the
+    deterministic fields must match on every shared item; the judged metrics
+    are shown side by side and are only comparable when both runs used the
+    same judge. Items missing from the baseline are listed, not compared."""
+    base = json.loads(path.read_text())
+    b = {t["id"]: t for t in base["traces"]}
+    shared = [t for t in traces if t["id"] in b]
+    missing = [t["id"] for t in traces if t["id"] not in b]
+    fields = ("context_recall", "predicted_abstention", "citation_accuracy")
+    diffs = [
+        (t["id"], f, b[t["id"]][f], t[f])
+        for t in shared
+        for f in fields
+        if b[t["id"]][f] != t[f]
+    ]
+    print(
+        f"\n== BASELINE {path.name}: {len(shared)} shared items, "
+        f"{len(missing)} not in baseline {missing}"
+    )
+    print(
+        "  deterministic differences on shared items (recall, abstention, citations): "
+        f"{len(diffs)}"
+    )
+    for d in diffs:
+        print("   ", d)
+    # Run files before ADR-31 carry no judge_model; they were all judged with gpt-4o-mini.
+    base_judge = base.get("judge_model") or "gpt-4o-mini"
+    print(
+        f"  judge: baseline {base_judge}, this run {judge_model}"
+        + (
+            ""
+            if base_judge == judge_model
+            else "  (DIFFERENT: judged metrics not comparable)"
+        )
+    )
+
+    def pooled_of(rows, k):
+        vals = [r[k] for r in rows if r.get(k) is not None]
+        return round(sum(vals) / len(vals), 3) if vals else None
+
+    brows = [b[t["id"]] for t in shared]
+    for k in (
+        "context_recall",
+        "citation_accuracy",
+        "faithfulness",
+        "answer_relevance",
+    ):
+        print(
+            f"  {k:<18} baseline {pooled_of(brows, k)}  this run {pooled_of(shared, k)}"
+            "  (shared items)"
+        )
+    leaks = [t["id"] for t in traces if t["verdict_leaks"]]
+    print(f"  verdict leaks this run (must be 0): {len(leaks)} {leaks}")
 
 
 def summarise(traces: list[dict]) -> dict:
@@ -129,9 +188,45 @@ def main() -> None:
     ap.add_argument("--bucket", choices=BUCKETS)
     ap.add_argument("--no-judge", action="store_true", help="skip the paid judge calls")
     ap.add_argument("--json", type=Path, help="write per-trace rows and summaries here")
+    # Cheap mode (ADR-31): iterate fast, gate on the full set.
+    ap.add_argument(
+        "--judge-model",
+        default=judge.JUDGE_MODEL,
+        help=(
+            "judge model for faithfulness and relevance (default: the model the saved "
+            "baselines were judged with, recorded in each run file). A different judge "
+            "is a directional signal only, never a gate decision."
+        ),
+    )
+    ap.add_argument(
+        "--subset",
+        choices=("smoke",),
+        help="run only evals/smoke_subset.json (one or two items per bucket)",
+    )
+    ap.add_argument(
+        "--baseline",
+        type=Path,
+        help="a saved run file to compare against, item by item, instead of rerunning flag-off",
+    )
+    ap.add_argument(
+        "--cheap",
+        action="store_true",
+        help=(
+            "preset: --subset smoke, --judge-model gpt-4o-mini, and VERIFY_MODEL=openai:gpt-4o-mini "
+            "unless VERIFY_MODEL is already set. Directional only."
+        ),
+    )
     args = ap.parse_args()
+    if args.cheap:
+        args.subset = args.subset or "smoke"
+        args.judge_model = "gpt-4o-mini"
+        os.environ.setdefault("VERIFY_MODEL", "openai:gpt-4o-mini")
+    judge.JUDGE_MODEL = args.judge_model
 
     items = json.loads(args.set.read_text())
+    if args.subset:
+        smoke = set(json.loads(SMOKE_PATH.read_text())["agentic"])
+        items = [i for i in items if i["id"] in smoke]
     if args.only:
         only = set(args.only.split(","))
         items = [i for i in items if i["id"] in only]
@@ -210,9 +305,16 @@ def main() -> None:
             f"set {args.set.name} ({len(items)} items)  corpus {cv.consolidated_date}"
             f"  AGENTIC_RAG={'1' if flag else '0'}  AGENTIC_REWRITE={'1' if node else '0'}"
             f"  AGENTIC_GRADE={'1' if grader else '0'}"
-            f"  judge={'off' if args.no_judge else 'on'}"
+            f"  judge={'off' if args.no_judge else args.judge_model}"
+            f"  verifier={config.verify_model()}"
+            f"  subset={args.subset or 'full'}"
             f"  env {os.environ.get('APP_ENV', 'dev')}"
         )
+        if args.cheap or args.judge_model != "gpt-4o-mini" or args.subset:
+            print(
+                "  NOTE: cheap or non-default settings; treat the numbers as directional, "
+                "not as a gate."
+            )
         traces: list[dict] = []
         for it in items:
             chat = ChatSession(user_id=user.id, corpus_version_id=cv.id, title="eval")
@@ -547,6 +649,9 @@ def main() -> None:
                     {
                         "agentic_rag": flag,
                         "set": args.set.name,
+                        "subset": args.subset,
+                        "judge_model": None if args.no_judge else args.judge_model,
+                        "verify_model": config.verify_model(),
                         "corpus": str(cv.consolidated_date),
                         "pooled": pooled,
                         "buckets": buckets,
@@ -556,6 +661,8 @@ def main() -> None:
                 )
             )
             print(f"wrote {args.json}")
+        if args.baseline:
+            compare_to_baseline(args.baseline, traces, args.judge_model)
     finally:
         answer_module.retrieve_step = real_retrieve
         answer_module.decide_step = real_decide
