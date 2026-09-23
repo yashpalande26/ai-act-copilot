@@ -1,6 +1,53 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-28: Single-paragraph article bodies restored to the corpus; six annexes still pending a parser (2026-09-23)
+Context: A read-only corpus audit found that eight articles whose body is one or more
+bare paragraphs with no number (Articles 32, 39, 85, 87, 94, 102, 103, 104) had only their
+heading stored: the parser emits a paragraph row only for a numbered <div class="norm">
+and a point row only for a grid list, so a bare <p class="norm"> under the article was
+in no provision row. The Article 32 presumption of conformity and the Article 85 right to
+lodge a complaint were un-retrievable and un-citable. This is the ADR-002 risk ("free-
+standing sentences not captured") at article level, not previously logged. The same audit
+confirmed the six annexes excluded since ADR-004 (I, VII, VIII, X, XI, XIV) are still
+absent and that the consolidated source carries no recitals at all.
+Decision: (1) Parser: when an article yields no paragraph and no point, the text of its
+bare paragraphs, joined, becomes the article row's own text_content; the heading stays in
+heading. Articles with numbered paragraphs are unchanged (their row still holds the
+heading). (2) Chunker: a childless article whose text differs from its heading is a leaf
+(is_leaf) and is chunked under its own label, "Article 32", which is the legally correct
+citation for an unnumbered body; the contextual prefix omits the trailing relative label
+for such a chunk. A new build_missing_chunks adds chunks only for leaves that have none
+and never deletes or re-embeds; the full rebuild path is unchanged. (3) A backfill script
+(scripts/backfill_article_bodies.py, dry run by default) checks the source file's hash
+against corpus_version.content_hash, updates the eight rows, adds their chunks, embeds
+only chunks with a NULL embedding, and rebuilds the BM25 index over all embedded chunks
+(bm25s has no append; the index is a local file). The existing 1,128 chunks and their
+embeddings were not touched. (4) The six annexes were NOT ingested in this step: their
+layouts are six different structures and the brief's rule was to report the scope first.
+Evidence: Dry run listed exactly the eight articles and nothing else. After --execute:
+provisions 1,255 (unchanged; the bodies live on the existing article rows), chunks 1,128
+to 1,136, all embedded (8 new embeddings, 723 tokens), BM25 manifest 1,136 documents.
+Every one of the 119 articles now has a chunk under it (was 111). Phrase checks: "Where a
+conformity assessment body demonstrates its conformity" and "any natural or legal person
+having grounds to consider" each return one provision row (art_32, art_85); a query on
+each subject ranks the new chunk first on both the BM25 and the vector leg. Test suite
+487 passed (three parser tests on real fixtures for Articles 32 and 85 and a numbered
+article, three chunker tests on the leaf rule and the label). On-topic set, 47 items,
+against the ADR-26 run (evals/runs/adr28_corpus_on_agentic_j2.json): 0 verdict leaks;
+citation accuracy 0.868 to 0.868; faithfulness 0.877 to 0.872; context recall 0.974 to
+0.974; answered 43 to 43; recall, abstention and citations identical item by item, with
+two precision moves: one multi-hop item's decompose plan (the known variance) and one
+multi-turn item whose context now admits the restored Article 104 chunk at a low rank
+(precision 0.194 to 0.196).
+Consequences: Article-level citations ("Article 32") can now be served with real text.
+Downstream readers of an article row's text (the Act navigator and the assessment report's
+provision text) now show the body for these eight articles instead of repeating the
+heading. The lead sentence of an article that has numbered paragraphs as well (ADR-002,
+Article 6's "Notwithstanding") is still not captured; only fully unnumbered bodies were in
+scope. The annex gap remains and is scoped in PROJECT_BRIEF for a decision.
+Status: Accepted (articles); annexes Pending.
+
 ## ADR-27: Risk-tier framing built behind RISK_TIER_FRAMING; retrieval fixed, generation not yet; flag off (2026-09-23)
 Context: A read-only trace of "I want to build EU AI act copilot?" showed two failures.
 On turn 1 the understand step produced high-risk vocabulary only ("AI system for

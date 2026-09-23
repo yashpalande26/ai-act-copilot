@@ -43,3 +43,66 @@ def test_split_long_text_splits_at_sentence_boundaries():
     assert all(len(part) <= 2000 for part in parts)
     # no sentence-ending punctuation lost mid-split
     assert "".join(parts).count(".") == long_text.count(".")
+
+
+# --- single-paragraph articles as leaves (23 Sep 2026) ---------------------------
+
+
+class _P:
+    def __init__(self, id, citation_id, unit_type, text, heading=None, parent_id=None):
+        self.id = id
+        self.citation_id = citation_id
+        self.unit_type = unit_type
+        self.text_content = text
+        self.heading = heading
+        self.parent_id = parent_id
+
+
+def test_is_leaf_childless_article_with_a_body_but_not_a_heading_only_container():
+    from app.ingestion.chunker import is_leaf
+
+    body = _P(
+        1, "art_32", "article", "Where a conformity assessment body ...", "Presumption"
+    )
+    heading_only = _P(
+        2, "art_6", "article", "Classification rules", "Classification rules"
+    )
+    assert is_leaf(body, has_children=False) is True
+    assert is_leaf(heading_only, has_children=True) is False
+    assert is_leaf(heading_only, has_children=False) is False  # heading is not a body
+    assert (
+        is_leaf(_P(3, "art_6.par_1", "paragraph", "text"), has_children=False) is True
+    )
+
+
+def test_chunk_rows_for_a_childless_article_uses_the_article_label_alone():
+    from app.ingestion.chunker import chunk_rows_for
+
+    art = _P(
+        7,
+        "art_32",
+        "article",
+        "Where a conformity assessment body demonstrates.",
+        "Presumption of conformity",
+    )
+    rows = chunk_rows_for(art, {7: art}, corpus_version_id=1)
+    assert len(rows) == 1
+    assert rows[0].provision_id == 7 and rows[0].parent_provision_id == 7
+    assert rows[0].index_text == (
+        "EU AI Act \u2014 Article 32 (Presumption of conformity):\n"
+        "Where a conformity assessment body demonstrates."
+    )
+    assert rows[0].chunk_text == "Where a conformity assessment body demonstrates."
+
+
+def test_chunk_rows_for_a_paragraph_is_unchanged():
+    from app.ingestion.chunker import chunk_rows_for
+
+    art = _P(1, "art_4", "article", "AI literacy", "AI literacy")
+    par = _P(
+        2, "art_4.par_1", "paragraph", "Providers and deployers shall ...", parent_id=1
+    )
+    rows = chunk_rows_for(par, {1: art, 2: par}, corpus_version_id=1)
+    assert rows[0].index_text.startswith(
+        "EU AI Act \u2014 Article 4 (AI literacy), paragraph 1:\n"
+    )

@@ -201,6 +201,27 @@ def parse_article(html: str) -> list[ParsedProvision]:
             ordinal += 1
             continue
 
+    if len(provisions) == 1:
+        # A single-paragraph article (Articles 32, 39, 85, 87, 94, 102 to 104
+        # in the 27 Jul 2026 text): no numbered paragraph, no point list, the
+        # body is one or more bare <p class="norm"> directly under the
+        # article. Until 23 Sep 2026 only the heading was stored and the body
+        # was in no provision row, so it was un-retrievable and un-citable
+        # (found by the corpus audit). The body becomes the article's own
+        # text_content; the chunker treats a childless article as a leaf and
+        # its citation label stays "Article N", which is the legally correct
+        # label for an unnumbered body.
+        body = " ".join(
+            t
+            for t in (
+                _own_text(para, exclude_classes=("modref",))
+                for para in root.find_all("p", class_="norm", recursive=False)
+            )
+            if t
+        )
+        if body:
+            provisions[0] = provisions[0].model_copy(update={"text_content": body})
+
     _validate(provisions, expected_types=("paragraph", "point"))
     return provisions
 

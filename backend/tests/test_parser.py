@@ -60,3 +60,36 @@ def test_malformed_article_input_raises_value_error():
 def test_malformed_annex_input_raises_value_error():
     with pytest.raises(ValueError):
         parse_annex("<div>nonsense</div>")
+
+
+def test_single_paragraph_article_body_is_kept_on_the_article_row():
+    # Article 32 has one bare <p class="norm"> and no numbered paragraph;
+    # before 23 Sep 2026 only the heading survived (corpus audit).
+    provisions = parse_article(_load_fixture("article_32.html"))
+    assert [p.unit_type for p in provisions] == ["article"]
+    art = provisions[0]
+    assert (
+        art.heading
+        == "Presumption of conformity with requirements relating to notified bodies"
+    )
+    assert art.text_content.startswith(
+        "Where a conformity assessment body demonstrates"
+    )
+    assert "Official Journal of the European Union" in art.text_content
+    assert art.text_content != art.heading
+
+
+def test_two_bare_paragraphs_are_joined_into_one_body():
+    provisions = parse_article(_load_fixture("article_85.html"))
+    assert len(provisions) == 1
+    body = provisions[0].text_content
+    assert body.startswith(
+        "Without prejudice to other administrative or judicial remedies"
+    )
+    assert "In accordance with Regulation (EU) 2019/1020" in body
+
+
+def test_numbered_article_row_still_holds_only_its_heading():
+    provisions = parse_article(_load_fixture("article_06.html"))
+    art = provisions[0]
+    assert art.text_content == art.heading and len(provisions) > 1

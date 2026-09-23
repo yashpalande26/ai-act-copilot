@@ -52,7 +52,10 @@ def build_contextual_prefix(
     ancestor_label: str, ancestor_heading: str | None, provision_label: str
 ) -> str:
     heading_part = f" ({ancestor_heading})" if ancestor_heading else ""
-    return f"EU AI Act — {ancestor_label}{heading_part}, {provision_label}:\n"
+    # An empty provision label is the container itself (a single-paragraph
+    # article chunked as its own leaf): no trailing ", ".
+    label_part = f", {provision_label}" if provision_label else ""
+    return f"EU AI Act — {ancestor_label}{heading_part}{label_part}:\n"
 
 
 def split_long_text(text: str, max_chars: int = MAX_CHUNK_CHARS) -> list[str]:
@@ -89,6 +92,96 @@ def _find_container_ancestor(
     return current
 
 
+def is_leaf(provision: Provision, has_children: bool) -> bool:
+    """What gets a chunk: paragraphs, points and annex points, and (since
+    23 Sep 2026) a childless article whose text is a body rather than its
+    heading, i.e. a single-paragraph article. Article and annex rows that
+    merely hold their heading stay containers."""
+    if provision.unit_type in LEAF_UNIT_TYPES:
+        return True
+    if provision.unit_type == "article" and not has_children:
+        text = (provision.text_content or "").strip()
+        return bool(text) and text != (provision.heading or "").strip()
+    return False
+
+
+def chunk_rows_for(
+    provision: Provision, by_id: dict[int, Provision], corpus_version_id: int
+) -> list[Chunk]:
+    """The Chunk rows one leaf provision produces (unsaved)."""
+    text = (provision.text_content or "").strip()
+    if not text:
+        return []
+    ancestor = _find_container_ancestor(provision, by_id)
+    ancestor_label = citation_label(ancestor.citation_id)
+    provision_label = (
+        ""
+        if ancestor.id == provision.id
+        else _relative_label(provision.citation_id, ancestor.citation_id)
+    )
+    parts = split_long_text(text)
+    total = len(parts)
+    rows: list[Chunk] = []
+    for i, part_text in enumerate(parts, start=1):
+        label = (
+            provision_label if total == 1 else f"{provision_label} (part {i}/{total})"
+        )
+        prefix = build_contextual_prefix(ancestor_label, ancestor.heading, label)
+        index_text = prefix + part_text
+        rows.append(
+            Chunk(
+                corpus_version_id=corpus_version_id,
+                provision_id=provision.id,
+                parent_provision_id=ancestor.id,
+                chunk_text=part_text,
+                index_text=index_text,
+                embedding=None,
+                char_start=None,
+                char_end=None,
+                content_hash=hashlib.sha256(index_text.encode("utf-8")).hexdigest(),
+                token_count=None,
+            )
+        )
+    return rows
+
+
+def _children_map(provisions: list[Provision]) -> set[int]:
+    return {p.parent_id for p in provisions if p.parent_id is not None}
+
+
+def build_missing_chunks(session: Session, corpus_version_id: int) -> int:
+    """Add chunks only for leaves that have none. Never deletes, never
+    touches an existing chunk or its embedding: the incremental path used to
+    backfill provisions added after the first ingest (23 Sep 2026)."""
+    provisions = (
+        session.execute(
+            select(Provision).where(Provision.corpus_version_id == corpus_version_id)
+        )
+        .scalars()
+        .all()
+    )
+    by_id = {p.id: p for p in provisions}
+    parents = _children_map(provisions)
+    chunked = set(
+        session.execute(
+            select(Chunk.provision_id).where(
+                Chunk.corpus_version_id == corpus_version_id
+            )
+        )
+        .scalars()
+        .all()
+    )
+    added = 0
+    for provision in provisions:
+        if provision.id in chunked or not is_leaf(provision, provision.id in parents):
+            continue
+        for row in chunk_rows_for(provision, by_id, corpus_version_id):
+            session.add(row)
+            added += 1
+    session.flush()
+    return added
+
+
 def build_chunks(session: Session, corpus_version_id: int) -> int:
     session.execute(delete(Chunk).where(Chunk.corpus_version_id == corpus_version_id))
 
@@ -100,52 +193,16 @@ def build_chunks(session: Session, corpus_version_id: int) -> int:
         .all()
     )
     by_id = {p.id: p for p in provisions}
+    parents = _children_map(provisions)
 
     try:
         chunk_count = 0
         for provision in provisions:
-            if provision.unit_type not in LEAF_UNIT_TYPES:
+            if not is_leaf(provision, provision.id in parents):
                 continue
-            text = (provision.text_content or "").strip()
-            if not text:
-                continue
-
-            ancestor = _find_container_ancestor(provision, by_id)
-            ancestor_label = citation_label(ancestor.citation_id)
-            provision_label = _relative_label(
-                provision.citation_id, ancestor.citation_id
-            )
-
-            parts = split_long_text(text)
-            total = len(parts)
-            for i, part_text in enumerate(parts, start=1):
-                label = (
-                    provision_label
-                    if total == 1
-                    else f"{provision_label} (part {i}/{total})"
-                )
-                prefix = build_contextual_prefix(
-                    ancestor_label, ancestor.heading, label
-                )
-                index_text = prefix + part_text
-                session.add(
-                    Chunk(
-                        corpus_version_id=corpus_version_id,
-                        provision_id=provision.id,
-                        parent_provision_id=ancestor.id,
-                        chunk_text=part_text,
-                        index_text=index_text,
-                        embedding=None,
-                        char_start=None,
-                        char_end=None,
-                        content_hash=hashlib.sha256(
-                            index_text.encode("utf-8")
-                        ).hexdigest(),
-                        token_count=None,
-                    )
-                )
+            for row in chunk_rows_for(provision, by_id, corpus_version_id):
+                session.add(row)
                 chunk_count += 1
-
         session.commit()
         return chunk_count
     except Exception:
