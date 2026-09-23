@@ -12,14 +12,22 @@ Two checks, both required to pass ("do not trust it, test it"):
                  resolve to a passage in the context (the id itself, an
                  ancestor or a descendant). A label absent from the context
                  is misgrounding whatever the model says.
-  entailment     one structured call to VERIFY_MODEL (gpt-4o by default; the
-                 eval measured gpt-4o-mini too). The model splits the answer
-                 into claims, says which numbered context passages each claim
-                 relies on, and whether the claim is SUPPORTED by those
+  entailment     one structured call to VERIFY_MODEL (gpt-4o-mini by
+                 default; VERIFY_MODEL selects gpt-4o). The model splits the
+                 answer into claims, says which numbered context passages each
+                 claim relies on, and whether the claim is SUPPORTED by those
                  passages, UNSUPPORTED, or carries NO_CITATION. Any cited
                  claim marked unsupported is misgrounding. A "supported"
                  verdict whose passage indexes are out of range is treated as
                  unsupported.
+
+ADR-25 (23 Sep 2026): the prompt and the passage block were put through a
+46-probe A/B (24 Stage 3 probes, 12 valid paraphrases including the real
+withheld answers from the ADR-20 and ADR-24 runs, 10 false-accept traps),
+gpt-4o-mini and gpt-4o, 3 draws per probe. See ADR-25 for what was kept and
+what was rejected; the rule throughout: a change that lets one more
+wrong-label, wrong-actor or contradicting claim through is rejected whatever
+it does for paraphrases.
 
 Outcome (app.generation.graph): passed | regenerated (the second draft
 passed) | abstained (the second draft failed too, or was itself the
@@ -136,11 +144,23 @@ def missing_references(answer: str, fused: list[FusedResult]) -> list[str]:
     ]
 
 
+def passage_block(index: int, f: FusedResult) -> str:
+    """One numbered passage: label, the Article or Annex heading the retriever
+    attached, then the text. The heading is what lets "listed as high-risk
+    (Annex III, point 1(c))" be checked against "High-risk AI systems referred
+    to in Article 6(2)" instead of guessed. ADR-25 probe, 3 draws per item:
+    with gpt-4o the heading turned the CCTV and emotion-recognition withholds
+    into passes at 0 false accepts; with gpt-4o-mini it did the opposite (the
+    wrong-actor probe went from caught 3/3 to 0/3), which is one of the two
+    reasons gpt-4o-mini is no longer the verifier."""
+    head = f"[{index}] {f.result.citation_label}"
+    if f.result.article_heading:
+        head += f" ({f.result.article_heading})"
+    return f"{head}\n{f.result.chunk_text}"
+
+
 def _prompt(answer: str, fused: list[FusedResult]) -> str:
-    blocks = [
-        f"[{i}] {f.result.citation_label}\n{f.result.chunk_text}"
-        for i, f in enumerate(fused)
-    ]
+    blocks = [passage_block(i, f) for i, f in enumerate(fused)]
     return f"ANSWER:\n{answer}\n\nPASSAGES:\n\n" + "\n\n".join(blocks)
 
 

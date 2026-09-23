@@ -259,5 +259,239 @@
   ],
   "answer": "Non-compliance with the obligations of providers pursuant to Article 16 is subject to administrative fines of up to EUR 35 000 000 or 7 % of total worldwide annual turnover (Article 99, paragraph 4, point (a)).",
   "note": "those are paragraph 3's figures; paragraph 4 says 15 000 000 and 3 %"
+ },
+ {
+  "id": "pp_01",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "anx_III.pt_5.sub_d",
+   "anx_III.pt_5.sub_a"
+  ],
+  "answer": "AI systems intended to evaluate and classify emergency calls, or to dispatch or establish priority in the dispatching of emergency first response services, including emergency healthcare patient triage systems, are listed as high-risk (Annex III, point 5(d)). Whether a specific system falls within this category is determined by its intended purpose, specifically if it is used to establish priority in dispatching emergency services or in emergency healthcare patient triage.",
+  "note": "ADR-24 run 3: the triage reply, generated on the gold provision and withheld by gpt-4o-mini twice"
+ },
+ {
+  "id": "pp_02",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "anx_III.pt_5.sub_d",
+   "anx_III.pt_6.sub_d"
+  ],
+  "answer": "The retrieved provisions state that AI systems intended to evaluate and classify emergency calls by natural persons, or to be used to dispatch or to establish priority in the dispatching of emergency first response services, as well as emergency healthcare patient triage systems, are covered by Annex III, point 5(d). The conditions attached are that the AI system is intended for use in emergency response services, including healthcare patient triage, and concerns the prioritisation of emergency services.",
+  "note": "the revised explain instruction's conditions sentence, withheld 1 of 3 draws in the probe"
+ },
+ {
+  "id": "pp_03",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "anx_III.pt_1.sub_a",
+   "art_3.pt_41",
+   "art_5.par_1.pt_e"
+  ],
+  "answer": "Remote biometric identification systems, which identify natural persons without their active involvement, typically at a distance through the comparison of a person's biometric data with a reference database (Article 3, point (41)), are considered high-risk AI systems (Annex III, point 1(a)). This does not include systems intended for biometric verification whose sole purpose is to confirm that a person is who they claim to be (Annex III, point 1(a)).",
+  "note": "ADR-24 probe: the CCTV reply, definition and Annex listing merged, withheld 2 of 3 draws"
+ },
+ {
+  "id": "pp_04",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_66.pt_h"
+  ],
+  "answer": "Cooperation with Union institutions and expert groups should be prioritised in the fields of product safety, cybersecurity, competition, digital and media services, financial services, consumer protection, data and fundamental rights protection, according to Article 66, point (h).",
+  "note": "ADR-20(b): the Article 66(h) paraphrase gpt-4o rejected twice"
+ },
+ {
+  "id": "pp_05",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_75.par_2"
+  ],
+  "answer": "If market surveillance authorities have sufficient reason to consider general-purpose AI systems non-compliant with the Regulation's requirements, they shall cooperate with the AI Office to carry out compliance evaluations and inform the Board and other market surveillance authorities accordingly (Article 75, paragraph 2).",
+  "note": "ADR-20 Stage 3 run: regenerated once by gpt-4o; the summary drops the clause on direct use for a high-risk purpose without changing the obligation"
+ },
+ {
+  "id": "pp_06",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "anx_III.pt_5.sub_b"
+  ],
+  "answer": "AI systems used to assess whether natural persons are creditworthy or to give them a credit score are listed in Annex III, point 5(b), except systems used to detect financial fraud.",
+  "note": "reworded, exception kept"
+ },
+ {
+  "id": "pp_07",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "anx_III.pt_4.sub_a"
+  ],
+  "answer": "AI systems intended to be used for recruiting or selecting people, for example to analyse and filter job applications and to evaluate candidates, are listed in Annex III, point 4(a).",
+  "note": "omission of one example (targeted job advertisements) is not a change"
+ },
+ {
+  "id": "pp_08",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_50.par_1"
+  ],
+  "answer": "Providers must make sure that people are told they are interacting with an AI system, unless that is obvious to a reasonably well-informed, observant and circumspect person in the circumstances (Article 50, paragraph 1). The duty does not apply to systems authorised by law to detect, prevent, investigate or prosecute criminal offences, subject to safeguards, unless they are available for the public to report an offence (Article 50, paragraph 1).",
+  "note": ""
+ },
+ {
+  "id": "pp_09",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_6.par_2",
+   "art_6.par_3"
+  ],
+  "answer": "Systems listed in Annex III are considered high-risk (Article 6, paragraph 2). By way of derogation, such a system is not considered high-risk where it does not pose a significant risk of harm to health, safety or fundamental rights, including by not materially influencing the outcome of decision making (Article 6, paragraph 3).",
+  "note": ""
+ },
+ {
+  "id": "pp_10",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_5.par_1.pt_f",
+   "anx_III.pt_1.sub_c"
+  ],
+  "answer": "Using AI systems to infer the emotions of a natural person at the workplace or in education institutions is prohibited, except where the system is intended for medical or safety reasons (Article 5, paragraph 1, point (f)). AI systems intended for emotion recognition are listed in Annex III, point 1(c).",
+  "note": ""
+ },
+ {
+  "id": "pp_11",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "anx_III.pt_5.sub_b",
+   "anx_III.pt_5.sub_c"
+  ],
+  "answer": "Whether a system falls within Annex III, point 5(b) turns on whether it is intended to evaluate the creditworthiness of natural persons or to establish their credit score; systems used for the purpose of detecting financial fraud are excepted.",
+  "note": "the conditions sentence in the provision's own terms"
+ },
+ {
+  "id": "pp_12",
+  "kind": "valid_paraphrase",
+  "expected_misgrounded": false,
+  "context_ids": [
+   "art_73.par_1",
+   "art_3.pt_49"
+  ],
+  "answer": "A provider whose high-risk AI system is on the Union market has to report every serious incident to the market surveillance authorities of the Member State where it happened (Article 73, paragraph 1).",
+  "note": "singular restatement of the same obligation"
+ },
+ {
+  "id": "pf_01",
+  "kind": "wrong_label_present",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "anx_III.pt_5.sub_d",
+   "anx_III.pt_5.sub_a"
+  ],
+  "answer": "AI systems intended to establish priority in the dispatching of emergency first response services, including emergency healthcare patient triage systems, are listed as high-risk (Annex III, point 5(a)).",
+  "note": "5(d)'s content cited to 5(a); both passages are in the context, so only the entailment check can catch it"
+ },
+ {
+  "id": "pf_02",
+  "kind": "dropped_exception",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "anx_III.pt_5.sub_b"
+  ],
+  "answer": "All AI systems intended to evaluate the creditworthiness of natural persons are high-risk without exception, including those used to detect financial fraud (Annex III, point 5(b)).",
+  "note": "contradicts the fraud-detection exception"
+ },
+ {
+  "id": "pf_03",
+  "kind": "inferred_consequence",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "anx_III.pt_5.sub_d",
+   "anx_III.pt_5.sub_a"
+  ],
+  "answer": "Emergency healthcare patient triage systems must undergo a third-party conformity assessment before being placed on the market (Annex III, point 5(d)).",
+  "note": "a consequence the passage does not contain"
+ },
+ {
+  "id": "pf_04",
+  "kind": "contradiction",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "anx_III.pt_1.sub_a",
+   "art_3.pt_41"
+  ],
+  "answer": "Biometric verification systems whose sole purpose is to confirm that a person is who they claim to be are remote biometric identification systems and are listed as high-risk (Annex III, point 1(a)).",
+  "note": "the passage excludes exactly these systems"
+ },
+ {
+  "id": "pf_05",
+  "kind": "wrong_actor",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_50.par_1"
+  ],
+  "answer": "Deployers shall ensure that AI systems intended to interact directly with natural persons are designed so that those persons are informed that they are interacting with an AI system (Article 50, paragraph 1).",
+  "note": "the obligation is on providers"
+ },
+ {
+  "id": "pf_06",
+  "kind": "fabricated_detail",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_6.par_2",
+   "art_6.par_3"
+  ],
+  "answer": "An Annex III system is not considered high-risk where it does not pose a significant risk of harm, provided the provider files a documented assessment with a notified body before placing it on the market (Article 6, paragraph 3).",
+  "note": "the filing with a notified body is not in the passage"
+ },
+ {
+  "id": "pf_07",
+  "kind": "added_condition",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_5.par_1.pt_e"
+  ],
+  "answer": "Creating or expanding facial recognition databases by untargeted scraping of facial images from the internet or CCTV footage is prohibited, unless the images were publicly posted by the persons themselves (Article 5, paragraph 1, point (e)).",
+  "note": "an exception the passage does not state"
+ },
+ {
+  "id": "pf_08",
+  "kind": "wrong_provision_content",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "anx_III.pt_1.sub_a",
+   "art_3.pt_41"
+  ],
+  "answer": "Deployers of remote biometric identification systems must obtain prior judicial authorisation for each use (Annex III, point 1(a)).",
+  "note": "plausible-sounding rule from elsewhere in the Act, not in either passage"
+ },
+ {
+  "id": "pf_09",
+  "kind": "wrong_actor",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "art_66.pt_h"
+  ],
+  "answer": "The Board must cooperate with national courts and prosecutors in the field of criminal justice (Article 66, point (h)).",
+  "note": "neither the bodies nor the field are in the passage"
+ },
+ {
+  "id": "pf_10",
+  "kind": "overgeneralisation",
+  "expected_misgrounded": true,
+  "context_ids": [
+   "anx_III.pt_1.sub_c",
+   "art_5.par_1.pt_f"
+  ],
+  "answer": "Emotion recognition systems are prohibited in all settings (Annex III, point 1(c); Article 5, paragraph 1, point (f)).",
+  "note": "Annex III lists them as high-risk; the prohibition covers workplace and education only"
  }
 ]

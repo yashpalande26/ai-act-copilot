@@ -1,0 +1,1078 @@
+{
+ "model": "openai:gpt-4o",
+ "repeats": 3,
+ "tp": 22,
+ "n_mis": 22,
+ "fp": 2,
+ "n_valid": 24,
+ "rows": [
+  {
+   "id": "pv_01",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 768,
+   "latency_ms": 2392
+  },
+  {
+   "id": "pv_02",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 807,
+   "latency_ms": 1569
+  },
+  {
+   "id": "pv_03",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 912,
+   "latency_ms": 2709
+  },
+  {
+   "id": "pv_04",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 890,
+   "latency_ms": 1786
+  },
+  {
+   "id": "pv_05",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 808,
+   "latency_ms": 1823
+  },
+  {
+   "id": "pv_06",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 879,
+   "latency_ms": 2098
+  },
+  {
+   "id": "pv_07",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 836,
+   "latency_ms": 2036
+  },
+  {
+   "id": "pv_08",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 716,
+   "latency_ms": 1404
+  },
+  {
+   "id": "pv_09",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 759,
+   "latency_ms": 1203
+  },
+  {
+   "id": "pv_10",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 787,
+   "latency_ms": 1540
+  },
+  {
+   "id": "pv_11",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 792,
+   "latency_ms": 1765
+  },
+  {
+   "id": "pv_12",
+   "kind": "valid",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 753,
+   "latency_ms": 1364
+  },
+  {
+   "id": "pm_01",
+   "kind": "wrong_label",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Deployers must assign human oversight to natural persons who have the necessary competence, training and authority (Article 3, point (4))."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Deployers must assign human oversight to natural persons who have the necessary competence, training and authority (Article 3, point (4))."
+    ],
+    [
+     "Deployers must assign human oversight to natural persons who have the necessary competence, training and authority (Article 3, point (4))."
+    ],
+    [
+     "Deployers must assign human oversight to natural persons who have the necessary competence, training and authority (Article 3, point (4))."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 632,
+   "latency_ms": 1170
+  },
+  {
+   "id": "pm_02",
+   "kind": "fabricated_figure",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Non-compliance with the prohibition of the AI practices referred to in Article 5 is subject to administrative fines of up to EUR 50 000 000 or 10 % of total worldwide annual turnover (Article 99, paragraph 3)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Non-compliance with the prohibition of the AI practices referred to in Article 5 is subject to administrative fines of up to EUR 50 000 000 or 10 % of total worldwide annual turnover (Article 99, paragraph 3)."
+    ],
+    [
+     "Non-compliance with the prohibition of the AI practices referred to in Article 5 is subject to administrative fines of up to EUR 50 000 000 or 10 % of total worldwide annual turnover (Article 99, paragraph 3)."
+    ],
+    [
+     "Non-compliance with the prohibition of the AI practices referred to in Article 5 is subject to administrative fines of up to EUR 50 000 000 or 10 % of total worldwide annual turnover (Article 99, paragraph 3)."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 783,
+   "latency_ms": 1259
+  },
+  {
+   "id": "pm_03",
+   "kind": "absent_label_mentioned",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "The CE marking must be at least 5 mm high (Article 48, paragraph 1)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "The CE marking must be at least 5 mm high (Article 48, paragraph 1)."
+    ],
+    [
+     "The CE marking must be at least 5 mm high (Article 48, paragraph 1)."
+    ],
+    [
+     "The CE marking must be at least 5 mm high (Article 48, paragraph 1)."
+    ]
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 647,
+   "latency_ms": 1337
+  },
+  {
+   "id": "pm_04",
+   "kind": "wrong_actor",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Deployers of high-risk AI systems placed on the Union market must report any serious incident to the market surveillance authorities of the Member States where the incident occurred (Article 73, paragraph 1)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Deployers of high-risk AI systems placed on the Union market must report any serious incident to the market surveillance authorities of the Member States where the incident occurred (Article 73, paragraph 1)."
+    ],
+    [
+     "Deployers of high-risk AI systems placed on the Union market must report any serious incident to the market surveillance authorities of the Member States where the incident occurred (Article 73, paragraph 1)."
+    ],
+    [
+     "Deployers of high-risk AI systems placed on the Union market must report any serious incident to the market surveillance authorities of the Member States where the incident occurred (Article 73, paragraph 1)."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 685,
+   "latency_ms": 1120
+  },
+  {
+   "id": "pm_05",
+   "kind": "added_condition",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "High-risk AI systems must technically allow for the automatic recording of events (logs) for at least ten years (Article 12, paragraph 1)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "High-risk AI systems must technically allow for the automatic recording of events (logs) for at least ten years (Article 12, paragraph 1)."
+    ],
+    [
+     "High-risk AI systems must technically allow for the automatic recording of events (logs) for at least ten years (Article 12, paragraph 1)."
+    ],
+    [
+     "High-risk AI systems must technically allow for the automatic recording of events (logs) for at least ten years (Article 12, paragraph 1)."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 778,
+   "latency_ms": 1301
+  },
+  {
+   "id": "pm_06",
+   "kind": "wrong_label",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "AI systems referred to in Annex III are considered to be high-risk (Article 49, paragraph 1)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "AI systems referred to in Annex III are considered to be high-risk (Article 49, paragraph 1)."
+    ],
+    [
+     "AI systems referred to in Annex III are considered to be high-risk (Article 49, paragraph 1)."
+    ],
+    [
+     "AI systems referred to in Annex III are considered to be high-risk (Article 49, paragraph 1)."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 645,
+   "latency_ms": 1246
+  },
+  {
+   "id": "pm_07",
+   "kind": "absent_label",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [
+    "art_19.par_1"
+   ],
+   "unsupported_claims": [
+    "Providers must keep the automatically generated logs for at least six months (Article 19, paragraph 1)"
+   ],
+   "unsupported_by_draw": [
+    [
+     "Providers must keep the automatically generated logs for at least six months (Article 19, paragraph 1)"
+    ],
+    [
+     "Providers must keep the automatically generated logs for at least six months (Article 19, paragraph 1)"
+    ],
+    [
+     "Providers must keep the automatically generated logs for at least six months (Article 19, paragraph 1)"
+    ]
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 701,
+   "latency_ms": 1437
+  },
+  {
+   "id": "pm_08",
+   "kind": "insufficient_provision",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "A general-purpose AI model must be registered in the EU database before it is placed on the market (Article 3, point (63))."
+   ],
+   "unsupported_by_draw": [
+    [
+     "A general-purpose AI model must be registered in the EU database before it is placed on the market (Article 3, point (63))."
+    ],
+    [
+     "A general-purpose AI model must be registered in the EU database before it is placed on the market (Article 3, point (63))."
+    ],
+    [
+     "A general-purpose AI model must be registered in the EU database before it is placed on the market (Article 3, point (63))."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 637,
+   "latency_ms": 1151
+  },
+  {
+   "id": "pm_09",
+   "kind": "fabricated_detail",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Deployers must disclose deep fakes by placing a visible watermark in the top-left corner of the content (Article 50, paragraph 4)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Deployers must disclose deep fakes by placing a visible watermark in the top-left corner of the content (Article 50, paragraph 4)."
+    ],
+    [
+     "Deployers must disclose deep fakes by placing a visible watermark in the top-left corner of the content (Article 50, paragraph 4)."
+    ],
+    [
+     "Deployers must disclose deep fakes by placing a visible watermark in the top-left corner of the content (Article 50, paragraph 4)."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 722,
+   "latency_ms": 1119
+  },
+  {
+   "id": "pm_10",
+   "kind": "wrong_label",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Training, validation and testing data sets must be subject to data governance and management practices appropriate for the intended purpose of the high-risk AI system (Article 13, paragraph 1)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Training, validation and testing data sets must be subject to data governance and management practices appropriate for the intended purpose of the high-risk AI system (Article 13, paragraph 1)."
+    ],
+    [
+     "Training, validation and testing data sets must be subject to data governance and management practices appropriate for the intended purpose of the high-risk AI system (Article 13, paragraph 1)."
+    ],
+    [
+     "Training, validation and testing data sets must be subject to data governance and management practices appropriate for the intended purpose of the high-risk AI system (Article 13, paragraph 1)."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 685,
+   "latency_ms": 1347
+  },
+  {
+   "id": "pm_11",
+   "kind": "contradiction",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Deployers that are private companies never have to perform a fundamental rights impact assessment before deploying a high-risk AI system (Article 27, paragraph 1)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Deployers that are private companies never have to perform a fundamental rights impact assessment before deploying a high-risk AI system (Article 27, paragraph 1)."
+    ],
+    [
+     "Deployers that are private companies never have to perform a fundamental rights impact assessment before deploying a high-risk AI system (Article 27, paragraph 1)."
+    ],
+    [
+     "Deployers that are private companies never have to perform a fundamental rights impact assessment before deploying a high-risk AI system (Article 27, paragraph 1)."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 678,
+   "latency_ms": 1348
+  },
+  {
+   "id": "pm_12",
+   "kind": "figure_from_other_paragraph",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Non-compliance with the obligations of providers pursuant to Article 16 is subject to administrative fines of up to EUR 35 000 000 or 7 % of total worldwide annual turnover (Article 99, paragraph 4, point (a))."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Non-compliance with the obligations of providers pursuant to Article 16 is subject to administrative fines of up to EUR 35 000 000 or 7 % of total worldwide annual turnover (Article 99, paragraph 4, point (a))."
+    ],
+    [
+     "Non-compliance with the obligations of providers pursuant to Article 16 is subject to administrative fines of up to EUR 35 000 000 or 7 % of total worldwide annual turnover (Article 99, paragraph 4, point (a))."
+    ],
+    [
+     "Non-compliance with the obligations of providers pursuant to Article 16 is subject to administrative fines of up to EUR 35 000 000 or 7 % of total worldwide annual turnover (Article 99, paragraph 4, point (a))."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 763,
+   "latency_ms": 1347
+  },
+  {
+   "id": "pp_01",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 848,
+   "latency_ms": 1887
+  },
+  {
+   "id": "pp_02",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 900,
+   "latency_ms": 2118
+  },
+  {
+   "id": "pp_03",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 879,
+   "latency_ms": 1770
+  },
+  {
+   "id": "pp_04",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": false,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Cooperation with Union institutions and expert groups should be prioritised in the fields of product safety, cybersecurity, competition, digital and media services, financial services, consumer protection, data and fundamental rights protection, according to Article 66, point (h)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Cooperation with Union institutions and expert groups should be prioritised in the fields of product safety, cybersecurity, competition, digital and media services, financial services, consumer protection, data and fundamental rights protection, according to Article 66, point (h)."
+    ],
+    [
+     "Cooperation with Union institutions and expert groups should be prioritised in the fields of product safety, cybersecurity, competition, digital and media services, financial services, consumer protection, data and fundamental rights protection, according to Article 66, point (h)."
+    ],
+    [
+     "Cooperation with Union institutions and expert groups should be prioritised in the fields of product safety, cybersecurity, competition, digital and media services, financial services, consumer protection, data and fundamental rights protection, according to Article 66, point (h)."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 636,
+   "latency_ms": 1471
+  },
+  {
+   "id": "pp_05",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": false,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "If market surveillance authorities have sufficient reason to consider general-purpose AI systems non-compliant with the Regulation's requirements, they shall cooperate with the AI Office to carry out compliance evaluations and inform the Board and other market surveillance authorities accordingly (Article 75, paragraph 2)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "If market surveillance authorities have sufficient reason to consider general-purpose AI systems non-compliant with the Regulation's requirements, they shall cooperate with the AI Office to carry out compliance evaluations and inform the Board and other market surveillance authorities accordingly (Article 75, paragraph 2)."
+    ],
+    [
+     "If market surveillance authorities have sufficient reason to consider general-purpose AI systems non-compliant with the Regulation's requirements, they shall cooperate with the AI Office to carry out compliance evaluations and inform the Board and other market surveillance authorities accordingly (Article 75, paragraph 2)."
+    ],
+    [
+     "If market surveillance authorities have sufficient reason to consider general-purpose AI systems non-compliant with the Regulation's requirements, they shall cooperate with the AI Office to carry out compliance evaluations and inform the Board and other market surveillance authorities accordingly (Article 75, paragraph 2)."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 672,
+   "latency_ms": 1321
+  },
+  {
+   "id": "pp_06",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 610,
+   "latency_ms": 1358
+  },
+  {
+   "id": "pp_07",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 609,
+   "latency_ms": 1373
+  },
+  {
+   "id": "pp_08",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 853,
+   "latency_ms": 1901
+  },
+  {
+   "id": "pp_09",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 789,
+   "latency_ms": 1811
+  },
+  {
+   "id": "pp_10",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 2,
+   "verifier_ok": true,
+   "tokens": 748,
+   "latency_ms": 1527
+  },
+  {
+   "id": "pp_11",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 682,
+   "latency_ms": 1343
+  },
+  {
+   "id": "pp_12",
+   "kind": "valid_paraphrase",
+   "expected_misgrounded": false,
+   "flagged": false,
+   "flagged_draws": "0/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [],
+   "unsupported_by_draw": [
+    [],
+    [],
+    []
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 707,
+   "latency_ms": 1161
+  },
+  {
+   "id": "pf_01",
+   "kind": "wrong_label_present",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "AI systems intended to establish priority in the dispatching of emergency first response services, including emergency healthcare patient triage systems, are listed as high-risk (Annex III, point 5(a))."
+   ],
+   "unsupported_by_draw": [
+    [
+     "AI systems intended to establish priority in the dispatching of emergency first response services, including emergency healthcare patient triage systems, are listed as high-risk (Annex III, point 5(a))."
+    ],
+    [
+     "AI systems intended to establish priority in the dispatching of emergency first response services, including emergency healthcare patient triage systems, are listed as high-risk (Annex III, point 5(a))."
+    ],
+    [
+     "AI systems intended to establish priority in the dispatching of emergency first response services, including emergency healthcare patient triage systems, are listed as high-risk (Annex III, point 5(a))."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 711,
+   "latency_ms": 1310
+  },
+  {
+   "id": "pf_02",
+   "kind": "dropped_exception",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "All AI systems intended to evaluate the creditworthiness of natural persons are high-risk without exception, including those used to detect financial fraud (Annex III, point 5(b))."
+   ],
+   "unsupported_by_draw": [
+    [
+     "All AI systems intended to evaluate the creditworthiness of natural persons are high-risk without exception, including those used to detect financial fraud (Annex III, point 5(b))."
+    ],
+    [
+     "All AI systems intended to evaluate the creditworthiness of natural persons are high-risk without exception, including those used to detect financial fraud (Annex III, point 5(b))."
+    ],
+    [
+     "All AI systems intended to evaluate the creditworthiness of natural persons are high-risk without exception, including those used to detect financial fraud (Annex III, point 5(b))."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 601,
+   "latency_ms": 1212
+  },
+  {
+   "id": "pf_03",
+   "kind": "inferred_consequence",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Emergency healthcare patient triage systems must undergo a third-party conformity assessment before being placed on the market (Annex III, point 5(d))."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Emergency healthcare patient triage systems must undergo a third-party conformity assessment before being placed on the market (Annex III, point 5(d))."
+    ],
+    [
+     "Emergency healthcare patient triage systems must undergo a third-party conformity assessment before being placed on the market (Annex III, point 5(d))."
+    ],
+    [
+     "Emergency healthcare patient triage systems must undergo a third-party conformity assessment before being placed on the market (Annex III, point 5(d))."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 681,
+   "latency_ms": 1269
+  },
+  {
+   "id": "pf_04",
+   "kind": "contradiction",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Biometric verification systems whose sole purpose is to confirm that a person is who they claim to be are remote biometric identification systems and are listed as high-risk (Annex III, point 1(a))."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Biometric verification systems whose sole purpose is to confirm that a person is who they claim to be are remote biometric identification systems and are listed as high-risk (Annex III, point 1(a))."
+    ],
+    [
+     "Biometric verification systems whose sole purpose is to confirm that a person is who they claim to be are remote biometric identification systems and are listed as high-risk (Annex III, point 1(a))."
+    ],
+    [
+     "Biometric verification systems whose sole purpose is to confirm that a person is who they claim to be are remote biometric identification systems and are listed as high-risk (Annex III, point 1(a))."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 682,
+   "latency_ms": 1269
+  },
+  {
+   "id": "pf_05",
+   "kind": "wrong_actor",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Deployers shall ensure that AI systems intended to interact directly with natural persons are designed so that those persons are informed that they are interacting with an AI system (Article 50, paragraph 1)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Deployers shall ensure that AI systems intended to interact directly with natural persons are designed so that those persons are informed that they are interacting with an AI system (Article 50, paragraph 1)."
+    ],
+    [
+     "Deployers shall ensure that AI systems intended to interact directly with natural persons are designed so that those persons are informed that they are interacting with an AI system (Article 50, paragraph 1)."
+    ],
+    [
+     "Deployers shall ensure that AI systems intended to interact directly with natural persons are designed so that those persons are informed that they are interacting with an AI system (Article 50, paragraph 1)."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 696,
+   "latency_ms": 1326
+  },
+  {
+   "id": "pf_06",
+   "kind": "fabricated_detail",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "An Annex III system is not considered high-risk where it does not pose a significant risk of harm, provided the provider files a documented assessment with a notified body before placing it on the market (Article 6, paragraph 3)."
+   ],
+   "unsupported_by_draw": [
+    [
+     "An Annex III system is not considered high-risk where it does not pose a significant risk of harm, provided the provider files a documented assessment with a notified body before placing it on the market (Article 6, paragraph 3)."
+    ],
+    [
+     "An Annex III system is not considered high-risk where it does not pose a significant risk of harm, provided the provider files a documented assessment with a notified body before placing it on the market (Article 6, paragraph 3)."
+    ],
+    [
+     "An Annex III system is not considered high-risk where it does not pose a significant risk of harm, provided the provider files a documented assessment with a notified body before placing it on the market (Article 6, paragraph 3)."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 695,
+   "latency_ms": 1328
+  },
+  {
+   "id": "pf_07",
+   "kind": "added_condition",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Creating or expanding facial recognition databases by untargeted scraping of facial images from the internet or CCTV footage is prohibited, unless the images were publicly posted by the persons themselves (Article 5, paragraph 1, point (e))."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Creating or expanding facial recognition databases by untargeted scraping of facial images from the internet or CCTV footage is prohibited, unless the images were publicly posted by the persons themselves (Article 5, paragraph 1, point (e))."
+    ],
+    [
+     "Creating or expanding facial recognition databases by untargeted scraping of facial images from the internet or CCTV footage is prohibited, unless the images were publicly posted by the persons themselves (Article 5, paragraph 1, point (e))."
+    ],
+    [
+     "Creating or expanding facial recognition databases by untargeted scraping of facial images from the internet or CCTV footage is prohibited, unless the images were publicly posted by the persons themselves (Article 5, paragraph 1, point (e))."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 617,
+   "latency_ms": 1141
+  },
+  {
+   "id": "pf_08",
+   "kind": "wrong_provision_content",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Deployers of remote biometric identification systems must obtain prior judicial authorisation for each use (Annex III, point 1(a))."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Deployers of remote biometric identification systems must obtain prior judicial authorisation for each use (Annex III, point 1(a))."
+    ],
+    [
+     "Deployers of remote biometric identification systems must obtain prior judicial authorisation for each use (Annex III, point 1(a))."
+    ],
+    [
+     "Deployers of remote biometric identification systems must obtain prior judicial authorisation for each use (Annex III, point 1(a))."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 650,
+   "latency_ms": 1173
+  },
+  {
+   "id": "pf_09",
+   "kind": "wrong_actor",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "The Board must cooperate with national courts and prosecutors in the field of criminal justice (Article 66, point (h))."
+   ],
+   "unsupported_by_draw": [
+    [
+     "The Board must cooperate with national courts and prosecutors in the field of criminal justice (Article 66, point (h))."
+    ],
+    [
+     "The Board must cooperate with national courts and prosecutors in the field of criminal justice (Article 66, point (h))."
+    ],
+    [
+     "The Board must cooperate with national courts and prosecutors in the field of criminal justice (Article 66, point (h))."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 590,
+   "latency_ms": 1166
+  },
+  {
+   "id": "pf_10",
+   "kind": "overgeneralisation",
+   "expected_misgrounded": true,
+   "flagged": true,
+   "flagged_draws": "3/3",
+   "correct": true,
+   "deterministic_missing": [],
+   "unsupported_claims": [
+    "Emotion recognition systems are prohibited in all settings (Annex III, point 1(c); Article 5, paragraph 1, point (f))."
+   ],
+   "unsupported_by_draw": [
+    [
+     "Emotion recognition systems are prohibited in all settings (Annex III, point 1(c); Article 5, paragraph 1, point (f))."
+    ],
+    [
+     "Emotion recognition systems are prohibited in all settings (Annex III, point 1(c); Article 5, paragraph 1, point (f))."
+    ],
+    [
+     "Emotion recognition systems are prohibited in all settings (Annex III, point 1(c); Article 5, paragraph 1, point (f))."
+    ]
+   ],
+   "claims_checked": 1,
+   "verifier_ok": true,
+   "tokens": 654,
+   "latency_ms": 1168
+  }
+ ]
+}

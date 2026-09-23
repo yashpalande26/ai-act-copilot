@@ -88,6 +88,7 @@ def main() -> None:
     ap.add_argument("--clarify", action="store_true")
     ap.add_argument("--chat", action="store_true")
     ap.add_argument("--json", type=Path)
+    ap.add_argument("--only", help="comma-separated item ids (clarify mode)")
     args = ap.parse_args()
     session = SessionLocal()
     real_commit = session.commit
@@ -334,6 +335,9 @@ def main() -> None:
 
         if args.clarify:
             items = json.loads((HERE / "clarify_set.json").read_text())
+            if args.only:
+                only = set(args.only.split(","))
+                items = [it for it in items if it["id"] in only]
             rows = []
             print("\n== CLARIFY: every sequence ==")
             for it in items:

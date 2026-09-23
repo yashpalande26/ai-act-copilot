@@ -1,6 +1,77 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-25: The citation verifier is gpt-4o with passage headings; prompt loosening rejected; clarify flag still off (2026-09-23)
+Context: ADR-20(b) recorded the verifier withholding faithful paraphrases; ADR-24 lost its
+last gate to the same thing (the triage reply, generated on Annex III 5(d), withheld twice
+by gpt-4o-mini). The brief: reduce false abstentions without raising false accepts, keep
+gpt-4o-mini unless prompt tuning cannot pass the gates, and treat a looser verifier as the
+worse failure. Everything below is 3 draws per probe because gpt-4o-mini at temperature 0
+is not deterministic; an item passes only if every draw does.
+Decision: (1) The probe set grew from 24 to 46 (evals/misgrounding_probes.json): twelve
+valid paraphrases, seven of them the real withheld answers from the ADR-20 and ADR-24 runs
+(the two triage wordings, the CCTV definition-plus-listing merge, Article 66(h), Article
+75(2)) plus five authored ones, and ten false-accept traps (right content under the wrong
+label with both passages present, an exception dropped to make the rule absolute, an
+inferred consequence, a claim placing within a provision what it expressly excludes, two
+wrong actors, a fabricated procedural detail, an added exception, a plausible rule from
+elsewhere in the Act, an overgeneralisation across two passages). The runner gained
+--repeats, --only, --prompt-file, --headings and --no-headings for A/B runs, and now
+attaches the Article or Annex heading the retriever attaches. (2) Eight configurations
+were measured (evals/runs/verify_probes_adr25_*.json and the scratch logs summarised
+here). gpt-4o-mini, production prompt: 2 false accepts (the Article 6(2) claim cited to
+Article 49(1) and the biometric-verification exclusion contradiction, both through 3/3),
+1 false abstention. gpt-4o-mini with headings: 3 and 2 (the wrong-actor probe went from
+caught 3/3 to caught 0/3). gpt-4o-mini with a narrow paraphrase clause and headings: 4 and
+1. gpt-4o-mini with an element-by-element rewrite and headings: 8 false accepts and 0
+false abstentions, every wrong-label probe waved through. gpt-4o-mini with the narrow
+clause and no headings: identical to production, 2 and 1. gpt-4o, production prompt: 0
+and 3. gpt-4o with the narrow clause: 0 and 4. gpt-4o, production prompt, headings: 0 and
+2, the two being Article 66(h) ("in particular" rendered as "should be prioritised") and
+Article 75(2) (the clause limiting the rule to systems usable directly by deployers for a
+high-risk purpose dropped). On re-reading, both change an element of the rule, a modality
+and a scope condition; they are kept in the set as authored, marked for Yash's review.
+(3) Chosen: gpt-4o with headings, production prompt. The prompt is unchanged: every
+loosening tried on gpt-4o-mini bought paraphrases with wrong-label accepts, and on gpt-4o
+the narrow clause only added a withhold. The heading is added to each passage block
+because it is the fact that makes "listed as high-risk (Annex III, point 1(c))" checkable
+against "High-risk AI systems referred to in Article 6(2)"; on gpt-4o it turned the CCTV
+and emotion-recognition withholds into passes at 0 false accepts, on gpt-4o-mini it did
+the opposite, which is why heading and model change together. config.verify_model()
+defaults to openai:gpt-4o; VERIFY_MODEL=openai:gpt-4o-mini restores the cheaper one.
+Evidence: Regression, gpt-4o without headings first (run 1): clarify 10 of 13, triage
+3/3 draws, but the on-topic set lost three answers to the verifier (Article 75(2), Article
+66(h), the emotion-recognition item's "considered high-risk (Annex III, point 1(c))") and
+citation accuracy fell 0.868 to 0.816, a failed gate. Regression with headings (run 2,
+files of record evals/runs/clarify_adr25_j2.json and adr25_on_agentic_j2.json): on-topic
+47 items, 0 verdict leaks, faithfulness 0.850 to 0.872, citation accuracy 0.868 to 0.868,
+context recall 0.947 to 0.974, answered 44 to 43, verifier passed 33 and abstained 1 (the
+Article 66(h) answer, again "should be prioritized"), no item whose answer passed the
+verifier scored lower on faithfulness than at baseline; the other differences from the
+ADR-24 baseline are the known guard and decompose variance (the multi-turn item the guard
+had false-blocked at baseline now answers; two multi-hop precisions moved). Clarify set 11
+of 13: 0 leaks, 0 stretched provisions, law-silent 2/2 routed, fired only on abstaining
+system descriptions, one question maximum, off-topic 0 fired, already-clear 3/3 grounded,
+underspecified asked 3/4 and grounded 3/3 of those; the two failing counts are one item,
+"we have an AI model in our company, is it a problem?", which the understand step judged
+not a system description in both regression runs today after judging it one in both
+ADR-24 runs. Triage item: grounded in the full run and in two of three extra draws; the
+third draw was withheld by the verifier (verify=abstained), so 3 of 4 today against a
+target of 3 of 3.
+Consequences: False accepts on the 22 traps go from 2 kinds through 3/3 to 0 on every
+draw, which is the safety property the task ranked first. False abstentions did not fall
+overall: they moved from the triage conditions sentence to two answers whose paraphrases
+arguably change the rule, and one triage draw in four is still withheld. Verifier cost
+rises from about 0.05 to about 0.8 cents per verified turn at list prices; AGENTIC_RAG is
+off in production so nothing changes there. CLARIFY_FOLLOWUP stays OFF: the rule was a
+clean full pass, and the clarify set is 11 of 13 (understand variance on the vaguest item)
+with the triage target at 3 of 4. Open for Yash: whether the Article 66(h) and 75(2)
+probes are valid paraphrases (as authored) or element changes (as gpt-4o reads them), and
+the understand step's coin flip on function-less descriptions, which decides whether the
+follow-up fires at all.
+Status: Accepted (verifier model and headings); prompt change Rejected; clarify flag
+Deferred.
+
 ## ADR-24: Clarifying follow-up fires on the generator's explain-mode abstention; the reply is one more pass through the normal path; flag still off (2026-09-23)
 Context: ADR-22 built the one clarifying question but hung it off the grader's abstention,
 which never fires: the grader finds some passage relevant to any vague AI description and

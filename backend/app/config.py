@@ -167,14 +167,16 @@ def agentic_grade_enabled() -> bool:
 
 
 def verify_model() -> str:
-    """The post-generation citation verifier's model (Stage 3). Measured on
-    22 Sep 2026: on the 24-probe misgrounding set gpt-4o caught 12/12 with
-    0 false positives and gpt-4o-mini 11/12 with 0; on the 35-item agentic
-    set gpt-4o withheld one correct single-hop answer (a faithful paraphrase
-    of Article 66(h) rejected twice), a false abstention the gate forbids,
-    while gpt-4o-mini regressed nothing. gpt-4o-mini is therefore the default;
-    VERIFY_MODEL=openai:gpt-4o selects the stricter verifier."""
-    return os.environ.get("VERIFY_MODEL", "openai:gpt-4o-mini")
+    """The post-generation citation verifier's model (Stage 3). ADR-25, 23 Sep
+    2026, 46 probes (22 misgrounded traps, 24 valid answers), 3 draws each:
+    gpt-4o-mini let a wrong-label claim and a contradiction of an express
+    exclusion through 3/3 under every prompt tried (five configurations),
+    while gpt-4o caught 22/22 on every draw under every configuration. A
+    verifier that passes wrong-provision claims is the worse failure, so
+    gpt-4o is the default; VERIFY_MODEL=openai:gpt-4o-mini restores the
+    cheaper one. Cost: the verifier call moves from about 0.05 to about 0.8
+    cents per verified turn at list prices."""
+    return os.environ.get("VERIFY_MODEL", "openai:gpt-4o")
 
 
 # Stage 3 node default. "1" since the passing run of 22 Sep 2026 with the
@@ -313,9 +315,12 @@ def clarify_model() -> str:
 # 4/4 underspecified asked, one question maximum, off-topic never fires). The
 # one failing gate: 3/4 underspecified grounded on the second pass; the fourth
 # retrieved the gold provision and answered on it, and the gpt-4o-mini
-# verifier withheld the answer twice (the paraphrase over-withholding of
-# ADR-20 b). The task rule is enable only on a full pass, so the default stays
-# off; the call to enable is Yash's.
+# verifier withheld the answer twice. ADR-25 (same day) moved the verifier to
+# gpt-4o with passage headings: the triage reply then grounded in 3 of 4
+# draws, and the clarify set was 11 of 13 because the understand step judged
+# the vaguest description ("we have an AI model in our company") not a
+# system description in both runs. Still not a full pass, so still off; the
+# open items are in PROJECT_BRIEF (ADR-24/25 follow-up).
 CLARIFY_FOLLOWUP_DEFAULT = "0"
 
 

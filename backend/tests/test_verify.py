@@ -16,9 +16,11 @@ from app.generation import answer as answer_module
 from app.generation import graph as graph_module
 from app.generation.answer import ABSTENTION_TEXT, RetrievalStep
 from app.generation.verify import (
+    SYSTEM_PROMPT,
     ClaimCheck,
     VerifyOutput,
     missing_references,
+    passage_block,
     references_in,
     regeneration_instruction,
     verify_answer,
@@ -84,6 +86,29 @@ def test_missing_references_resolves_ancestors_descendants_and_passage_mentions(
         "art_19.par_1"
     ]
     assert missing_references("Annex IV applies", CTX) == ["anx_IV"]
+
+
+def test_passage_block_carries_the_heading_the_retriever_attached():
+    # ADR-25: the verifier (gpt-4o) sees that an Annex III passage sits under
+    # the high-risk heading; without a heading the block is label and text.
+    with_heading = _fr(
+        1,
+        "anx_III.pt_5.sub_d",
+        "emergency healthcare patient triage systems.",
+        label="Annex III, point 5(d)",
+    )
+    with_heading.result.article_heading = (
+        "High-risk AI systems referred to in Article 6(2)"
+    )
+    assert passage_block(3, with_heading) == (
+        "[3] Annex III, point 5(d) (High-risk AI systems referred to in Article 6(2))\n"
+        "emergency healthcare patient triage systems."
+    )
+    assert passage_block(0, CTX[0]) == (
+        "[0] art_16.pt_h\naffix the CE marking ... in accordance with Article 48;"
+    )
+    assert "\u2014" not in SYSTEM_PROMPT
+    assert config.verify_model() == "openai:gpt-4o"
 
 
 # --- verdicts -----------------------------------------------------------------
