@@ -106,3 +106,50 @@ def test_chunk_rows_for_a_paragraph_is_unchanged():
     assert rows[0].index_text.startswith(
         "EU AI Act \u2014 Article 4 (AI literacy), paragraph 1:\n"
     )
+
+
+def test_citation_label_renders_sectioned_annex_ids():
+    from app.ingestion.chunker import citation_label
+
+    assert citation_label("anx_I.sec_A.pt_2") == "Annex I, Section A, point 2"
+    assert citation_label("anx_I.sec_B") == "Annex I, Section B"
+    assert citation_label("anx_III.pt_5.sub_b") == "Annex III, point 5(b)"  # unchanged
+
+
+def test_chunk_rows_for_a_sectioned_annex_point_carries_the_section_heading():
+    from app.ingestion.chunker import chunk_rows_for
+
+    annex = _P(
+        1,
+        "anx_I",
+        "annex",
+        "List of Union harmonisation legislation",
+        "List of Union harmonisation legislation",
+    )
+    sec = _P(
+        2,
+        "anx_I.sec_A",
+        "annex_section",
+        "List of Union harmonisation legislation based on the New Legislative Framework",
+        "List of Union harmonisation legislation based on the New Legislative Framework",
+        parent_id=1,
+    )
+    pt = _P(
+        3,
+        "anx_I.sec_A.pt_4",
+        "annex_point",
+        "Directive 2014/33/EU ... lifts and safety components for lifts",
+        parent_id=2,
+    )
+    rows = chunk_rows_for(pt, {1: annex, 2: sec, 3: pt}, corpus_version_id=1)
+    assert len(rows) == 1 and rows[0].parent_provision_id == 1
+    assert rows[0].index_text.startswith(
+        "EU AI Act \u2014 Annex I (List of Union harmonisation legislation), "
+        "Section A (List of Union harmonisation legislation based on the New Legislative Framework), point 4:\n"
+        "Directive 2014/33/EU"
+    )
+    deleted = _P(4, "anx_I.sec_A.pt_1", "annex_point", "", parent_id=2)
+    assert (
+        chunk_rows_for(deleted, {1: annex, 2: sec, 4: deleted}, corpus_version_id=1)
+        == []
+    )

@@ -2,7 +2,12 @@ from pathlib import Path
 
 import pytest
 
-from app.ingestion.parser import parse_annex, parse_article
+from app.ingestion.parser import (
+    is_sectioned_annex,
+    parse_annex,
+    parse_article,
+    parse_sectioned_annex,
+)
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
@@ -93,3 +98,43 @@ def test_numbered_article_row_still_holds_only_its_heading():
     provisions = parse_article(_load_fixture("article_06.html"))
     art = provisions[0]
     assert art.text_content == art.heading and len(provisions) > 1
+
+
+# --- sectioned annexes (Annex I, 23 Sep 2026) ---------------------------------
+
+
+def test_annex_i_is_sectioned_and_annex_iii_is_not():
+    assert is_sectioned_annex(_load_fixture("annex_I.html")) is True
+    assert is_sectioned_annex(_load_fixture("annex_III.html")) is False
+
+
+def test_annex_i_sections_numbering_and_markers():
+    provisions = parse_sectioned_annex(_load_fixture("annex_I.html"))
+    by = {p.citation_id: p for p in provisions}
+    assert by["anx_I"].unit_type == "annex"
+    assert by["anx_I"].heading == "List of Union harmonisation legislation"
+    assert by["anx_I.sec_A"].unit_type == "annex_section"
+    assert by["anx_I.sec_A"].heading.startswith(
+        "List of Union harmonisation legislation based on the New Legislative Framework"
+    )
+    assert by["anx_I.sec_B"].heading == "List of other Union harmonisation legislation"
+    # numbering runs through the annex: 1 to 12 in A, 13 to 21 in B
+    points = [p for p in provisions if p.unit_type == "annex_point"]
+    assert [p.number for p in points] == [str(i) for i in range(1, 22)]
+    assert all(p.parent_citation_id == "anx_I.sec_A" for p in points[:12])
+    assert all(p.parent_citation_id == "anx_I.sec_B" for p in points[12:])
+    # item 1 deleted by M1: a row with the marker and no text, never chunked
+    deleted = by["anx_I.sec_A.pt_1"]
+    assert deleted.deleted is True
+    assert deleted.amendment_marker == "M1" and deleted.text_content == ""
+    # item 21 inserted by M1; its neighbours carry no marker
+    assert by["anx_I.sec_B.pt_21"].amendment_marker == "M1"
+    assert by["anx_I.sec_B.pt_21"].text_content.startswith("Regulation (EU) 2023/1230")
+    assert by["anx_I.sec_B.pt_20"].amendment_marker is None
+    assert by["anx_I.sec_A.pt_2"].amendment_marker is None
+    # the number is stripped from the text; the text is the item
+    assert by["anx_I.sec_A.pt_2"].text_content.startswith("Directive 2009/48/EC")
+    assert by["anx_I.sec_A.pt_4"].text_content.endswith(
+        "lifts (OJ L 96, 29.3.2014, p. 251);"
+    )
+    assert sum(1 for p in points if p.text_content) == 20

@@ -442,5 +442,48 @@
   "anx_XII",
   "anx_XIII",
   "anx_XIV"
- ]
+ ],
+ "annex_sections": {
+  "anx_I": [
+   {
+    "id": "anx_I.sec_A",
+    "number": "A",
+    "heading": "List of Union harmonisation legislation based on the New Legislative Framework"
+   },
+   {
+    "id": "anx_I.sec_B",
+    "number": "B",
+    "heading": "List of other Union harmonisation legislation"
+   }
+  ],
+  "anx_VIII": [
+   {
+    "id": "anx_VIII.sec_A",
+    "number": "A",
+    "heading": "Information to be submitted by providers of high-risk AI systems in accordance with Article 49(1)"
+   },
+   {
+    "id": "anx_VIII.sec_B",
+    "number": "B",
+    "heading": "Information to be submitted by providers of high-risk AI systems in accordance with Article 49(2)"
+   },
+   {
+    "id": "anx_VIII.sec_C",
+    "number": "C",
+    "heading": "Information to be submitted by deployers of high-risk AI systems in accordance with Article 49(3)"
+   }
+  ],
+  "anx_XI": [
+   {
+    "id": "anx_XI.sec_1",
+    "number": "1",
+    "heading": ""
+   },
+   {
+    "id": "anx_XI.sec_2",
+    "number": "2",
+    "heading": ""
+   }
+  ]
+ }
 }

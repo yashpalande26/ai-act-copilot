@@ -684,5 +684,17 @@
   "must_route": false,
   "no_verdict": true,
   "note": "genuinely off-topic: must scope or refuse, never an Act reading"
+ },
+ {
+  "id": "ag_pl_09",
+  "bucket": "plain_language",
+  "source": "authored",
+  "question": "we're building an AI controller that acts as the safety component of a lift, is that high-risk under the AI Act?",
+  "history": [],
+  "gold_citation_ids": [
+   "anx_I.sec_A.pt_4"
+  ],
+  "expected_abstention": false,
+  "note": "ADR-29: the Annex I product-safety route. Directive 2014/33/EU (lifts and safety components for lifts) is Annex I, Section A, point 4; Article 6(1) makes a safety component of an Annex I product high-risk. Gold is the Annex I item so the new path is what is measured."
  }
 ]

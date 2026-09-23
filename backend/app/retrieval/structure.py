@@ -46,6 +46,9 @@ def _index() -> dict:
         "section_articles": section_articles,
         "section_heads": section_heads,
         "annexes": set(data["annexes"]),
+        "annex_sections": {
+            k: [s["id"] for s in v] for k, v in data.get("annex_sections", {}).items()
+        },
     }
 
 
@@ -81,3 +84,9 @@ def chapters_with_section(section: str) -> list[str]:
 
 def is_annex(annex_root: str) -> bool:
     return annex_root in _index()["annexes"]
+
+
+def annex_sections(annex_root: str) -> list[str]:
+    """Section ids of a sectioned annex ("anx_I" -> ["anx_I.sec_A",
+    "anx_I.sec_B"]); empty for an unsectioned annex."""
+    return list(_index()["annex_sections"].get(annex_root, []))

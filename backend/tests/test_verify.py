@@ -68,6 +68,10 @@ def test_references_in_parses_the_label_forms_the_model_writes():
         "anx_I",
         "anx_III.pt_4.sub_a",
     ]
+    assert references_in("Annex I, Section A, point 4 and Annex I, Section B") == [
+        "anx_I.sec_A.pt_4",
+        "anx_I.sec_B",
+    ]
     assert references_in("Articles 53 and 54") == [
         "art_53"
     ]  # lenient: only the first is parsed

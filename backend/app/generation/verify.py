@@ -92,7 +92,10 @@ _ARTICLE = re.compile(
     r"(?:,?\s+point\s+\(([a-z]{1,2}|\d+)\)|\s*\(([a-z]{1,2})\))?",
     re.IGNORECASE,
 )
-_ANNEX = re.compile(r"\bAnnex\s+([IVXLC]+)\b(?:,?\s+point\s+(\d+)(?:\s*\(([a-z])\))?)?")
+_ANNEX = re.compile(
+    r"\bAnnex\s+([IVXLC]+)\b(?:,?\s+Section\s+([A-Z0-9]+)\b)?"
+    r"(?:,?\s+point\s+(\d+)(?:\s*\(([a-z])\))?)?"
+)
 
 
 def references_in(answer: str) -> list[str]:
@@ -109,8 +112,10 @@ def references_in(answer: str) -> list[str]:
             cid += f".pt_{pt.lower()}"
         out.append(cid)
     for m in _ANNEX.finditer(answer):
-        roman, pt, sub = m.groups()
+        roman, sec, pt, sub = m.groups()
         cid = f"anx_{roman}"
+        if sec:
+            cid += f".sec_{sec}"
         if pt:
             cid += f".pt_{pt}"
         if sub:

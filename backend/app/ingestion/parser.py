@@ -320,10 +320,145 @@ def parse_annex(html: str) -> list[ParsedProvision]:
     return provisions
 
 
+_SECTION_TITLE = re.compile(r"^Section\s+([A-Z0-9]+)\.?\s*(.*)$")
+_NUMBERED_ITEM = re.compile(r"^(\d+)\.\s*(.*)$", re.DOTALL)
+_DELETION = re.compile(r"^[\u2014\u2013\-]{3,}$")
+
+
+def is_sectioned_annex(html: str) -> bool:
+    """An annex laid out as titled sections (<p class="title-gr-seq-level-1">)
+    rather than a grid list: Annexes I, VII, VIII, X, XI, XIV in the 27 Jul
+    2026 text. Only the numbered-bare-paragraph shape (Annex I) is parsed so
+    far; see parse_sectioned_annex."""
+    return 'class="title-gr-seq-level-1"' in html
+
+
+def parse_sectioned_annex(html: str) -> list[ParsedProvision]:
+    """Annex with lettered or numbered sections whose items are numbered bare
+    paragraphs ("2. Directive 2009/48/EC ..."). Citation scheme (23 Sep 2026):
+    anx_<annex>.sec_<section>.pt_<n>; the section is a row of unit_type
+    annex_section carrying the section heading. Numbering runs through the
+    whole annex (Annex I: 1 to 12 in Section A, 13 to 21 in Section B). An
+    amendment marker (M1 ...) applies to the items that follow it until the
+    base-text marker (B). A marker followed by a dash run and no item is a
+    deletion: the missing number is recorded as a deleted row with empty text
+    and the marker, so the gap is explained and never chunked."""
+    soup = BeautifulSoup(html, "lxml")
+    root = soup.find("div", id=re.compile(r"^anx_"))
+    if root is None:
+        raise ValueError("No annex id (anx_*) found in input HTML")
+    match = re.match(r"^anx_(.+)$", root["id"])
+    roman = match.group(1) if match else ""
+    if not roman:
+        raise ValueError("Annex number could not be extracted")
+    annex_id = f"anx_{roman}"
+    heading_tag = root.find("p", class_="title-annex-2")
+    heading = _clean_text(heading_tag.get_text()) if heading_tag else None
+
+    provisions: list[ParsedProvision] = [
+        ParsedProvision(
+            citation_id=annex_id,
+            eid=annex_id,
+            unit_type="annex",
+            number=roman,
+            heading=heading,
+            text_content=heading or "",
+            parent_citation_id=None,
+            amendment_marker=None,
+            ordinal=0,
+        )
+    ]
+    used: set[str] = {annex_id}
+    section_id: str | None = None
+    current_marker: str | None = None
+    last_number = 0
+    ordinal = 1
+
+    for tag in root.find_all("p"):
+        classes = tag.get("class") or []
+        if "title-gr-seq-level-1" in classes:
+            title = _clean_text(tag.get_text())
+            m = _SECTION_TITLE.match(title)
+            if m is None:
+                raise ValueError(f"Unrecognised section title in {annex_id}: {title!r}")
+            letter, section_heading = m.group(1), _clean_text(m.group(2))
+            section_id = _dedupe_citation_id(f"{annex_id}.sec_{letter}", used)
+            provisions.append(
+                ParsedProvision(
+                    citation_id=section_id,
+                    eid=None,
+                    unit_type="annex_section",
+                    number=letter,
+                    heading=section_heading or None,
+                    text_content=section_heading or title,
+                    parent_citation_id=annex_id,
+                    amendment_marker=None,
+                    ordinal=ordinal,
+                )
+            )
+            ordinal += 1
+            continue
+        if "modref" in classes:
+            # "M1", "B", or "M1 \u2014\u2014\u2014\u2014\u2014" when the amending act deleted an item
+            raw = _marker_code(tag)
+            code, _, trailing = raw.partition(" ")
+            if _DELETION.match(trailing.strip()):
+                # a deleted item: the number after the last one seen
+                last_number += 1
+                parent = section_id or annex_id
+                provisions.append(
+                    ParsedProvision(
+                        citation_id=_dedupe_citation_id(
+                            f"{parent}.pt_{last_number}", used
+                        ),
+                        eid=None,
+                        unit_type="annex_point",
+                        number=str(last_number),
+                        heading=None,
+                        text_content="",
+                        parent_citation_id=parent,
+                        amendment_marker=code,
+                        ordinal=ordinal,
+                        deleted=True,
+                    )
+                )
+                ordinal += 1
+                continue
+            current_marker = None if code == "B" else code
+            continue
+        if "norm" in classes:
+            text = _own_text(tag, exclude_classes=("modref",))
+            m = _NUMBERED_ITEM.match(text)
+            if m is None:
+                continue  # an unnumbered paragraph in a sectioned annex: not this shape
+            number, body = m.group(1), _clean_text(m.group(2))
+            parent = section_id or annex_id
+            provisions.append(
+                ParsedProvision(
+                    citation_id=_dedupe_citation_id(f"{parent}.pt_{number}", used),
+                    eid=None,
+                    unit_type="annex_point",
+                    number=number,
+                    heading=None,
+                    text_content=body,
+                    parent_citation_id=parent,
+                    amendment_marker=current_marker,
+                    ordinal=ordinal,
+                )
+            )
+            last_number = int(number)
+            ordinal += 1
+
+    _validate(provisions, expected_types=("annex_point",))
+    return provisions
+
+
 def _validate(
     provisions: list[ParsedProvision], expected_types: tuple[str, ...]
 ) -> None:
     for provision in provisions:
+        if provision.deleted:
+            continue
         if provision.unit_type in expected_types and not provision.text_content:
             raise ValueError(
                 f"Empty text_content for {provision.citation_id!r} ({provision.unit_type})"

@@ -1,6 +1,72 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-29: Annex I ingested as the first sectioned annex; citation scheme anx_<annex>.sec_<section>.pt_<n> (2026-09-23)
+Context: Annex I, the list of Union harmonisation legislation that drives the Article
+6(1) product-safety high-risk route, had been excluded since ADR-004 because its layout
+(titled sections holding numbered bare paragraphs) has nothing in common with the Annex
+III grid lists the annex parser understood. Five other annexes share the exclusion, each
+with its own layout (scoped in PROJECT_BRIEF under ADR-004 Step B). The consolidated text
+also carries an M1 edit inside Annex I: item 1 deleted, item 21 inserted.
+Decision: (1) Citation scheme: a sectioned annex uses anx_<annex>.sec_<section>.pt_<n>,
+with the section as a provision row of unit_type annex_section carrying the section
+heading; unsectioned annexes keep anx_<annex>.pt_<n> unchanged (Annex III untouched). The
+section appears in the id only where the annex has sections. Item numbering runs through
+the annex as printed (Annex I: 1 to 12 in Section A, 13 to 21 in Section B), so an item's
+id is its citable number. (2) Parser: parse_sectioned_annex, selected by the presence of
+a <p class="title-gr-seq-level-1">; a marker row ("M1", "B") applies to the items that
+follow; a marker followed by a dash run and no item is a deletion and is recorded as a
+row with the next number, the marker, empty text and deleted=True, so the numbering gap
+is explained; the number is stripped from the item text. Deleted rows are exempt from
+the non-empty-text validation and never chunked. (3) Labels: citation_label renders
+sec_X as "Section X" ("Annex I, Section A, point 2"); the chunk prefix carries the section
+heading ("Annex I (List of Union harmonisation legislation), Section A (List of Union
+harmonisation legislation based on the New Legislative Framework), point 4:") because the
+item text alone never says which family of legislation it belongs to. The verifier's
+reference parser reads "Annex I, Section A, point 4" to the same id. (4) Structure map:
+build_structure.py records annex_sections for every annex whose titles read "Section X";
+structure.annex_sections() exposes them. (5) Backfill: scripts/backfill_annex.py <annex>
+(dry run by default) checks the source hash, refuses if the annex has rows, inserts the
+parsed rows with their parent chain, adds chunks through build_missing_chunks, embeds
+only NULL embeddings, rebuilds BM25 and the structure map. Annex I is now parsed by the
+full-ingest path too (UNSUPPORTED_ANNEXES lost anx_I). (6) One golden item added to the
+on-topic set: an AI safety component of a lift, gold Annex I, Section A, point 4
+(Directive 2014/33/EU), so the product-safety route is measured from now on.
+Evidence: Dry run listed 24 rows (annex, two sections, 21 points of which 1 deleted), 20
+chunkable, exactly as the source reads. After --execute: provisions 1,255 to 1,279,
+chunks 1,136 to 1,156, all embedded (20 new, 2,429 tokens), BM25 1,156 documents, annex
+roots 8 to 9. Markers: anx_I.sec_A.pt_1 M1 with 0 characters and no chunk;
+anx_I.sec_B.pt_21 M1 with its text. Retrieval: "safety of toys" finds Section A point 2
+first on both legs, "lifts and safety components for lifts" Section A point 4 first on
+both legs, "machinery regulation 2023/1230" Section B point 21 first on both legs; the
+retrieved labels render "Annex I, Section A, point 2". Test suite 491 passed (parser
+tests on the real Annex I fixture for sections, numbering, the deleted and inserted items
+and the stripped numbers; label and prefix tests; the reference parser test; the existing
+gold-ids-exist-in-corpus test now covers the new item). On-topic set, now 48 items
+(evals/runs/adr29_annex1_on_agentic_j2.json): 0 verdict leaks. The new lift item:
+Annex I, Section A, point 4 at fused rank 0, recall 1.0, citation accuracy 1.0,
+faithfulness 5; the answer names Article 6(1)(a) and the Annex I item and reaches no
+conclusion about the user's system. On the 47 items shared with the ADR-28 run, pooled
+citation accuracy 0.868 to 0.816 and faithfulness 4.36 to 4.21, from two items, both with
+no Annex I chunk in their context: the multi-turn follow-up "Can it change the
+classification rules too?" was false-blocked by the injection guard (no retrieval), and
+the shop facial-recognition description abstained and asked the clarifying question.
+Three repeats of those two items: the facial-recognition item answered on its gold 3/3
+(citation accuracy 1.0 each), the multi-turn item answered 2/3 and was guard-blocked
+once. The guard's false-block rate on that phrasing now stands at 4 of 12 draws (ADR-23
+backlog). The only pre-existing item whose context admitted an Annex I chunk (Section B
+point 21, low rank) kept its outcome. So the regression gate is not met by this single
+draw, and the two misses are the two known flakes rather than the corpus change; the
+per-item evidence is what supports that, not the pooled number.
+Consequences: The Article 6(1) route can be grounded on the Annex I list instead of being
+reported as incomplete. The pattern for the remaining five annexes is set: a parser per
+layout, the same citation scheme where sections exist, the same backfill script. Annex
+VIII (lettered sections with unnumbered paragraphs and grid lists) and Annex XI (two-line
+section titles, grid lists) are the next closest; the structure map already lists their
+sections. The chunk prefix for sectioned annexes is longer than for other leaves, a cost
+in tokens per retrieved passage accepted for the retrievability it buys.
+Status: Accepted.
+
 ## ADR-28: Single-paragraph article bodies restored to the corpus; six annexes still pending a parser (2026-09-23)
 Context: A read-only corpus audit found that eight articles whose body is one or more
 bare paragraphs with no number (Articles 32, 39, 85, 87, 94, 102, 103, 104) had only their

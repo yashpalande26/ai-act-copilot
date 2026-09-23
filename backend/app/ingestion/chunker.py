@@ -18,6 +18,8 @@ def _render_segments(segments: list[str], *, is_annex: bool) -> str:
             parts.append(f"Article {seg[4:]}")
         elif seg.startswith("anx_"):
             parts.append(f"Annex {seg[4:]}")
+        elif seg.startswith("sec_"):
+            parts.append(f"Section {seg[4:]}")
         elif seg.startswith("par_"):
             parts.append(f"paragraph {seg[4:]}")
         elif seg.startswith("pt_"):
@@ -114,11 +116,19 @@ def chunk_rows_for(
         return []
     ancestor = _find_container_ancestor(provision, by_id)
     ancestor_label = citation_label(ancestor.citation_id)
-    provision_label = (
-        ""
-        if ancestor.id == provision.id
-        else _relative_label(provision.citation_id, ancestor.citation_id)
-    )
+    parent = by_id.get(provision.parent_id) if provision.parent_id else None
+    if ancestor.id == provision.id:
+        provision_label = ""
+    elif parent is not None and parent.unit_type == "annex_section" and parent.heading:
+        # A sectioned annex (Annex I): the section heading names the family
+        # of legislation, which the item text alone does not say.
+        provision_label = (
+            f"{_relative_label(parent.citation_id, ancestor.citation_id)}"
+            f" ({parent.heading}), "
+            f"{_relative_label(provision.citation_id, parent.citation_id)}"
+        )
+    else:
+        provision_label = _relative_label(provision.citation_id, ancestor.citation_id)
     parts = split_long_text(text)
     total = len(parts)
     rows: list[Chunk] = []

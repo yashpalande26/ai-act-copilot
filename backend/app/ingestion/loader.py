@@ -9,7 +9,14 @@ from sqlalchemy.orm import Session
 
 from app.db.models import CorpusVersion, Provision
 from app.ingestion.models import ParsedProvision
-from app.ingestion.parser import _clean_text, parse_annex, parse_article, split_document
+from app.ingestion.parser import (
+    _clean_text,
+    is_sectioned_annex,
+    parse_annex,
+    parse_article,
+    parse_sectioned_annex,
+    split_document,
+)
 
 # These annexes use a different top-level structure - numbered sections via
 # <p class="title-gr-seq-level-1"> (Annex VII additionally has decimal
@@ -17,7 +24,12 @@ from app.ingestion.parser import _clean_text, parse_annex, parse_article, split_
 # understands Annex III's grid-container/lettered-point convention. Loading
 # them today would misattribute their points to the annex root. Excluded
 # until that's built ("Step B").
-UNSUPPORTED_ANNEXES = {"anx_I", "anx_VII", "anx_VIII", "anx_X", "anx_XI", "anx_XIV"}
+# Annex I joined the corpus on 23 Sep 2026 through parse_sectioned_annex
+# (sections of numbered bare paragraphs). The five below still need parsers
+# for their own shapes: decimal sub-numbering (VII), unnumbered paragraphs
+# under lettered sections (VIII), plain lists under numbered sections (X),
+# two-line section titles (XI), code tables (XIV).
+UNSUPPORTED_ANNEXES = {"anx_VII", "anx_VIII", "anx_X", "anx_XI", "anx_XIV"}
 
 
 def build_corpus(
@@ -41,7 +53,11 @@ def build_corpus(
         if annex_id in UNSUPPORTED_ANNEXES:
             skipped_annexes.append(annex_id)
             continue
-        provisions.extend(parse_annex(block))
+        provisions.extend(
+            parse_sectioned_annex(block)
+            if is_sectioned_annex(block)
+            else parse_annex(block)
+        )
 
     if skipped_annexes:
         print(
@@ -79,7 +95,11 @@ def validate_corpus(provisions: list[ParsedProvision]) -> None:
     text_required = {"paragraph", "point", "annex_point"}
 
     for p in provisions:
-        if p.unit_type in text_required and not p.text_content.strip():
+        if (
+            p.unit_type in text_required
+            and not p.deleted
+            and not p.text_content.strip()
+        ):
             raise ValueError(
                 f"Empty text_content for {p.citation_id!r} ({p.unit_type})"
             )

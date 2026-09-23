@@ -58,12 +58,33 @@ def build(html_path: Path) -> dict:
             }
         )
     annexes = [d["id"] for d in soup.find_all("div", id=re.compile(r"^anx_[IVXLC]+$"))]
+    annex_sections = {}
+    for d in soup.find_all("div", id=re.compile(r"^anx_[IVXLC]+$")):
+        secs = []
+        for p in d.find_all("p", class_="title-gr-seq-level-1"):
+            title = " ".join(p.get_text(" ", strip=True).split())
+            m = re.match(r"^Section\s+([A-Z0-9]+)\.?\s*(.*)$", title)
+            if m:
+                # Annex VIII titles put a dash between "Section A" and the
+                # heading text: a separator in the source, not part of the heading.
+                heading = m.group(2).strip().lstrip("\u2014\u2013-").strip()
+                secs.append(
+                    {
+                        "id": f"{d['id']}.sec_{m.group(1)}",
+                        "number": m.group(1),
+                        "heading": heading,
+                    }
+                )
+        if secs:
+            annex_sections[d["id"]] = secs
     return {
         "source": html_path.name,
         "celex": "02024R1689",
         "consolidated_date": "2026-07-27",
         "chapters": chapters,
         "annexes": annexes,
+        # Only annexes whose sections are titled "Section X" (Annex I: A and B).
+        "annex_sections": annex_sections,
     }
 
 
