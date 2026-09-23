@@ -586,8 +586,12 @@
   "expected_abstention": false,
   "must_route": true,
   "no_verdict": true,
-  "note": "CORRECTED 22 Sep 2026: the Act does not clearly name pure property or collateral valuation; Annex III 5(b) covers evaluating the creditworthiness of NATURAL PERSONS. No gold provision. Satisfied by an abstention, or by an explanation that names NO provision, either way routed to the assessment. A named provision here is a stretch and fails.",
-  "route_or_abstain": true
+  "note": "CORRECTED 22 Sep 2026: the Act does not clearly name pure property or collateral valuation; Annex III 5(b) covers evaluating the creditworthiness of NATURAL PERSONS. No gold provision. Satisfied by an abstention, or by an explanation that names NO provision, either way routed to the assessment. A named provision here is a stretch and fails. ADR-35: the honest not-listed answer may name a general obligation; the gate is that it never names Annex III 5(b) or any other high-risk or prohibited provision (forbidden_prefixes).",
+  "route_or_abstain": true,
+  "forbidden_prefixes": [
+   "anx_III",
+   "art_5."
+  ]
  },
  {
   "id": "ag_pl_02",

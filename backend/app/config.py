@@ -383,7 +383,11 @@ def recital_map_enabled() -> bool:
 # rule that keeps property valuation routed also silences a spam filter) and
 # the copilot item abstained 3/3 with the covering provision first in
 # context; on-topic citation accuracy moved 0.868 to 0.842 on one item.
-RISK_TIER_FRAMING_DEFAULT = "0"
+# ON since ADR-35 (23 Sep 2026): the tiered instruction rewritten so the honest
+# not-listed answer is a first-class response; risk-tier gate absolute 0 over
+# 42 draws and value 10 of 10 items at 3 of 3; on-topic citation accuracy
+# 0.884 to 0.953 against the ADR-34 baseline, 0 leaks.
+RISK_TIER_FRAMING_DEFAULT = "1"
 
 
 def risk_tier_framing_enabled() -> bool:

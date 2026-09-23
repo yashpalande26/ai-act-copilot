@@ -235,59 +235,61 @@ EXPLAIN_AND_ROUTE_INSTRUCTION = (
 )
 
 
-# ADR-27 (23 Sep 2026), behind RISK_TIER_FRAMING. The instruction above says
-# to answer about "the kind of system or area of use the description names"
-# and otherwise abstain; measured, it abstained with the transparency
-# provision for systems that interact with people at position 2 of the
-# context, because a copilot is not a high-risk category. This instruction
-# sorts every retrieved provision by whether its STATED SCOPE covers the
-# described function, at any level of the Regulation, and answers from those;
-# an adjacent provision (same area, different function) is never used and
-# forces the abstention so the structured assessment decides. No provision is
-# named here; the sort is done on each passage's own words.
+# ADR-27 built this behind RISK_TIER_FRAMING; ADR-35 (23 Sep 2026) rewrote
+# it. The ADR-24 instruction above answers about "the kind of system or area
+# of use the description names" and otherwise abstains; measured, it abstained
+# with the transparency provision at rank 0 for a copilot and for every
+# not-listed system. ADR-27's version sorted provisions by stated scope but
+# told the model to abstain whenever an adjacent provision was retrieved, and
+# with fifteen passages one always is (not-listed answered 0 of 12). This
+# version: the honest not-listed answer is a first-class response (none of the
+# retrieved provisions names the use; any general obligation in the context;
+# the structured assessment confirms), adjacent provisions are never
+# mentioned, and the everyday-to-technical bridges (face recognition is
+# biometric identification, a copilot interacts with natural persons) name
+# functions, never provisions. Probed 14 items x 3 draws before adoption:
+# transparency 12/12 on the transparency provision, not-listed 15/15 honest
+# with the general obligation only, high-risk 12/12 on gold, prohibited 3/3,
+# 0 leaks, 0 stretches. No provision is named here; the sort is done on each
+# passage's own words (asserted by a test).
 EXPLAIN_TIERED_INSTRUCTION = (
-    "The user describes their own AI system in plain language and asks whether "
-    "it is regulated or how risky it is. You cannot decide that for their "
-    "system, and you are not asked to. First read the whole description (it may "
-    "be spread over more than one sentence) for what the system does: what it "
-    "decides, predicts, ranks, recognises, generates or produces, for whom, "
-    "from what data, and the area it is used in. If the description states "
-    "neither what the system does nor the area it is used in, no provision can "
-    "be matched to it: reply with exactly the abstention sentence. Otherwise "
-    "sort every retrieved provision by its own stated scope: (A) COVERS the "
-    "described function: the provision names that kind of system, that "
-    "function, that kind of output or behaviour, or an obligation that applies "
-    "to every AI system or to every provider or deployer. Read kinds by what "
-    "they do: a system that answers, chats with, advises, assists or talks to "
-    "people is a system that interacts directly with natural persons; a system "
-    "that produces text, images, audio or video is a system that generates "
-    "content; a provision naming such systems covers it, at whatever level of "
-    "the Regulation it sits; (B) ADJACENT: the "
-    "same area of use but a different function, or the same function in a "
-    "different setting or for a different actor; (C) unrelated. The Regulation "
-    "treats systems at several levels, so (A) may hold a forbidden practice, a "
-    "listed high-risk use, a transparency obligation, or a general obligation, "
-    "and the answer covers each of them. Answering means exactly this, from "
-    "the context only: (1) for each provision in (A), state what it says about "
-    "that kind of system or use, quoting or closely paraphrasing it and citing "
-    "it by its label; (2) state, in the provision's own words, the conditions "
-    "it attaches (the intended purpose it names, the persons concerned, the "
-    "area of use, any exception); (3) if (A) holds only general obligations, "
-    "say plainly that none of the retrieved provisions names a use of the kind "
-    "described, then state what those general obligations say; (4) do not "
-    "state whether the user's own system is or is not high-risk, prohibited, "
-    "in scope or compliant, and do not tell the user what they must do: that "
-    "is decided separately by a structured assessment. Never answer from a "
-    "provision in (B): do not say the described use is or is not covered by "
-    "it, and never substitute it for a provision the Regulation does not "
-    "contain. Reply with exactly the abstention sentence when (A) is empty. "
-    "When (A) holds only general obligations and (B) is not empty, reply with "
-    "exactly the abstention sentence as well: an adjacent provision means the "
-    "structured assessment must decide. When (A) holds a provision that names "
-    "the kind of system, function, output or behaviour described, answer from "
-    "(A) and leave (B) unmentioned, whatever else was retrieved. Never cite a "
-    "label that is not in the context. An answer of this shape is complete even "
-    "though it reaches no conclusion about the user's system."
+    "The user describes their own AI system in plain language and asks whether it is regulated or how risky it is. "
+    "You cannot decide that for their system, and you are not asked to. "
+    "First read the whole description (it may be spread over more than one sentence) for what the system does: "
+    "what it decides, predicts, ranks, recognises, generates or produces, for whom, from what data, and the area it is used in. "
+    "If the description states neither what the system does nor the area it is used in, no provision can be matched to it: "
+    "reply with exactly the abstention sentence. "
+    "Otherwise sort every retrieved provision by its own stated scope: "
+    "(A) COVERS the described function: "
+    "the provision names that kind of system, that function, that kind of output or behaviour, or states an obligation that applies to every AI system or to every provider or deployer regardless of risk. "
+    "Read kinds by what they do, not by the words used. "
+    "The user speaks in everyday words and the Regulation in technical ones, and a provision names the function when its technical term is what the user described: "
+    "a system that recognises or identifies people from their face, voice or other bodily features is a biometric identification system; "
+    "one that reads people's mood or feelings is an emotion recognition system; "
+    "one that ranks or filters job applicants is a recruitment or selection system; "
+    "one that scores people for loans is a creditworthiness evaluation system; "
+    "a chatbot, assistant, copilot, helpdesk tool or any system that answers, chats with, advises, assists or talks to people is a system that interacts directly with natural persons; "
+    "a system that produces text, images, audio or video is a system that generates content; "
+    "a system that identifies people at a distance or without their active involvement, for example by camera, is a remote biometric identification system. "
+    "A listed high-risk use is often a short entry in an annex that names only the kind of system: "
+    "read it together with its heading and with any definition of that term in the context, and it covers the described function when the definition does. "
+    "A provision naming such systems covers it, at whatever level of the Regulation it sits (a forbidden practice, a listed high-risk use, a transparency obligation, a general obligation). "
+    "(B) ADJACENT: "
+    "the same area of use but a different function, or the same function in a different setting or for a different actor (a rule addressed only to law enforcement or public authorities is adjacent when the user is a business, and the other way round). "
+    "(C) unrelated. "
+    "Before concluding that no provision names the use, check every retrieved provision that names a function against what the system does. "
+    "Answering means exactly this, from the context only: "
+    "(1) for each provision in (A) that names the kind of system, function, output or behaviour described, state what it says about that kind of system or use, quoting or closely paraphrasing it and citing it by its label, and state, in the provision's own words, the conditions it attaches (the intended purpose it names, the persons concerned, the area of use, any exception); "
+    "(2) if no provision in (A) names the kind of system, function, output or behaviour described, do not abstain: "
+    "say plainly that none of the retrieved provisions names a use of the kind described, then state what any general obligation in (A) says, citing it by its label, and say that the structured assessment confirms the classification; "
+    "(3) never mention a provision in (B): "
+    "do not say the described use is or is not covered by it, do not cite it, and never substitute it for a provision the Regulation does not contain; "
+    "(4) write about kinds of systems, never about the user's system: "
+    "do not state whether the user's own system is or is not high-risk, prohibited, in scope, covered by or subject to a provision or compliant, do not make 'the described system', 'the described use' or 'your system' the subject of a sentence that classifies it or restates the description, and do not tell the user what they must do: "
+    "that is decided separately by a structured assessment. "
+    "Never cite a label that is not in the context. "
+    "An answer of this shape is complete even though it reaches no conclusion about the user's system; "
+    "the abstention sentence is only for a description that states neither what the system does nor where it is used."
 )
 
 

@@ -105,9 +105,10 @@
   "bucket": "law_silent",
   "question": "I want to build a property valuation model for bridge lending, how risky is it?",
   "gold_citation_ids": [],
-  "forbidden_prefixes": ["art_", "anx_"],
-  "expect": "route",
-  "note": "Load-bearing: creditworthiness (Annex III 5(b)) is adjacent, not covering. Must abstain and route with zero provisions named."
+  "general_ids": ["art_4"],
+  "forbidden_prefixes": ["anx_III", "art_5."],
+  "expect": "honest_not_listed",
+  "note": "Load-bearing (ADR-35): creditworthiness (Annex III 5(b)) is adjacent, not covering. Expects the honest not-listed answer (none of the retrieved provisions names asset valuation; a general obligation if one is in context; the assessment confirms). Absolute gate: never names Annex III 5(b) or any other high-risk or prohibited provision."
  },
  {
   "id": "rt_pr_01",

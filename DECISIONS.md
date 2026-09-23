@@ -1,6 +1,93 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-35: The honest risk-tier answer for a described system; "never cite a wrong high-risk provision" replaces "cite nothing" (2026-09-23)
+Context: ADR-27 built RISK_TIER_FRAMING and left it off: the tiered instruction answered
+on the transparency provision for three of four interactive systems, never produced the
+honest not-listed answer (12 of 12 draws abstained, spam filter to demand forecaster), and
+the copilot description abstained with the transparency provision at rank 0. Its rule "an
+adjacent provision means abstain so the structured assessment decides" was the cause: with
+fifteen passages an adjacent provision is always retrieved. The brief reframes the safety
+line: the guarantee is that the copilot never cites a high-risk or prohibited provision for
+a use its scope does not cover, not that it cites nothing; a use no listed category covers
+gets a first-class honest answer, with any general obligation that applies, and the
+structured assessment confirms the classification.
+Decision: (1) EXPLAIN_TIERED_INSTRUCTION rewritten (understand.py). Same scope sort as
+ADR-27 (COVERS / ADJACENT / unrelated, on each passage's own words) with three changes.
+The honest not-listed answer is a first-class response: when no provision in COVERS names
+the kind of system, function, output or behaviour described, do not abstain; say that none
+of the retrieved provisions names a use of the kind described, state any general
+obligation in COVERS by its label, say the structured assessment confirms the
+classification. An adjacent provision is never mentioned and never forces the abstention;
+the abstention is only for a description that names neither function nor area (the ADR-24
+clarify trigger). Everyday-to-technical bridges name functions, never provisions: a
+system that identifies people from their face or voice is a biometric identification
+system, at a distance or without their involvement a remote one; reading mood is emotion
+recognition; ranking applicants is recruitment or selection; scoring people for loans is
+creditworthiness evaluation; a chatbot, assistant or copilot interacts directly with
+natural persons; producing text or media generates content. A short annex entry is read
+with its heading and the definitions in the context. A rule addressed only to law
+enforcement or public authorities is adjacent for a business. The no-verdict rule also
+forbids "the described system", "the described use" or "your system" as the subject of a
+classifying sentence (measured: "The described AI system is a voice assistant..." tripped
+the verdict-leak detector 3 of 3 on a restatement). (2) Verifier prompt: a sentence about
+this tool (a structured assessment confirms the classification) is not a claim about the
+Act and gets no_citation (measured: gpt-4o marked it unsupported once in 14 and would have
+forced a regeneration on every honest answer). (3) Golds: the property-valuation item in
+both sets now expects the honest not-listed answer; its gate is that it never names Annex
+III 5(b) or any other high-risk or prohibited provision (forbidden prefixes anx_III,
+art_5.), a general obligation is allowed. (4) Runners: the risk-tier absolute gate for
+not-listed and law-silent items is "names a high-risk or prohibited provision"; their value
+gate is the honest answer (not the abstention, not a clarifying question, says none names
+the use, no stretch); the on-topic runner's routed-item check counts only forbidden
+prefixes. No provision id anywhere in the logic (the regex test on both texts stands).
+Iteration (probe_tiers, real contexts per item, gpt-4o generator, 3 draws per item,
+verifier on the first): ADR-27 wording, transparency 9/12, not-listed 0/12, property
+valuation 0/3 honest, high-risk 12/12. First rewrite: transparency 12/12, not-listed 12/12,
+property valuation 3/3 honest with the general obligation only, high-risk 9/12 (the shop
+facial-recognition item took the honest path with Annex III 1(a) at rank 4), 5 verdict
+leaks. Second: leaks 0, high-risk still 9/12 (the same item cited the biometric
+identification definition and the law-enforcement prohibition instead of the annex entry).
+Third, adopted: transparency 12/12, not-listed 12/12, property valuation 3/3, high-risk
+12/12, prohibited 3/3, 0 leaks, 0 stretches, 0 citations outside the context.
+Rejected: keeping the adjacent-means-abstain rule with a narrower ADJACENT (the tension is
+the rule itself, not its width); a provision-id allowlist for "general obligations" (a
+hardcoded id, forbidden by the brief and untestable against new provisions); asking the
+generator to state "not among the high-risk categories in Annex III" (a claim about the
+whole Act the context cannot support; the honest sentence is about the retrieved
+provisions, which the verifier can check).
+Evidence, risk-tier gate (23 Sep 2026, evals/runs/risk_tier_adr35_on_j2.json, 14 items x 3
+draws through the graph, CLARIFY_FOLLOWUP=0, gpt-4o verifier): ABSOLUTE all 0 over 42
+draws (verdict leaks 0, stretched to a forbidden provision 0, provision not in context 0,
+high-risk item not grounded on its gold 0 of 12, not-listed or law-silent item naming a
+high-risk or prohibited provision 0 of 15). VALUE 10 of 10 items at 3 of 3: the four
+transparency items name the transparency provision (the copilot included, 0 of 3 under
+ADR-27); the four not-listed items and property valuation give the honest answer naming
+the general obligation and nothing else; social scoring names its prohibition. Per bucket:
+transparency 12/12 answered on gold, not-listed 12/12 honest with the general obligation,
+high-risk 12/12 on gold, law-silent 3/3 honest, prohibited 3/3. Flag-off reference
+(risk_tier_off_j2.json, ADR-27): transparency 1 of 4, not-listed 0 of 4, high-risk 3 of 4.
+Evidence, on-topic set (evals/runs/adr35_risk_tier_on_agentic_j2.json, 52 items, gpt-4o
+verifier, mini judge, RISK_TIER_FRAMING on, against the ADR-34 baseline): verdict leaks
+0; every ADR-32 to ADR-34 gate still 0; property valuation routed with the general
+obligation only and no forbidden provision. Shared items: context recall 0.977 to 1.0,
+citation accuracy 0.884 to 0.953, faithfulness 4.341 to 4.292, answer relevance 4.568 to
+4.396. The judged pool changed: five plain-language items that used to ask a clarifying
+question (bridge lending, shop chatbot, card-fraud model, spam filter, shop facial
+recognition) now answer, four of them on their gold; on the 43 items judged in both runs
+faithfulness is 4.326 to 4.302 and relevance 4.558 to 4.628, so the pooled dip is
+composition: the mini judge scores an honest answer that reaches no conclusion low on
+relevance (1 to 3 of 5) by design. The penalties follow-up abstained again on its unchanged
+direct path (the ADR-33 and ADR-34 knife-edge item; this flag does not touch it). Known
+imperfection, not a gate: the card-fraud item gave the honest answer and then quoted the
+transparency provision at type level instead of pointing at the creditworthiness entry
+whose exception names fraud detection, which sat at rank 0. Faithful, no verdict, no
+high-risk provision, but the wrong provision to mention. Next step, to probe and gate
+separately: an exception or exclusion inside a provision names the use too, and a
+transparency obligation is not a general obligation.
+Status: ACCEPTED, RISK_TIER_FRAMING_DEFAULT = "1" (inside AGENTIC_RAG). Both run files
+are the new baselines (risk-tier flag on; on-topic).
+
 ## ADR-34: The recital expansion runs only on explanation questions; a direct lookup under RECITAL_MAP is ADR-32 exactly (2026-09-23)
 Context: ADR-33's gate passed every absolute check and grounded all four "why" items, but
 two marginal direct items (the penalties follow-up, "what does Chapter III require?")
@@ -526,7 +613,8 @@ the covering provision first in context (the description says "answers users' qu
 the bridge sentence says that is interaction, the model still abstains 3/3); (c) decide
 whether "interacts directly with natural persons" should be cited for a camera system.
 All prompt work; no provision id may enter the logic.
-Status: Built; flag Deferred (value gate failed).
+Status: Built; flag Deferred (value gate failed). Superseded by ADR-35 the same day,
+which rewrote the tiered instruction and turned the flag on.
 
 ## ADR-26: Clarifying follow-up on under a split gate; two probe golds corrected; understand and verifier prompts firmed (2026-09-23)
 Context: ADR-25 left three things open: whether the Article 66(h) and 75(2) probes were

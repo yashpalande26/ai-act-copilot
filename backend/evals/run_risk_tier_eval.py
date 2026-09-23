@@ -13,18 +13,22 @@ Buckets (evals/risk_tier_set.json): transparency (interactive or generative
 systems; expect the transparency provision surfaced), not_listed (no listed
 category; expect an honest answer that none of the retrieved provisions names
 the use, with any general obligation, not a bare abstention), high_risk (must
-still ground on the existing gold), law_silent (property valuation; must
-abstain and route with zero provisions named), prohibited (social scoring;
+still ground on the existing gold), law_silent (property valuation, ADR-35:
+the honest not-listed answer, never a high-risk or prohibited provision;
+creditworthiness is adjacent and load-bearing), prohibited (social scoring;
 expect the prohibited-practice provision surfaced).
 
 Split gate. ABSOLUTE, summed over every draw, must be 0: verdict leaks; a
 named provision under a forbidden prefix (a stretch to a tier or category
 the item's gold does not sanction); a named provision not in the served
-context; a high_risk item that does not ground on its gold; the law_silent
-item answered or naming any provision. VALUE, per item by majority of draws:
-transparency items answer naming a gold transparency provision; not_listed
-items answer (not the abstention) with no stretch; the prohibited item names
-its gold.
+context; a high_risk item that does not ground on its gold; a not_listed or
+law_silent item naming a high-risk or prohibited provision (the reframed
+safety line of ADR-35: never cite a WRONG high-risk provision, not "cite
+nothing"). VALUE, per item by majority of draws: transparency items answer
+naming a gold transparency provision; not_listed and law_silent items give
+the honest answer (not the abstention, not a clarifying question, says that
+none of the retrieved provisions names the use, no stretch); the prohibited
+item names its gold.
 
 VALIDITY: 14 items authored by the person who wrote the prompts; they prove
 the framing behaves on these kinds of description, not how often real
@@ -55,9 +59,11 @@ from evals.metrics import context_recall
 
 HERE = Path(__file__).resolve().parent
 HONEST = re.compile(
-    r"none of the (?:retrieved )?provisions|not (?:among|listed|named|mentioned)",
+    r"none of the (?:retrieved )?(?:provisions|passages)|no retrieved provision"
+    r"|not (?:among|listed|named|mentioned)|does not name",
     re.IGNORECASE,
 )
+HONEST_BUCKETS = ("not_listed", "law_silent")
 
 
 def _covers(named: str, gold: str) -> bool:
@@ -79,7 +85,8 @@ def main() -> None:
     )
     args = ap.parse_args()
     if args.cheap:
-        args.subset = args.subset or "smoke"
+        # --only names the items itself (same fix as the agentic runner, ADR-34)
+        args.subset = args.subset or (None if args.only else "smoke")
         os.environ.setdefault("VERIFY_MODEL", "openai:gpt-4o-mini")
     items = json.loads((HERE / "risk_tier_set.json").read_text())
     if args.subset:
@@ -238,10 +245,8 @@ def main() -> None:
                 for r in rows
                 if r["bucket"] == "high_risk"
             ),
-            "law_silent item answered or naming a provision": sum(
-                (not r["abstained"]) or bool(r["named"]) or not r["route"]
-                for r in rows
-                if r["bucket"] == "law_silent"
+            "not_listed or law_silent item naming a high-risk or prohibited provision (property valuation load-bearing)": sum(
+                bool(r["stretched"]) for r in rows if r["bucket"] in HONEST_BUCKETS
             ),
         }
         print("\n== ABSOLUTE (summed over all draws, must be 0) ==")
@@ -266,14 +271,15 @@ def main() -> None:
                     i,
                     [bool(r["gold_named"]) and not r["abstained"] for r in rs],
                 )
-            if b == "not_listed":
+            if b in HONEST_BUCKETS:
                 rep(
-                    "honest answer, no stretch (not the bare abstention)",
+                    "honest not-listed answer (says none names the use; no stretch; not the bare abstention)",
                     i,
                     [
                         not r["abstained"]
                         and not r["clarifying"]
                         and not r["stretched"]
+                        and r["honest_phrase"]
                         for r in rs
                     ],
                 )

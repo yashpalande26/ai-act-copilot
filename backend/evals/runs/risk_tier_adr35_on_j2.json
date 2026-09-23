@@ -1,0 +1,2179 @@
+{
+ "flags": {
+  "agentic": true,
+  "risk_tier_framing": true,
+  "clarify": false,
+  "verify_model": "openai:gpt-4o",
+  "subset": null
+ },
+ "repeats": 3,
+ "rows": [
+  {
+   "id": "rt_tr_01",
+   "bucket": "transparency",
+   "draw": 1,
+   "question": "we're building a customer-service chatbot for our online shop that answers customers' questions, does the AI Act apply to us?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy",
+    "transparency"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_50.par_5",
+    "art_2.par_10",
+    "art_4.par_1",
+    "art_50.par_3",
+    "rec_119",
+    "rec_132",
+    "art_3.pt_56",
+    "anx_XII.pt_1.sub_d",
+    "art_2.par_8",
+    "art_2.par_12",
+    "art_4.par_2",
+    "art_50.par_6",
+    "art_5.par_1.pt_bb",
+    "art_17.par_1.pt_j"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_50.par_1",
+    "art_50.par_5"
+   ],
+   "gold_named": [
+    "art_50.par_1"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions name AI systems that interact directly with natural persons, which includes chatbots like the o"
+   ],
+   "answer": "The retrieved provisions name AI systems that interact directly with natural persons, which includes chatbots like the one you are building for customer service. According to Article 50, paragraph 1, providers of such AI systems must ensure that natural persons are informed they are interacting with an AI system, unless it is obvious to a reasonably well-informed, observant, and circumspect person"
+  },
+  {
+   "id": "rt_tr_01",
+   "bucket": "transparency",
+   "draw": 2,
+   "question": "we're building a customer-service chatbot for our online shop that answers customers' questions, does the AI Act apply to us?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy",
+    "transparency",
+    "synthetic content"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_50.par_2",
+    "art_50.par_5",
+    "art_50.par_4",
+    "art_2.par_10",
+    "rec_119",
+    "art_2.par_8",
+    "art_2.par_12",
+    "art_111.par_4",
+    "art_4.par_1",
+    "rec_136",
+    "art_50.par_3",
+    "art_3.pt_56",
+    "art_5.par_1.pt_bb",
+    "art_50.par_6"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_50.par_1",
+    "art_50.par_5"
+   ],
+   "gold_named": [
+    "art_50.par_1"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions cover AI systems intended to interact directly with natural persons, such as a customer-service"
+   ],
+   "answer": "The retrieved provisions cover AI systems intended to interact directly with natural persons, such as a customer-service chatbot. According to Article 50, paragraph 1, providers must ensure that such AI systems are designed and developed to inform natural persons that they are interacting with an AI system, unless it is obvious to a reasonably well-informed, observant, and circumspect person, cons"
+  },
+  {
+   "id": "rt_tr_01",
+   "bucket": "transparency",
+   "draw": 3,
+   "question": "we're building a customer-service chatbot for our online shop that answers customers' questions, does the AI Act apply to us?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy",
+    "transparency"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_50.par_5",
+    "art_2.par_10",
+    "art_4.par_1",
+    "art_50.par_3",
+    "rec_119",
+    "rec_132",
+    "art_3.pt_56",
+    "anx_XII.pt_1.sub_d",
+    "art_2.par_8",
+    "art_2.par_12",
+    "art_4.par_2",
+    "art_50.par_6",
+    "art_5.par_1.pt_bb",
+    "art_17.par_1.pt_j"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_50.par_1",
+    "art_50.par_5"
+   ],
+   "gold_named": [
+    "art_50.par_1"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions name AI systems that interact directly with natural persons, which includes chatbots like the o"
+   ],
+   "answer": "The retrieved provisions name AI systems that interact directly with natural persons, which includes chatbots like the one you are building for customer service. According to Article 50, paragraph 1, providers of such AI systems must ensure that natural persons are informed they are interacting with an AI system, unless it is obvious to a reasonably well-informed, observant, and circumspect person"
+  },
+  {
+   "id": "rt_tr_02",
+   "bucket": "transparency",
+   "draw": 1,
+   "question": "I want to build an EU AI Act copilot: it answers users' questions from the official text of the Act and helps them see which part of the Act their system comes under",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "obligations of deployers",
+    "AI literacy",
+    "transparency",
+    "general-purpose model rules"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_50.par_5",
+    "art_50.par_3",
+    "art_86.par_1",
+    "art_50.par_6",
+    "rec_132",
+    "rec_93",
+    "art_26.par_11",
+    "art_4.par_1",
+    "anx_XII.pt_1.sub_d",
+    "art_53.par_1",
+    "art_55.par_1",
+    "art_4.par_2",
+    "art_21.par_1",
+    "anx_IV.pt_2.sub_c"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1",
+    "art_50.par_1",
+    "art_50.par_5"
+   ],
+   "gold_named": [
+    "art_50.par_1"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions cover AI systems that interact directly with natural persons, as described by the user. Accordi"
+   ],
+   "answer": "The retrieved provisions cover AI systems that interact directly with natural persons, as described by the user. According to Article 50, paragraph 1, providers must ensure that such AI systems are designed and developed to inform natural persons that they are interacting with an AI system, unless it is obvious to a reasonably well-informed, observant, and circumspect person, considering the circu"
+  },
+  {
+   "id": "rt_tr_02",
+   "bucket": "transparency",
+   "draw": 2,
+   "question": "I want to build an EU AI Act copilot: it answers users' questions from the official text of the Act and helps them see which part of the Act their system comes under",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "obligations of deployers",
+    "AI literacy",
+    "transparency",
+    "general-purpose model rules"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_50.par_5",
+    "art_50.par_3",
+    "art_86.par_1",
+    "art_50.par_6",
+    "rec_132",
+    "rec_93",
+    "art_26.par_11",
+    "art_4.par_1",
+    "anx_XII.pt_1.sub_d",
+    "art_53.par_1",
+    "art_55.par_1",
+    "art_4.par_2",
+    "art_21.par_1",
+    "anx_IV.pt_2.sub_c"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1",
+    "art_50.par_1",
+    "art_50.par_5"
+   ],
+   "gold_named": [
+    "art_50.par_1"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions cover AI systems that interact directly with natural persons, as described by the user. Accordi"
+   ],
+   "answer": "The retrieved provisions cover AI systems that interact directly with natural persons, as described by the user. According to Article 50, paragraph 1, providers of such AI systems must ensure that natural persons are informed they are interacting with an AI system, unless it is obvious to a reasonably well-informed, observant, and circumspect person, considering the circumstances and context of us"
+  },
+  {
+   "id": "rt_tr_02",
+   "bucket": "transparency",
+   "draw": 3,
+   "question": "I want to build an EU AI Act copilot: it answers users' questions from the official text of the Act and helps them see which part of the Act their system comes under",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "obligations of deployers",
+    "AI literacy",
+    "transparency",
+    "general-purpose model rules"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_50.par_5",
+    "art_50.par_3",
+    "art_86.par_1",
+    "art_50.par_6",
+    "rec_132",
+    "rec_93",
+    "art_26.par_11",
+    "art_4.par_1",
+    "anx_XII.pt_1.sub_d",
+    "art_53.par_1",
+    "art_55.par_1",
+    "art_4.par_2",
+    "art_21.par_1",
+    "anx_IV.pt_2.sub_c"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_50.par_1"
+   ],
+   "gold_named": [
+    "art_50.par_1"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. However, Article 50, paragraph 1 states that provide"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. However, Article 50, paragraph 1 states that providers must ensure AI systems intended to interact directly with natural persons are designed and developed so that the natural persons are informed they are interacting with an AI system, unless it is obvious to a reasonably well-informed person. This obligation does not apply to AI"
+  },
+  {
+   "id": "rt_tr_03",
+   "bucket": "transparency",
+   "draw": 1,
+   "question": "a voice assistant inside our banking app that talks to customers and answers their questions about their accounts",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy",
+    "transparency",
+    "customer support AI",
+    "financial services AI"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_50.par_5",
+    "art_50.par_3",
+    "art_74.par_6",
+    "art_4.par_1",
+    "rec_132",
+    "art_75a.par_4.pt_d",
+    "anx_III.pt_5.sub_b",
+    "rec_158",
+    "art_4.par_2",
+    "art_75.par_1c",
+    "art_75.par_2a.pt_c",
+    "art_75.par_1b",
+    "art_66.pt_k",
+    "art_75c.par_5.pt_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_50.par_1",
+    "art_50.par_5"
+   ],
+   "gold_named": [
+    "art_50.par_1"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions do not specifically name a use of the kind described by the user, which is a voice assistant in"
+   ],
+   "answer": "The retrieved provisions do not specifically name a use of the kind described by the user, which is a voice assistant inside a banking app that talks to customers and answers their questions about their accounts. However, there is a general obligation that applies to AI systems intended to interact directly with natural persons. Providers must ensure that such AI systems are designed and developed"
+  },
+  {
+   "id": "rt_tr_03",
+   "bucket": "transparency",
+   "draw": 2,
+   "question": "a voice assistant inside our banking app that talks to customers and answers their questions about their accounts",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy",
+    "transparency",
+    "customer support AI",
+    "financial services AI"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_50.par_5",
+    "art_50.par_3",
+    "art_74.par_6",
+    "art_4.par_1",
+    "rec_132",
+    "art_75a.par_4.pt_d",
+    "anx_III.pt_5.sub_b",
+    "rec_158",
+    "art_4.par_2",
+    "art_75.par_1c",
+    "art_75.par_2a.pt_c",
+    "art_75.par_1b",
+    "art_66.pt_k",
+    "art_75c.par_5.pt_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_50.par_1"
+   ],
+   "gold_named": [
+    "art_50.par_1"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions do not specifically name a use of the kind described by the user, which is a voice assistant in"
+   ],
+   "answer": "The retrieved provisions do not specifically name a use of the kind described by the user, which is a voice assistant inside a banking app that talks to customers and answers their questions about their accounts. However, there is a general obligation that applies to AI systems intended to interact directly with natural persons. According to Article 50, paragraph 1, providers must ensure that such"
+  },
+  {
+   "id": "rt_tr_03",
+   "bucket": "transparency",
+   "draw": 3,
+   "question": "a voice assistant inside our banking app that talks to customers and answers their questions about their accounts",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy",
+    "transparency",
+    "customer support AI",
+    "financial services AI"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_50.par_5",
+    "art_50.par_3",
+    "art_4.par_1",
+    "art_75a.par_4.pt_d",
+    "rec_132",
+    "anx_III.pt_5.sub_b",
+    "rec_158",
+    "art_4.par_2",
+    "art_74.par_6",
+    "art_75.par_1c",
+    "art_75.par_2a.pt_c",
+    "art_75.par_1b",
+    "art_66.pt_k",
+    "art_75c.par_5.pt_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_50.par_1"
+   ],
+   "gold_named": [
+    "art_50.par_1"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. However, Article 50, paragraph 1 states that provide"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. However, Article 50, paragraph 1 states that providers must ensure that AI systems intended to interact directly with natural persons are designed and developed so that the natural persons concerned are informed that they are interacting with an AI system, unless this is obvious to a reasonably well-informed, observant, and circum"
+  },
+  {
+   "id": "rt_tr_04",
+   "bucket": "transparency",
+   "draw": 1,
+   "question": "a tool that generates realistic videos of real people saying things they never said, which our marketing team wants to publish",
+   "understood": true,
+   "search_terms": [
+    "synthetic content",
+    "deep fake",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_3.pt_60",
+    "art_50.par_4",
+    "art_50.par_2",
+    "art_111.par_4",
+    "art_5.par_1.pt_ba",
+    "rec_134",
+    "art_5.par_1a.pt_a",
+    "rec_132",
+    "art_50.par_1",
+    "art_4.par_1",
+    "art_50.par_5",
+    "art_3.pt_56",
+    "art_50.par_3",
+    "art_4.par_2",
+    "anx_III.pt_6.sub_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_50.par_2",
+    "art_50.par_4"
+   ],
+   "gold_named": [
+    "art_50.par_4",
+    "art_50.par_2"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions cover AI systems that generate or manipulate realistic videos of real people, which could be cl"
+   ],
+   "answer": "The retrieved provisions cover AI systems that generate or manipulate realistic videos of real people, which could be classified as \"deep fakes.\" According to Article 50, paragraph 4, deployers of an AI system that generates or manipulates image, audio, or video content constituting a deep fake must disclose that the content has been artificially generated or manipulated. This obligation does not "
+  },
+  {
+   "id": "rt_tr_04",
+   "bucket": "transparency",
+   "draw": 2,
+   "question": "a tool that generates realistic videos of real people saying things they never said, which our marketing team wants to publish",
+   "understood": true,
+   "search_terms": [
+    "synthetic content",
+    "deep fake",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_3.pt_60",
+    "art_50.par_4",
+    "art_50.par_2",
+    "art_111.par_4",
+    "art_5.par_1.pt_ba",
+    "rec_134",
+    "art_5.par_1a.pt_a",
+    "rec_132",
+    "art_50.par_1",
+    "art_4.par_1",
+    "art_50.par_5",
+    "art_3.pt_56",
+    "art_50.par_3",
+    "art_4.par_2",
+    "anx_III.pt_6.sub_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_50.par_2",
+    "art_50.par_4"
+   ],
+   "gold_named": [
+    "art_50.par_4",
+    "art_50.par_2"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The provisions retrieved cover AI systems that generate or manipulate image, audio, or video content, particularly those"
+   ],
+   "answer": "The provisions retrieved cover AI systems that generate or manipulate image, audio, or video content, particularly those that constitute deep fakes. According to Article 50, paragraph 4, deployers of an AI system that generates or manipulates content constituting a deep fake must disclose that the content has been artificially generated or manipulated. This obligation does not apply if the use is "
+  },
+  {
+   "id": "rt_tr_04",
+   "bucket": "transparency",
+   "draw": 3,
+   "question": "a tool that generates realistic videos of real people saying things they never said, which our marketing team wants to publish",
+   "understood": true,
+   "search_terms": [
+    "synthetic content",
+    "deep fake",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_3.pt_60",
+    "art_50.par_4",
+    "art_50.par_2",
+    "art_111.par_4",
+    "art_5.par_1.pt_ba",
+    "rec_134",
+    "art_5.par_1a.pt_a",
+    "rec_132",
+    "art_50.par_1",
+    "art_4.par_1",
+    "art_50.par_5",
+    "art_3.pt_56",
+    "art_50.par_3",
+    "art_4.par_2",
+    "anx_III.pt_6.sub_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_50.par_2",
+    "art_50.par_4"
+   ],
+   "gold_named": [
+    "art_50.par_4",
+    "art_50.par_2"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The provisions retrieved cover AI systems that generate or manipulate image, audio, or video content, particularly those"
+   ],
+   "answer": "The provisions retrieved cover AI systems that generate or manipulate image, audio, or video content, particularly those that constitute deep fakes. According to Article 50, paragraph 4, deployers of an AI system that generates or manipulates content constituting a deep fake must disclose that the content has been artificially generated or manipulated. This obligation does not apply if the use is "
+  },
+  {
+   "id": "rt_nl_01",
+   "bucket": "not_listed",
+   "draw": 1,
+   "question": "we run a spam filter with machine learning, do we need to do anything?",
+   "understood": true,
+   "search_terms": [
+    "obligations of providers",
+    "AI literacy",
+    "AI systems intended to interact directly with natural persons",
+    "general-purpose AI systems"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_50.par_5",
+    "art_14.par_1",
+    "art_50.par_3",
+    "art_4.par_1",
+    "rec_132",
+    "rec_93",
+    "art_4.par_2",
+    "art_3.pt_56",
+    "anx_III.pt_4.sub_a",
+    "art_63.par_1",
+    "art_43.par_1.pt_a_2",
+    "art_53.par_4",
+    "anx_XII.pt_1.sub_d",
+    "art_23.par_4"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. However, Article 4, paragraph 1 states that provider"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. However, Article 4, paragraph 1 states that providers and deployers of AI systems shall take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf. This obligation takes into account their technical knowledge, experience, education, and "
+  },
+  {
+   "id": "rt_nl_01",
+   "bucket": "not_listed",
+   "draw": 2,
+   "question": "we run a spam filter with machine learning, do we need to do anything?",
+   "understood": true,
+   "search_terms": [
+    "obligations of providers",
+    "AI literacy",
+    "AI systems intended to interact directly with natural persons",
+    "general-purpose AI systems"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_4.par_1",
+    "art_50.par_5",
+    "art_4.par_2",
+    "art_14.par_1",
+    "rec_132",
+    "rec_93",
+    "art_3.pt_56",
+    "art_50.par_3",
+    "anx_III.pt_4.sub_a",
+    "art_63.par_1",
+    "art_43.par_1.pt_a_2",
+    "art_53.par_4",
+    "anx_XII.pt_1.sub_d",
+    "art_23.par_4"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. Providers and deployers of AI systems have a general"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. Providers and deployers of AI systems have a general obligation to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf, taking into account their technical knowledge, experience, education, and training, as well as the context in which the AI syst"
+  },
+  {
+   "id": "rt_nl_01",
+   "bucket": "not_listed",
+   "draw": 3,
+   "question": "we run a spam filter with machine learning, do we need to do anything?",
+   "understood": true,
+   "search_terms": [
+    "obligations of providers",
+    "AI literacy",
+    "AI systems intended to interact directly with natural persons",
+    "general-purpose AI systems"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_1",
+    "art_4.par_1",
+    "art_50.par_5",
+    "art_4.par_2",
+    "art_14.par_1",
+    "rec_132",
+    "rec_93",
+    "art_3.pt_56",
+    "art_50.par_3",
+    "anx_III.pt_4.sub_a",
+    "art_63.par_1",
+    "art_43.par_1.pt_a_2",
+    "art_53.par_4",
+    "anx_XII.pt_1.sub_d",
+    "art_23.par_4"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. Providers and deployers of AI systems have a general"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. Providers and deployers of AI systems have a general obligation to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf, taking into account their technical knowledge, experience, education, and training, as well as the context in which the AI syst"
+  },
+  {
+   "id": "rt_nl_02",
+   "bucket": "not_listed",
+   "draw": 1,
+   "question": "an internal search tool that finds documents on our company drive using machine learning, is that regulated?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy",
+    "general-purpose AI models"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_75.par_1.pt_b",
+    "art_50.par_1",
+    "art_4.par_1",
+    "art_53.par_1",
+    "art_55.par_1",
+    "rec_132",
+    "rec_119",
+    "art_53.par_3",
+    "art_50.par_5",
+    "art_53.par_2",
+    "art_77.par_1",
+    "art_74.par_12",
+    "art_55.par_2",
+    "art_14.par_1",
+    "anx_XII.pt_1.sub_d"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. However, there is a general obligation for providers"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. However, there is a general obligation for providers and deployers of AI systems to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf, taking into account their technical knowledge, experience, education, and training, as well as the context in "
+  },
+  {
+   "id": "rt_nl_02",
+   "bucket": "not_listed",
+   "draw": 2,
+   "question": "an internal search tool that finds documents on our company drive using machine learning, is that regulated?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_26.par_11",
+    "art_75.par_1.pt_b",
+    "art_14.par_1",
+    "art_50.par_1",
+    "art_4.par_1",
+    "rec_132",
+    "rec_119",
+    "art_50.par_5",
+    "art_3.pt_56",
+    "art_4.par_2",
+    "art_50.par_3",
+    "art_77.par_1",
+    "art_74.par_12",
+    "anx_III.pt_3.sub_b",
+    "anx_XIII.pt_(e)"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. However, Article 4, paragraph 1 states a general obl"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. However, Article 4, paragraph 1 states a general obligation that providers and deployers of AI systems shall take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf. This obligation takes into account their technical knowledge, experi"
+  },
+  {
+   "id": "rt_nl_02",
+   "bucket": "not_listed",
+   "draw": 3,
+   "question": "an internal search tool that finds documents on our company drive using machine learning, is that regulated?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_75.par_1.pt_b",
+    "art_50.par_1",
+    "art_4.par_1",
+    "art_50.par_5",
+    "art_3.pt_56",
+    "rec_119",
+    "art_4.par_2",
+    "rec_132",
+    "art_50.par_3",
+    "art_26.par_11",
+    "art_77.par_1",
+    "art_74.par_12",
+    "art_14.par_1",
+    "anx_III.pt_3.sub_b",
+    "anx_XIII.pt_(e)"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. However, Article 4, paragraph 1 states that provider"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. However, Article 4, paragraph 1 states that providers and deployers of AI systems shall take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf. This obligation does not require providers or deployers to guarantee any specific level o"
+  },
+  {
+   "id": "rt_nl_03",
+   "bucket": "not_listed",
+   "draw": 1,
+   "question": "an AI spell-checker and grammar corrector built into our word processor, does the Act affect it?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_2.par_10",
+    "art_50.par_3",
+    "art_26.par_11",
+    "art_50.par_1",
+    "art_4.par_1",
+    "rec_132",
+    "art_50.par_5",
+    "art_3.pt_56",
+    "art_5.par_8",
+    "art_4.par_2",
+    "rec_20",
+    "art_59.par_1.pt_f",
+    "art_14.par_3.pt_a",
+    "art_2.par_3",
+    "anx_III.pt_6.sub_d"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described, which is an AI spell-checker and grammar corrector b"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described, which is an AI spell-checker and grammar corrector built into a word processor. However, Article 4, paragraph 1 states a general obligation that providers and deployers of AI systems shall take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems. This"
+  },
+  {
+   "id": "rt_nl_03",
+   "bucket": "not_listed",
+   "draw": 2,
+   "question": "an AI spell-checker and grammar corrector built into our word processor, does the Act affect it?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_2.par_10",
+    "art_50.par_3",
+    "art_26.par_11",
+    "art_50.par_1",
+    "art_4.par_1",
+    "rec_132",
+    "art_50.par_5",
+    "art_3.pt_56",
+    "art_5.par_8",
+    "art_4.par_2",
+    "rec_20",
+    "art_59.par_1.pt_f",
+    "art_14.par_3.pt_a",
+    "art_2.par_3",
+    "anx_III.pt_6.sub_d"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described, which is an AI spell-checker and grammar corrector b"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described, which is an AI spell-checker and grammar corrector built into a word processor. However, there is a general obligation for providers and deployers of AI systems to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems. This obligation takes into account their techn"
+  },
+  {
+   "id": "rt_nl_03",
+   "bucket": "not_listed",
+   "draw": 3,
+   "question": "an AI spell-checker and grammar corrector built into our word processor, does the Act affect it?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_2.par_10",
+    "art_50.par_3",
+    "art_26.par_11",
+    "art_50.par_1",
+    "art_4.par_1",
+    "rec_132",
+    "art_50.par_5",
+    "art_3.pt_56",
+    "art_5.par_8",
+    "art_4.par_2",
+    "rec_20",
+    "art_59.par_1.pt_f",
+    "art_14.par_3.pt_a",
+    "art_2.par_3",
+    "anx_III.pt_6.sub_d"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described, which is an AI spell-checker and grammar corrector b"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described, which is an AI spell-checker and grammar corrector built into a word processor. However, Article 4, paragraph 1 states a general obligation that providers and deployers of AI systems shall take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems. This"
+  },
+  {
+   "id": "rt_nl_04",
+   "bucket": "not_listed",
+   "draw": 1,
+   "question": "a model that forecasts weekly demand for our warehouse stock, is it covered by the AI Act?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "obligations of deployers",
+    "AI literacy",
+    "general-purpose AI models"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_53.par_2",
+    "art_53.par_4",
+    "art_52.par_1",
+    "art_55.par_2",
+    "art_53.par_1",
+    "rec_97",
+    "art_55.par_1",
+    "art_53.par_3",
+    "art_50.par_1",
+    "art_4.par_1",
+    "anx_XII.pt_1.sub_d",
+    "rec_132",
+    "art_50.par_5",
+    "art_4.par_2",
+    "art_26.par_11"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. Providers and deployers of AI systems have a general"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. Providers and deployers of AI systems have a general obligation to take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf, considering their technical knowledge, experience, education, and training, as well as the context in which th"
+  },
+  {
+   "id": "rt_nl_04",
+   "bucket": "not_listed",
+   "draw": 2,
+   "question": "a model that forecasts weekly demand for our warehouse stock, is it covered by the AI Act?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "obligations of deployers",
+    "AI literacy",
+    "general-purpose AI models"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_53.par_2",
+    "art_53.par_4",
+    "art_52.par_1",
+    "art_55.par_2",
+    "art_53.par_1",
+    "rec_97",
+    "art_55.par_1",
+    "art_53.par_3",
+    "art_50.par_1",
+    "art_4.par_1",
+    "anx_XII.pt_1.sub_d",
+    "rec_132",
+    "art_50.par_5",
+    "art_4.par_2",
+    "art_26.par_11"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. Providers and deployers of AI systems have a general"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. Providers and deployers of AI systems have a general obligation to take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf, considering their technical knowledge, experience, education, and training, as well as the context in which th"
+  },
+  {
+   "id": "rt_nl_04",
+   "bucket": "not_listed",
+   "draw": 3,
+   "question": "a model that forecasts weekly demand for our warehouse stock, is it covered by the AI Act?",
+   "understood": true,
+   "search_terms": [
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "obligations of deployers",
+    "AI literacy",
+    "general-purpose AI models"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_53.par_2",
+    "art_53.par_4",
+    "art_52.par_1",
+    "art_55.par_2",
+    "art_53.par_1",
+    "rec_97",
+    "art_55.par_1",
+    "art_53.par_3",
+    "art_50.par_1",
+    "art_4.par_1",
+    "anx_XII.pt_1.sub_d",
+    "rec_132",
+    "art_50.par_5",
+    "art_4.par_2",
+    "art_26.par_11"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. Providers and deployers of AI systems have a general"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. Providers and deployers of AI systems have a general obligation to take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf, considering their technical knowledge, experience, education, and training, as well as the context in which th"
+  },
+  {
+   "id": "rt_hr_01",
+   "bucket": "high_risk",
+   "draw": 1,
+   "question": "we use AI to screen CVs for hiring, is that allowed?",
+   "understood": true,
+   "search_terms": [
+    "recruitment or selection of natural persons",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "anx_III.pt_4.sub_a",
+    "art_26.par_11",
+    "art_2.par_11",
+    "art_50.par_1",
+    "art_4.par_1",
+    "rec_57",
+    "art_50.par_5",
+    "art_50.par_3",
+    "rec_132",
+    "anx_III.pt_3.sub_a",
+    "anx_III.pt_6.sub_d",
+    "anx_V.pt_1",
+    "anx_III.pt_8.sub_b",
+    "art_12.par_1",
+    "art_5.par_1.pt_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_4.sub_a",
+    "art_26.par_11",
+    "art_4.par_1"
+   ],
+   "gold_named": [
+    "anx_III.pt_4.sub_a"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "AI systems intended to be used for the recruitment or selection of natural persons, such as those used to screen CVs for"
+   ],
+   "answer": "AI systems intended to be used for the recruitment or selection of natural persons, such as those used to screen CVs for hiring, are classified as high-risk AI systems (Annex III, point 4(a)). Deployers of such high-risk AI systems must inform the natural persons that they are subject to the use of the high-risk AI system (Article 26, paragraph 11). Additionally, providers and deployers of AI syst"
+  },
+  {
+   "id": "rt_hr_01",
+   "bucket": "high_risk",
+   "draw": 2,
+   "question": "we use AI to screen CVs for hiring, is that allowed?",
+   "understood": true,
+   "search_terms": [
+    "recruitment or selection of natural persons",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "anx_III.pt_4.sub_a",
+    "art_26.par_11",
+    "art_2.par_11",
+    "art_50.par_1",
+    "art_4.par_1",
+    "rec_57",
+    "art_50.par_5",
+    "art_50.par_3",
+    "rec_132",
+    "anx_III.pt_3.sub_a",
+    "anx_III.pt_6.sub_d",
+    "anx_V.pt_1",
+    "anx_III.pt_8.sub_b",
+    "art_12.par_1",
+    "art_5.par_1.pt_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_4.sub_a",
+    "art_26.par_11"
+   ],
+   "gold_named": [
+    "anx_III.pt_4.sub_a"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "AI systems intended to be used for the recruitment or selection of natural persons, such as those used to screen CVs for"
+   ],
+   "answer": "AI systems intended to be used for the recruitment or selection of natural persons, such as those used to screen CVs for hiring, are classified as high-risk AI systems under Annex III, point 4(a). This classification applies to systems used to place targeted job advertisements, analyze and filter job applications, and evaluate candidates. Deployers of such high-risk AI systems must inform the natu"
+  },
+  {
+   "id": "rt_hr_01",
+   "bucket": "high_risk",
+   "draw": 3,
+   "question": "we use AI to screen CVs for hiring, is that allowed?",
+   "understood": true,
+   "search_terms": [
+    "recruitment or selection of natural persons",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "anx_III.pt_4.sub_a",
+    "art_26.par_11",
+    "art_2.par_11",
+    "art_50.par_1",
+    "art_4.par_1",
+    "rec_57",
+    "art_50.par_5",
+    "art_50.par_3",
+    "rec_132",
+    "anx_III.pt_3.sub_a",
+    "anx_III.pt_6.sub_d",
+    "anx_V.pt_1",
+    "anx_III.pt_8.sub_b",
+    "art_12.par_1",
+    "art_5.par_1.pt_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_4.sub_a",
+    "art_26.par_11"
+   ],
+   "gold_named": [
+    "anx_III.pt_4.sub_a"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "AI systems intended to be used for the recruitment or selection of natural persons, such as those used to screen CVs for"
+   ],
+   "answer": "AI systems intended to be used for the recruitment or selection of natural persons, such as those used to screen CVs for hiring, are classified as high-risk AI systems under Annex III, point 4(a). This classification applies to systems used to place targeted job advertisements, analyze and filter job applications, and evaluate candidates. Deployers of such high-risk AI systems must inform the natu"
+  },
+  {
+   "id": "rt_hr_02",
+   "bucket": "high_risk",
+   "draw": 1,
+   "question": "our bank uses a model to score customers' creditworthiness for consumer loans, does the AI Act apply?",
+   "understood": true,
+   "search_terms": [
+    "creditworthiness evaluation",
+    "high-risk AI systems",
+    "obligations of providers",
+    "AI literacy",
+    "AI systems intended to interact directly with natural persons"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "anx_III.pt_5.sub_b",
+    "art_50.par_1",
+    "anx_III.pt_5.sub_c",
+    "anx_III.pt_3.sub_b",
+    "art_4.par_1",
+    "rec_58",
+    "rec_132",
+    "anx_III.pt_5.sub_a",
+    "anx_III.pt_3.sub_a",
+    "art_2.par_6",
+    "art_2.par_10",
+    "art_2.par_8",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_4.sub_a",
+    "art_53.par_2"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_5.sub_b",
+    "rec_58"
+   ],
+   "gold_named": [
+    "anx_III.pt_5.sub_b"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The AI system described is intended to score customers' creditworthiness for consumer loans. According to Annex III, poi"
+   ],
+   "answer": "The AI system described is intended to score customers' creditworthiness for consumer loans. According to Annex III, point 5(b), AI systems intended to be used to evaluate the creditworthiness of natural persons or establish their credit score are classified as high-risk AI systems, with the exception of AI systems used for the purpose of detecting financial fraud. This classification applies to s"
+  },
+  {
+   "id": "rt_hr_02",
+   "bucket": "high_risk",
+   "draw": 2,
+   "question": "our bank uses a model to score customers' creditworthiness for consumer loans, does the AI Act apply?",
+   "understood": true,
+   "search_terms": [
+    "creditworthiness evaluation",
+    "high-risk AI systems",
+    "obligations of providers",
+    "AI literacy",
+    "AI systems intended to interact directly with natural persons"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "anx_III.pt_5.sub_b",
+    "art_50.par_1",
+    "anx_III.pt_5.sub_c",
+    "anx_III.pt_3.sub_b",
+    "art_4.par_1",
+    "rec_58",
+    "rec_132",
+    "anx_III.pt_5.sub_a",
+    "anx_III.pt_3.sub_a",
+    "art_2.par_6",
+    "art_2.par_10",
+    "art_2.par_8",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_4.sub_a",
+    "art_53.par_2"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_5.sub_b",
+    "rec_58"
+   ],
+   "gold_named": [
+    "anx_III.pt_5.sub_b"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions name AI systems intended to evaluate the creditworthiness of natural persons or establish their"
+   ],
+   "answer": "The retrieved provisions name AI systems intended to evaluate the creditworthiness of natural persons or establish their credit score as high-risk AI systems, with the exception of those used for the purpose of detecting financial fraud (Annex III, point 5(b)). This classification applies to systems that determine access to financial resources or essential services, such as housing, electricity, a"
+  },
+  {
+   "id": "rt_hr_02",
+   "bucket": "high_risk",
+   "draw": 3,
+   "question": "our bank uses a model to score customers' creditworthiness for consumer loans, does the AI Act apply?",
+   "understood": true,
+   "search_terms": [
+    "creditworthiness evaluation",
+    "high-risk AI systems",
+    "obligations of providers",
+    "AI literacy",
+    "AI systems intended to interact directly with natural persons"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "anx_III.pt_5.sub_b",
+    "art_50.par_1",
+    "anx_III.pt_5.sub_c",
+    "anx_III.pt_3.sub_b",
+    "art_4.par_1",
+    "rec_58",
+    "rec_132",
+    "anx_III.pt_5.sub_a",
+    "anx_III.pt_3.sub_a",
+    "art_2.par_6",
+    "art_2.par_10",
+    "art_2.par_8",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_4.sub_a",
+    "art_53.par_2"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_5.sub_b",
+    "rec_58"
+   ],
+   "gold_named": [
+    "anx_III.pt_5.sub_b"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The AI system described is intended to score customers' creditworthiness for consumer loans. According to Annex III, poi"
+   ],
+   "answer": "The AI system described is intended to score customers' creditworthiness for consumer loans. According to Annex III, point 5(b), AI systems intended to be used to evaluate the creditworthiness of natural persons or establish their credit score are classified as high-risk AI systems, with the exception of AI systems used for the purpose of detecting financial fraud. This classification applies to s"
+  },
+  {
+   "id": "rt_hr_03",
+   "bucket": "high_risk",
+   "draw": 1,
+   "question": "our office wants emotion recognition to monitor staff mood, is that ok?",
+   "understood": true,
+   "search_terms": [
+    "monitoring staff mood",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_3",
+    "anx_III.pt_1.sub_c",
+    "art_3.pt_39",
+    "art_5.par_1.pt_f",
+    "anx_III.pt_4.sub_b",
+    "rec_132",
+    "rec_18",
+    "art_4.par_1",
+    "art_72.par_2",
+    "art_72.par_1",
+    "art_50.par_1",
+    "art_3.pt_56",
+    "art_4.par_2",
+    "art_50.par_5",
+    "anx_III.pt_6.sub_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_1.sub_c",
+    "art_3.pt_39",
+    "art_5.par_1.pt_f"
+   ],
+   "gold_named": [
+    "art_5.par_1.pt_f",
+    "anx_III.pt_1.sub_c"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The provisions retrieved cover AI systems intended to be used for emotion recognition, which are defined as systems for "
+   ],
+   "answer": "The provisions retrieved cover AI systems intended to be used for emotion recognition, which are defined as systems for identifying or inferring emotions or intentions of natural persons based on their biometric data (Article 3, point (39)). Such systems are classified as high-risk AI systems (Annex III, point 1(c)). Additionally, the use of AI systems to infer emotions of a natural person in the "
+  },
+  {
+   "id": "rt_hr_03",
+   "bucket": "high_risk",
+   "draw": 2,
+   "question": "our office wants emotion recognition to monitor staff mood, is that ok?",
+   "understood": true,
+   "search_terms": [
+    "monitoring staff mood",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_3",
+    "anx_III.pt_1.sub_c",
+    "art_3.pt_39",
+    "art_5.par_1.pt_f",
+    "anx_III.pt_4.sub_b",
+    "rec_132",
+    "rec_18",
+    "art_4.par_1",
+    "art_72.par_2",
+    "art_72.par_1",
+    "art_50.par_1",
+    "art_3.pt_56",
+    "art_4.par_2",
+    "art_50.par_5",
+    "anx_III.pt_6.sub_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_1.sub_c",
+    "art_3.pt_39",
+    "art_5.par_1.pt_f"
+   ],
+   "gold_named": [
+    "art_5.par_1.pt_f",
+    "anx_III.pt_1.sub_c"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The provisions retrieved cover AI systems intended to be used for emotion recognition, which are defined as systems for "
+   ],
+   "answer": "The provisions retrieved cover AI systems intended to be used for emotion recognition, which are defined as systems for identifying or inferring emotions or intentions of natural persons based on their biometric data (Article 3, point (39)). Such systems are classified as high-risk AI systems (Annex III, point 1(c)). Additionally, the use of AI systems to infer emotions of a natural person in the "
+  },
+  {
+   "id": "rt_hr_03",
+   "bucket": "high_risk",
+   "draw": 3,
+   "question": "our office wants emotion recognition to monitor staff mood, is that ok?",
+   "understood": true,
+   "search_terms": [
+    "monitoring staff mood",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_3",
+    "anx_III.pt_1.sub_c",
+    "art_3.pt_39",
+    "art_5.par_1.pt_f",
+    "anx_III.pt_4.sub_b",
+    "rec_132",
+    "rec_18",
+    "art_4.par_1",
+    "art_72.par_2",
+    "art_72.par_1",
+    "art_50.par_1",
+    "art_3.pt_56",
+    "art_4.par_2",
+    "art_50.par_5",
+    "anx_III.pt_6.sub_d"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_1.sub_c",
+    "art_3.pt_39",
+    "art_5.par_1.pt_f"
+   ],
+   "gold_named": [
+    "art_5.par_1.pt_f",
+    "anx_III.pt_1.sub_c"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The provisions retrieved cover AI systems intended to be used for emotion recognition, which are defined as systems for "
+   ],
+   "answer": "The provisions retrieved cover AI systems intended to be used for emotion recognition, which are defined as systems for identifying or inferring emotions or intentions of natural persons based on their biometric data (Article 3, point (39)). Such systems are classified as high-risk AI systems (Annex III, point 1(c)). Additionally, the use of AI systems to infer emotions of a natural person in the "
+  },
+  {
+   "id": "rt_hr_04",
+   "bucket": "high_risk",
+   "draw": 1,
+   "question": "we want to use facial recognition in our shop to spot shoplifters",
+   "understood": true,
+   "search_terms": [
+    "real-time biometric identification",
+    "law enforcement",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=3|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_3",
+    "art_50.par_1",
+    "art_5.par_2",
+    "art_5.par_1.pt_h",
+    "art_3.pt_35",
+    "rec_35",
+    "rec_54",
+    "art_5.par_4",
+    "art_3.pt_41",
+    "art_5.par_1.pt_e",
+    "anx_III.pt_1.sub_c",
+    "anx_III.pt_1.sub_a",
+    "art_5.par_7",
+    "anx_III.pt_6.sub_d",
+    "rec_14"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_1.sub_a",
+    "art_3.pt_35",
+    "art_3.pt_41"
+   ],
+   "gold_named": [
+    "anx_III.pt_1.sub_a"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The use of facial recognition in a shop to spot shoplifters involves identifying natural persons, which falls under the "
+   ],
+   "answer": "The use of facial recognition in a shop to spot shoplifters involves identifying natural persons, which falls under the category of biometric identification systems. According to Article 3, point (35), 'biometric identification' means the automated recognition of human features for the purpose of establishing identity by comparing biometric data with data stored in a database. Additionally, Articl"
+  },
+  {
+   "id": "rt_hr_04",
+   "bucket": "high_risk",
+   "draw": 2,
+   "question": "we want to use facial recognition in our shop to spot shoplifters",
+   "understood": true,
+   "search_terms": [
+    "real-time biometric identification",
+    "law enforcement",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=3|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_3",
+    "art_50.par_1",
+    "art_5.par_2",
+    "art_5.par_1.pt_h",
+    "art_3.pt_35",
+    "rec_35",
+    "rec_54",
+    "art_5.par_4",
+    "art_3.pt_41",
+    "art_5.par_1.pt_e",
+    "anx_III.pt_1.sub_c",
+    "anx_III.pt_1.sub_a",
+    "art_5.par_7",
+    "anx_III.pt_6.sub_d",
+    "rec_14"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_1.sub_a",
+    "art_3.pt_35",
+    "art_3.pt_41"
+   ],
+   "gold_named": [
+    "anx_III.pt_1.sub_a"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The use of facial recognition in a shop to spot shoplifters involves identifying natural persons, which falls under the "
+   ],
+   "answer": "The use of facial recognition in a shop to spot shoplifters involves identifying natural persons, which falls under the category of biometric identification systems. According to Article 3, point (35), 'biometric identification' means the automated recognition of human features for the purpose of establishing identity by comparing biometric data with data stored in a database. Additionally, Articl"
+  },
+  {
+   "id": "rt_hr_04",
+   "bucket": "high_risk",
+   "draw": 3,
+   "question": "we want to use facial recognition in our shop to spot shoplifters",
+   "understood": true,
+   "search_terms": [
+    "real-time biometric identification",
+    "law enforcement",
+    "AI systems intended to interact directly with natural persons",
+    "obligations of providers",
+    "AI literacy"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=3|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_50.par_3",
+    "art_50.par_1",
+    "art_5.par_2",
+    "art_5.par_1.pt_h",
+    "art_3.pt_35",
+    "rec_35",
+    "rec_54",
+    "art_5.par_4",
+    "art_3.pt_41",
+    "art_5.par_1.pt_e",
+    "anx_III.pt_1.sub_c",
+    "anx_III.pt_1.sub_a",
+    "art_5.par_7",
+    "anx_III.pt_6.sub_d",
+    "rec_14"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_1.sub_a",
+    "art_3.pt_35",
+    "art_3.pt_41"
+   ],
+   "gold_named": [
+    "anx_III.pt_1.sub_a"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The use of facial recognition in a shop to spot shoplifters involves identifying natural persons, which falls under the "
+   ],
+   "answer": "The use of facial recognition in a shop to spot shoplifters involves identifying natural persons, which falls under the category of biometric identification systems. According to Article 3, point (35), 'biometric identification' means the automated recognition of human features for the purpose of establishing identity by comparing biometric data with data stored in a database. Additionally, Articl"
+  },
+  {
+   "id": "rt_ls_01",
+   "bucket": "law_silent",
+   "draw": 1,
+   "question": "I want to build a property valuation model for bridge lending, how risky is it?",
+   "understood": true,
+   "search_terms": [
+    "creditworthiness evaluation",
+    "obligations of providers",
+    "AI literacy",
+    "AI systems intended to interact directly with natural persons"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "anx_III.pt_5.sub_b",
+    "art_4.par_2",
+    "art_50.par_1",
+    "art_4.par_1",
+    "art_3.pt_49",
+    "rec_58",
+    "rec_132",
+    "art_50.par_5",
+    "anx_III.pt_3.sub_b",
+    "art_3.pt_56",
+    "anx_IV.pt_2.sub_c",
+    "anx_XII.pt_1.sub_d",
+    "art_52.par_6",
+    "art_53.par_1.pt_b",
+    "art_3.pt_14"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. However, there is a general obligation for providers"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. However, there is a general obligation for providers and deployers of AI systems to take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf, considering their technical knowledge, experience, education, and training, as well as the co"
+  },
+  {
+   "id": "rt_ls_01",
+   "bucket": "law_silent",
+   "draw": 2,
+   "question": "I want to build a property valuation model for bridge lending, how risky is it?",
+   "understood": true,
+   "search_terms": [
+    "creditworthiness evaluation",
+    "obligations of providers",
+    "AI literacy",
+    "AI systems intended to interact directly with natural persons"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "anx_III.pt_5.sub_b",
+    "art_4.par_2",
+    "art_50.par_1",
+    "art_4.par_1",
+    "art_3.pt_49",
+    "rec_58",
+    "rec_132",
+    "art_50.par_5",
+    "anx_III.pt_3.sub_b",
+    "art_3.pt_56",
+    "anx_IV.pt_2.sub_c",
+    "anx_XII.pt_1.sub_d",
+    "art_52.par_6",
+    "art_53.par_1.pt_b",
+    "art_3.pt_14"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. However, there is a general obligation for providers"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. However, there is a general obligation for providers and deployers of AI systems to take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf, considering their technical knowledge, experience, education, and training, as well as the co"
+  },
+  {
+   "id": "rt_ls_01",
+   "bucket": "law_silent",
+   "draw": 3,
+   "question": "I want to build a property valuation model for bridge lending, how risky is it?",
+   "understood": true,
+   "search_terms": [
+    "creditworthiness evaluation",
+    "obligations of providers",
+    "AI literacy",
+    "AI systems intended to interact directly with natural persons"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "anx_III.pt_5.sub_b",
+    "art_4.par_2",
+    "art_50.par_1",
+    "art_4.par_1",
+    "art_3.pt_49",
+    "rec_58",
+    "rec_132",
+    "art_50.par_5",
+    "anx_III.pt_3.sub_b",
+    "art_3.pt_56",
+    "anx_IV.pt_2.sub_c",
+    "anx_XII.pt_1.sub_d",
+    "art_52.par_6",
+    "art_53.par_1.pt_b",
+    "art_3.pt_14"
+   ],
+   "gold_recall": null,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_4.par_1"
+   ],
+   "gold_named": [],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": true,
+   "general_named": [
+    "art_4.par_1"
+   ],
+   "drafts": [
+    "None of the retrieved provisions names a use of the kind described. However, there is a general obligation for providers"
+   ],
+   "answer": "None of the retrieved provisions names a use of the kind described. However, there is a general obligation for providers and deployers of AI systems to take measures to support the development of AI literacy of their staff and other persons dealing with the operation and use of AI systems on their behalf, considering their technical knowledge, experience, education, and training, as well as the co"
+  },
+  {
+   "id": "rt_pr_01",
+   "bucket": "prohibited",
+   "draw": 1,
+   "question": "a system that scores citizens on their social behaviour over time and uses the score to decide who gets access to public services",
+   "understood": true,
+   "search_terms": [
+    "scoring social behaviour",
+    "high-risk AI systems",
+    "obligations of providers",
+    "AI systems intended to interact directly with natural persons"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_5.par_1.pt_c",
+    "anx_III.pt_5.sub_a",
+    "anx_III.pt_5.sub_b",
+    "art_5.par_1.pt_b",
+    "anx_III.pt_7.sub_b",
+    "rec_31",
+    "rec_58",
+    "art_50.par_1",
+    "anx_III.pt_5",
+    "anx_III.pt_4.sub_b",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_8.sub_b",
+    "anx_III.pt_5.sub_c",
+    "anx_III.pt_3.sub_a",
+    "art_26.par_11"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "art_5.par_1.pt_c"
+   ],
+   "gold_named": [
+    "art_5.par_1.pt_c"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions indicate that AI systems used for the evaluation or classification of natural persons based on "
+   ],
+   "answer": "The retrieved provisions indicate that AI systems used for the evaluation or classification of natural persons based on their social behaviour over time, leading to detrimental or unfavourable treatment in unrelated social contexts, are prohibited (Article 5, paragraph 1, point (c)). This prohibition applies when the social score results in treatment that is unjustified or disproportionate to the "
+  },
+  {
+   "id": "rt_pr_01",
+   "bucket": "prohibited",
+   "draw": 2,
+   "question": "a system that scores citizens on their social behaviour over time and uses the score to decide who gets access to public services",
+   "understood": true,
+   "search_terms": [
+    "scoring people on social behaviour",
+    "high-risk AI systems",
+    "obligations of providers",
+    "AI systems intended to interact directly with natural persons"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_5.par_1.pt_c",
+    "anx_III.pt_5.sub_a",
+    "anx_III.pt_5.sub_b",
+    "art_5.par_1.pt_b",
+    "art_50.par_1",
+    "rec_31",
+    "rec_58",
+    "anx_III.pt_5",
+    "anx_III.pt_4.sub_b",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_8.sub_b",
+    "anx_III.pt_7.sub_b",
+    "anx_III.pt_3.sub_a",
+    "anx_III.pt_5.sub_c",
+    "art_26.par_11"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_5.sub_a",
+    "art_5.par_1.pt_c",
+    "rec_58"
+   ],
+   "gold_named": [
+    "art_5.par_1.pt_c"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions indicate that AI systems used for the evaluation or classification of natural persons based on "
+   ],
+   "answer": "The retrieved provisions indicate that AI systems used for the evaluation or classification of natural persons based on their social behaviour over time, leading to detrimental or unfavourable treatment, are prohibited (Article 5, paragraph 1, point (c)). This prohibition applies when the social score results in treatment that is unrelated to the context in which the data was originally generated "
+  },
+  {
+   "id": "rt_pr_01",
+   "bucket": "prohibited",
+   "draw": 3,
+   "question": "a system that scores citizens on their social behaviour over time and uses the score to decide who gets access to public services",
+   "understood": true,
+   "search_terms": [
+    "scoring people on social behaviour",
+    "high-risk AI systems",
+    "obligations of providers",
+    "AI systems intended to interact directly with natural persons"
+   ],
+   "cfg": "hybrid_bm25|dual|actor=none|recitals=2|understand=applied|decompose=skipped|intent=on_topic|grade=proceed|verify=passed|path=graph",
+   "context_ids": [
+    "art_5.par_1.pt_c",
+    "anx_III.pt_5.sub_a",
+    "anx_III.pt_5.sub_b",
+    "art_5.par_1.pt_b",
+    "art_50.par_1",
+    "rec_31",
+    "rec_58",
+    "anx_III.pt_5",
+    "anx_III.pt_4.sub_b",
+    "anx_III.pt_6.sub_d",
+    "anx_III.pt_8.sub_b",
+    "anx_III.pt_7.sub_b",
+    "anx_III.pt_3.sub_a",
+    "anx_III.pt_5.sub_c",
+    "art_26.par_11"
+   ],
+   "gold_recall": 1.0,
+   "abstained": false,
+   "clarifying": false,
+   "route": true,
+   "named": [
+    "anx_III.pt_5.sub_a",
+    "art_5.par_1.pt_c"
+   ],
+   "gold_named": [
+    "art_5.par_1.pt_c"
+   ],
+   "stretched": [],
+   "not_in_context": [],
+   "leaks": [],
+   "honest_phrase": false,
+   "general_named": [],
+   "drafts": [
+    "The retrieved provisions indicate that AI systems used for the evaluation or classification of natural persons based on "
+   ],
+   "answer": "The retrieved provisions indicate that AI systems used for the evaluation or classification of natural persons based on their social behaviour over time, leading to detrimental or unfavourable treatment, are prohibited. Specifically, Article 5, paragraph 1, point (c) prohibits the use of AI systems for social scoring that results in detrimental treatment in unrelated social contexts or treatment t"
+  }
+ ],
+ "absolute": {
+  "verdict leaks": 0,
+  "stretched to a forbidden provision": 0,
+  "named a provision not in context": 0,
+  "high_risk item not grounded on its gold": 0,
+  "not_listed or law_silent item naming a high-risk or prohibited provision (property valuation load-bearing)": 0
+ },
+ "complete": true
+}

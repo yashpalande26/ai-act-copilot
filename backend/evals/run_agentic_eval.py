@@ -444,6 +444,12 @@ def main() -> None:
                 ),
                 "must_route": it.get("must_route", False),
                 "route_or_abstain": it.get("route_or_abstain", False),
+                # ADR-35: a routed item may name a general obligation; what it
+                # may never name is a high-risk or prohibited provision whose
+                # scope does not cover the use.
+                "forbidden_prefixes": it.get(
+                    "forbidden_prefixes", ["anx_III", "art_5."]
+                ),
                 "names_provision": [] if abstained else references_in(res.answer),
                 # ADR-32: recitals in the served context and in the answer
                 "recitals_in_context": sum(is_recital(c) for c in context_ids),
@@ -665,16 +671,24 @@ def main() -> None:
         plain = [t for t in traces if t["bucket"] == "plain_language"]
         if plain:
             unnamed = [t for t in plain if t["route_or_abstain"]]
+
+            def _stretch(t):
+                return [
+                    p
+                    for p in t["names_provision"]
+                    if any(p.startswith(f) for f in t["forbidden_prefixes"])
+                ]
+
             unnamed_ok = [
                 t["id"]
                 for t in unnamed
                 if (t["predicted_abstention"] or t["system_description"])
-                and not t["names_provision"]
+                and not _stretch(t)
             ]
-            stretched = [t["id"] for t in unnamed if t["names_provision"]]
+            stretched = [(t["id"], _stretch(t)) for t in unnamed if _stretch(t)]
             print(
-                f"== UN-NAMED USES (route or abstain, no provision asserted) ==  ok {len(unnamed_ok)}/{len(unnamed)} {unnamed_ok}"
-                f"  stretched to a provision (must be 0): {len(stretched)} {stretched}"
+                f"== UN-NAMED USES (route or abstain, no high-risk or prohibited provision asserted, ADR-35) ==  ok {len(unnamed_ok)}/{len(unnamed)} {unnamed_ok}"
+                f"  stretched to a forbidden provision (must be 0): {len(stretched)} {stretched}"
             )
             print(
                 "== PLAIN LANGUAGE ==  understood "

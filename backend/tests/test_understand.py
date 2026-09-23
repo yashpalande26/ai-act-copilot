@@ -300,7 +300,9 @@ def test_understood_question_retrieves_on_terms_fused_with_the_question_and_expl
         )
     ]
     prompt = gen.call_args.kwargs["messages"][1]["content"]
-    assert EXPLAIN_AND_ROUTE_INSTRUCTION in prompt
+    # the explain instruction in force (the tiered one since ADR-35's default)
+    assert understand.explain_instruction() in prompt
+    assert understand.explain_instruction() == understand.EXPLAIN_TIERED_INSTRUCTION
     # the user's words are shown; the question asked is the explain question
     assert "The user wrote: I want to build a property valuation model" in prompt
     assert (
@@ -453,3 +455,15 @@ def test_tiered_prompt_and_instruction_name_no_provision_and_keep_the_hard_lines
         in understand.EXPLAIN_TIERED_INSTRUCTION
     )
     assert "transparency" in understand.SYSTEM_PROMPT_TIERED
+
+
+def test_tiered_instruction_makes_the_honest_not_listed_answer_first_class():
+    """ADR-35: no provision covering the use is an answer, not an abstention,
+    and an adjacent provision never forces the abstention or gets cited."""
+    text = understand.EXPLAIN_TIERED_INSTRUCTION
+    assert "do not abstain" in text
+    assert "none of the retrieved provisions names a use of the kind described" in text
+    assert "structured assessment confirms the classification" in text
+    assert "never mention a provision in (B)" in text
+    assert "abstention sentence as well" not in text  # the ADR-27 adjacent rule
+    assert "the described use" in text
