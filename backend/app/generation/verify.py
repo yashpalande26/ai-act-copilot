@@ -12,8 +12,9 @@ Two checks, both required to pass ("do not trust it, test it"):
                  resolve to a passage in the context (the id itself, an
                  ancestor or a descendant). A label absent from the context
                  is misgrounding whatever the model says.
-  entailment     one structured call to VERIFY_MODEL (gpt-4o-mini by
-                 default; VERIFY_MODEL selects gpt-4o). The model splits the
+  entailment     one structured call to VERIFY_MODEL (gpt-4o by default
+                 since ADR-25; VERIFY_MODEL=openai:gpt-4o-mini restores the
+                 cheaper one). The model splits the
                  answer into claims, says which numbered context passages each
                  claim relies on, and whether the claim is SUPPORTED by those
                  passages, UNSUPPORTED, or carries NO_CITATION. Any cited

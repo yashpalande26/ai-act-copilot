@@ -23,9 +23,10 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 # $10/1M out) that is ~$0.006 per call typical and ~$0.0115 worst case with
 # output at the 800-token ceiling; the query embedding adds ~$0.000002. At
 # the caps below, worst-case exposure is ~$0.23/day/user and ~$1.15/day
-# global. Note calls_today() counts every query_trace row, including the
-# ones the test_ask_api integration tests write, so the global cap is also
-# a budget for test and eval traffic on the same UTC day.
+# global. calls_today() counts query_trace plus extraction_run rows for the
+# current UTC day in the CURRENT environment only (APP_ENV), so each
+# environment has its own budget: test and dev traffic never spends
+# production's.
 MAX_QUESTION_CHARS = 2000  # ~500 tokens; rejected by Pydantic before any spend
 MAX_OUTPUT_TOKENS = 800
 
@@ -106,14 +107,15 @@ def followup_rewrite_enabled() -> bool:
 
 
 def agentic_rag_enabled() -> bool:
-    """OFF by default. Stage 0 of the agentic-RAG plan (22 Sep 2026): when set
-    to 1, /ask and every eval runner execute the grounded-answer pipeline as a
-    LangGraph graph (app.generation.graph) whose nodes call the SAME retrieve,
-    generate and decide functions the plain path calls, in the same order,
-    with the same result. No node behaves differently yet; the graph exists
-    so later stages (query rewriting, retrieval grading, citation
-    verification, bounded decomposition) can be added one flag-gated node at
-    a time and gated against this baseline."""
+    """OFF by default; set per environment. When 1, /ask and every eval
+    runner execute the grounded-answer pipeline as a LangGraph graph
+    (app.generation.graph, ADR-20) instead of the plain retrieve-generate-
+    decide sequence. The graph adds flag-gated nodes, each on by default and
+    effective only under this flag: intent gate and chat lane, rewrite,
+    query understanding, decomposition, retrieval grading, citation
+    verification, clarifying follow-up. With every node flag at 0 the graph
+    reproduces the plain path (Stage 0), the baseline each node was gated
+    against."""
     return os.environ.get("AGENTIC_RAG", "0") == "1"
 
 
@@ -179,10 +181,11 @@ def verify_model() -> str:
     return os.environ.get("VERIFY_MODEL", "openai:gpt-4o")
 
 
-# Stage 3 node default. "1" since the passing run of 22 Sep 2026 with the
-# gpt-4o-mini verifier (evals/runs/stage3_verify_mini_j2.json vs
+# Stage 3 node default. "1" since the passing run of 22 Sep 2026, measured
+# then with a gpt-4o-mini verifier (evals/runs/stage3_verify_mini_j2.json vs
 # stage2_grade_j2.json): every deterministic metric identical, no answerable
-# item abstained on, probe true positives 11/12 with 0 false positives. Only
+# item abstained on, probe true positives 11/12 with 0 false positives. The
+# verifier model has been gpt-4o since ADR-25 (see verify_model above). Only
 # effective when AGENTIC_RAG=1, which stays off.
 AGENTIC_VERIFY_DEFAULT = "1"
 
@@ -308,9 +311,9 @@ def clarify_model() -> str:
     return os.environ.get("CLARIFY_MODEL", "openai:gpt-4o-mini")
 
 
-# Clarifying follow-up default. OFF. ADR-24 (23 Sep 2026) moved the trigger
-# to the generator's explain-mode abstention and revised the explain
-# instruction; on the 14-sequence clarify set 12 of 13 gates hold (0 leaks,
+# Clarifying follow-up default. ON ("1", ADR-26; history below). ADR-24
+# (23 Sep 2026) moved the trigger to the generator's explain-mode abstention
+# and revised the explain instruction; on the 14-sequence clarify set 12 of 13 gates hold (0 leaks,
 # 0 stretched provisions, fired only on abstaining system descriptions,
 # 4/4 underspecified asked, one question maximum, off-topic never fires). The
 # one failing gate: 3/4 underspecified grounded on the second pass; the fourth
@@ -375,7 +378,8 @@ def recital_map_enabled() -> bool:
     )
 
 
-# Risk-tier framing default (ADR-27, 23 Sep 2026). OFF: on the 14-item
+# Risk-tier framing default. ON ("1") since ADR-35; history below. ADR-27
+# (23 Sep 2026) kept it OFF: on the 14-item
 # risk-tier set, 3 draws, every absolute gate was 0 (leaks, stretches,
 # out-of-context citations, high-risk regression, property valuation) and the
 # transparency provision was retrieved on the first pass 12/12, but the value

@@ -44,8 +44,9 @@ Backend (Railway → Variables). Nothing else is read by the code.
 | `DAILY_LIMIT_PER_USER`, `DAILY_LIMIT_GLOBAL` | optional; the daily caps, default 20 and 100 (ADR-23). Set on the service to raise a testing account without a deploy; read at request time. |
 | `DATABASE_URL` | the Supabase **session pooler** URL (`...pooler.supabase.com:5432`, user `postgres.<ref>`). The direct host is IPv6-only and unreachable from Railway. |
 | `OPENAI_API_KEY` | |
-| `INTERNAL_API_SECRET` | byte-identical to the Vercel value |
+| `INTERNAL_API_SECRET` | **required**; byte-identical to the Vercel value. The HMAC key that signs the BFF service token; without it `/ask` and `/classify` refuse every call. Generate with `openssl rand -base64 32`. |
 | `APP_ENV` | `production` |
+| `AGENTIC_RAG` | optional; `1` runs `/ask` through the LangGraph pipeline (intent gate, rewrite, grader, verifier, decomposition; ADR-20), anything else the plain retrieve-generate path. Default off in the repo; set it per environment. The per-node flags (`AGENTIC_GRADE`, `AGENTIC_VERIFY`, ...) only take effect when it is `1`. |
 | `ADMIN_EMAILS` | comma-separated operator e-mails allowed to open the admin trace viewer (`/admin/*`). Unset means nobody. This is the real gate; keep it to operator accounts: the viewer shows each question, its answer, and **the e-mail of the user who asked**, which is personal data. |
 
 Frontend (Vercel → Environment Variables, Production scope). Nothing is `NEXT_PUBLIC_`.
