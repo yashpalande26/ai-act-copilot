@@ -1,6 +1,62 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-37: Defer the first-turn answer cache (2026-09-30)
+Context: A cache for the four chat starters and repeated first-turn questions was planned,
+to skip retrieval and generation on a question whose answer depends only on its text and
+the pipeline state. A read-only aggregate query of query_trace found 78 production rows, of
+which 6 were starter turns (obligations 2, deployer 2, credit scoring 1, prohibited 1).
+From their recorded token counts at gpt-4o list prices they cost about $0.03 in total.
+Per-starter latency samples are n=1 or 2, so percentiles are not meaningful. On graph turns
+the recorded latency is retrieval plus gpt-4o generation only: the intent, rewrite,
+understand, decompose, grade and verify calls are not in it, so graph-turn latency in
+query_trace understates the real turn.
+Decision: Do not build yet. If built later: an in-process cache (Railway runs a single
+uvicorn worker), exact match on the four starters, key = normalized question +
+corpus_version_id + a pipeline fingerprint (models, output-changing flags, prompt
+constants, retrieval constants, in the ENGINE_VERSION pattern of app/assessment/version.py).
+Only store answers from turns that completed without abstention, clarification or
+degradation, and, where the verifier ran, passed it. A hit still writes the message,
+citation and query_trace rows through decide_step, tagged in retrieval_config, and still
+counts toward the daily quota. Redis only once there is more than one instance.
+Alternatives rejected for now: Redis (a service, a failure mode and a cost for a single
+instance); excluding hits from calls_today (changes a money control for no measured gain).
+Consequences: Starter clicks keep today's latency. Revisit when production traffic makes
+starter latency or cost material. Prerequisite: add the credit-scoring and
+prohibited-practices starters to an eval set; today only the obligations and deployer
+starters appear in any eval (evals/sweep_breadth.py, and obligations in
+golden_set_enumeration.yaml), and a cache freezes one sample of the answer, so the frozen
+answer needs a gate of its own.
+Status: Deferred.
+
+## ADR-36: RLS on all public tables via Alembic migration (2026-09-30)
+Context: Row Level Security was enabled by hand in the Supabase dashboard and existed in no
+migration, so a database built from migrations (local compose, CI, a rebuilt Supabase
+project) had none. Supabase's Data API exposes the public schema to anyone holding the
+project's anon key, and with RLS off every table is readable and writable through it.
+Decision: Migration f7a8b9c0d1e2 runs an idempotent ALTER TABLE IF EXISTS public.<table>
+ENABLE ROW LEVEL SECURITY on 14 hardcoded tables (the 13 ORM tables plus alembic_version),
+one literal statement per table, with no policies. The list is hardcoded rather than read
+from Base.metadata so the migration replays the same statements whatever the models later
+become. downgrade() is a deliberate no-op: disabling RLS would reopen the Data API, and RLS
+was on before the migration existed, so there is no prior state to restore. A static
+drift-guard test (tests/test_rls_migrations.py) fails when any table in Base.metadata, or
+alembic_version, has no ENABLE ROW LEVEL SECURITY statement anywhere in the migrations
+folder, so a new ORM table cannot ship without one.
+Consequences: The backend connects as postgres (the role in the local .env; Railway's
+preDeploy runs the migrations as the same kind of URL, so that role creates and owns the
+tables; the Railway role itself was not inspected). A table owner bypasses RLS unless it is
+FORCEd, so the backend is unaffected; RLS restricts only Supabase's Data API roles (anon,
+authenticated), which with no policies can read and write nothing. Verified locally against
+the docker-compose Postgres in a fresh empty database: the chain builds from nothing to
+head f7a8b9c0d1e2, and 14/14 public tables have relrowsecurity = t (0 forced, 0 policies).
+The drift guard was shown to fail on an unprotected in-memory table. That local check proves
+the flag is set; it cannot show the Data API is blocked, because the local role owns the
+tables. Supabase Data API check pending after deploy. Known limits: the drift guard is a
+text scan, so a commented-out statement still counts; the backend using the owner role is a
+least-privilege gap (a leaked DATABASE_URL is full control), noted for later.
+Status: Accepted; Supabase Data API check pending after deploy.
+
 ## ADR-35: The honest risk-tier answer for a described system; "never cite a wrong high-risk provision" replaces "cite nothing" (2026-09-23)
 Context: ADR-27 built RISK_TIER_FRAMING and left it off: the tiered instruction answered
 on the transparency provision for three of four interactive systems, never produced the
