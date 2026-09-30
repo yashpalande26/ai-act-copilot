@@ -10,7 +10,10 @@ Yash — solo engineer, ~3 yrs experience. I am LEARNING the full engineering li
 - NEVER fabricate metrics, results, or capabilities. Real, defensible numbers only.
 - Do NOT over-engineer. Smallest correct solution. No abstractions until needed.
 - Do NOT charge ahead on assumptions. If unclear, ask me first.
-- I commit ALL git myself. NEVER run git commit. NEVER add "Co-Authored-By: Claude" or similar.
+- I commit ALL git myself. NEVER run any git command, read-only ones included. NEVER add "Co-Authored-By: Claude" or similar.
+- NEVER open or print .env or any secret value (API keys, passwords, DATABASE_URL).
+- Before any command that touches a database, print only the HOST of the DATABASE_URL in effect. Proceed only if it is localhost or 127.0.0.1, with one exception: a read-only query against a remote database is allowed only when my prompt explicitly authorizes it for that step, and it must run inside a READ ONLY transaction and return aggregates only. Otherwise STOP.
+- NEVER run alembic or any write against a remote database. Railway's preDeploy applies migrations.
 - Explain every new concept, tool, and decision in plain language, with the tradeoff — I am here to learn.
 - Mid-level framing, not senior/architect.
 
