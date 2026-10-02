@@ -1,6 +1,80 @@
 # Architecture Decision Log
 One entry per non-obvious decision: what, why, alternatives rejected. Newest at top.
 
+## ADR-38: Cut Supabase egress: provisions cached per process, chunk queries select only what they read (2026-10-02)
+Context: pg_stat_statements on Supabase showed two egress sources. The full provision
+SELECT in `report._Corpus` ran on every /act, /assess and /assessments request (4,983
+calls, ~1,285 rows each), reloading the whole corpus as ORM rows each time. The three chunk
+queries in `retrieval/search.py` (vector_search, the bm25_search hydrate,
+fetch_provision_chunks) selected `Chunk, Provision, Ancestor`, i.e. every column including
+the 1536-dim embedding (6,148 B stored per row) plus two provisions' full text, while every
+caller builds a SearchResult from four fields (plus the distance in vector_search). No
+Python code reads the embedding after these queries; the cosine distance is computed by the
+server as a labelled column that the query orders by, and only that float comes back.
+/ask never constructs `_Corpus`.
+Decision: (a) `report.py` keeps the per-request latest-corpus_version lookup (now
+`id, consolidated_date ... LIMIT 1`) and loads the provisions of that version once per
+process into `_PROVISIONS`, keyed by corpus_version_id, as frozen `ProvRow(citation_id,
+text_content, ordinal)` behind read-only mappings, with `clear_cache()`. Plain data, not ORM
+objects, because the cache outlives the session that loaded it. A lock with a second check
+makes concurrent first requests from FastAPI's threadpool run one SELECT. `_Corpus` keeps
+its public shape (`version`, `by_id`, `children`, `text`, `node`); `children` values are now
+tuples. (b) The three chunk queries select `Chunk.id, Chunk.chunk_text,
+Provision.citation_id, Ancestor.heading` (plus the distance label in vector_search). WHERE,
+JOIN, ORDER BY and LIMIT are unchanged.
+Tradeoff accepted: a backfill that edits provisions in place under the same version id is
+not seen by a running server until it restarts. This follows the precedent of
+`recital_map._EDGE_CACHE` and the BM25 index, and a Railway redeploy restarts the process.
+Checking a count or content hash per request would cost a query per request to guard a
+deploy-time event. Old versions are never evicted; ~0.5 MB of text per version, one worker.
+Alternatives rejected: a cache keyed on a content hash (a query per request); Redis (a
+service for one instance); caching ORM rows (session-bound, can expire or detach).
+Evidence (local `aiact_local`, a copy of the production corpus: corpus_version 1, 1,459
+provisions, 1,336 chunks): `evals/check_retrieval_parity.py` recorded retrieval and API
+output on the unchanged code (209 embedding calls, one per distinct query string, replayed
+from the snapshot afterwards so the comparison makes no API call), then compared after each
+change: EXACT MATCH on retrieve_step at breadth 25 and 50 for 162 questions (golden, hard,
+realistic, agentic, broad sets) and 44 dual-path follow-up pairs, on vector_search and
+bm25_search with recitals excluded and included, on fetch_provision_chunks for all 308
+provision roots, on /act/definitions, /act/provisions for all 1,459 provisions,
+/assess/questionnaire, /assess for 10 answer fixtures and the /assess/extract system
+prompt, with a fresh session per request and a cold and a warm pass that must match. Unit
+tests pin the selected columns (by source table) and that no chunk query selects the
+embedding, one provision load per corpus version (a new version loads, `clear_cache`
+reloads), read-only cached data, and one load under eight concurrent first requests (the
+test fails 10 of 10 with the lock removed). Estimated bytes per row from local
+`pg_stats.avg_width` (sum of avg_width x non-null fraction of the selected columns;
+embedding taken as its measured stored size because avg_width reports the 18 B TOAST
+pointer): provision 395 -> 362 B; chunk rows ~7,750 -> ~400 B. psycopg2 receives the
+vector in text form (19,244 B on average locally), so the real wire saving per chunk row is
+likely larger than the estimate. These local figures differ from the production figures
+quoted above (~1,285 rows per call, ~435 B per provision row, 7,061 B per chunk row): the
+rows per call in pg_stat_statements is an average over the statement's whole history, and
+the local corpus (1,459 provisions) is the current production corpus, so the gap probably
+reflects provisions added during that history, such as the recitals of ADR-32; the
+production B/row figures came from an earlier estimate whose method is not recorded here.
+To keep before and after comparable, the measurement below uses one method for both sides.
+What the evidence cannot see: real production queries (the replay uses eval-set questions;
+for a projection the rows are unchanged by construction, the replay checks that argument),
+LLM-written query strings, and cross-version cache behaviour on real data (one version
+locally; the unit test covers it). No non-live test runs the projected chunk SQL (only the
+opt-in, paid @live tests do), so the parity script is its real-database check; the
+provision load is exercised by the corpus-backed tests in tests/test_assessment.py. The article_heading None branch never occurs in this
+corpus (every chunk has a parent with a heading); a unit test covers it.
+Measurement plan: after deploy, snapshot pg_stat_statements twice, ~24 to 48 h apart, each
+read explicitly authorised, in a READ ONLY transaction, aggregates only, stats never reset.
+Attribute per statement, not by the dashboard total, because moving tests and evals to the
+local database (tests/_db_guard.py) also lowers egress: the old provision statement's calls
+should stop growing and the new narrow one grow by about one per process start or new
+corpus version; the chunk statements get new queryids, so compare their Δcalls x
+rows_per_call x estimated B/row with the old ones. Estimate B/row for old and new
+statements the same way (avg_width of the selected columns, with the embedding counted at
+its text-form size, since psycopg2 receives it as text; counting it at its stored size
+understates the old rows and so the attribution). Report the dashboard total as: "Supabase
+egress fell from X to Y, of which ~Z is attributable to this fix per pg_stat_statements;
+the rest is tests and evals moving local".
+Status: Accepted; production measurement pending after deploy.
+
 ## ADR-37: Defer the first-turn answer cache (2026-09-30)
 Context: A cache for the four chat starters and repeated first-turn questions was planned,
 to skip retrieval and generation on a question whose answer depends only on its text and
