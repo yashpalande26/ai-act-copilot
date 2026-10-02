@@ -1,7 +1,9 @@
 {
   "permissions": {
     "deny": [
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(railway:*)",
+      "Read(**/.env)"
     ]
   }
 }
