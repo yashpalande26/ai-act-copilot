@@ -3,7 +3,10 @@ penalty ceilings. The only database access in the package, and it is
 read-only: provisions are loaded by citation_id, never retrieved by similarity.
 """
 
-from datetime import UTC, datetime
+import threading
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
+from types import MappingProxyType
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -68,32 +71,83 @@ STANDING_COMMENTARY = (
 )
 
 
+@dataclass(frozen=True)
+class VersionRow:
+    id: int
+    consolidated_date: date
+
+
+@dataclass(frozen=True)
+class ProvRow:
+    """The provision columns callers read. Plain data, not an ORM object: it
+    outlives the session that loaded it, so it must not be tied to one."""
+
+    citation_id: str
+    text_content: str
+    ordinal: int
+
+
+# corpus_version_id -> (by_id, children), read-only views. Process-level, like
+# recital_map._EDGE_CACHE and the BM25 index: the provisions of a version
+# change only at deploy time (ingest or backfill, then a restart), so a new
+# version is picked up by the per-request version lookup below and an
+# in-place backfill needs a restart (ADR-38).
+_Maps = tuple[MappingProxyType[str, ProvRow], MappingProxyType[str, tuple[str, ...]]]
+_PROVISIONS: dict[int, _Maps] = {}
+# FastAPI runs sync endpoints in a threadpool: without the lock, concurrent
+# first requests would each run the full provision SELECT.
+_LOAD_LOCK = threading.Lock()
+
+
+def clear_cache() -> None:
+    with _LOAD_LOCK:
+        _PROVISIONS.clear()
+
+
+def _load_provisions(session: Session, version_id: int) -> _Maps:
+    cached = _PROVISIONS.get(version_id)
+    if cached is not None:
+        return cached
+    with _LOAD_LOCK:
+        cached = _PROVISIONS.get(version_id)
+        if cached is not None:
+            return cached
+        rows = session.execute(
+            select(Provision.citation_id, Provision.text_content, Provision.ordinal)
+            .where(Provision.corpus_version_id == version_id)
+            .order_by(Provision.id)  # document order
+        ).all()
+        by_id = {
+            r.citation_id: ProvRow(r.citation_id, r.text_content, r.ordinal)
+            for r in rows
+        }
+        children: dict[str, list[str]] = {}
+        for cid in by_id:
+            parent = cid.rsplit(".", 1)[0] if "." in cid else None
+            if parent:
+                children.setdefault(parent, []).append(cid)
+        cached = (
+            MappingProxyType(by_id),
+            MappingProxyType({k: tuple(v) for k, v in children.items()}),
+        )
+        _PROVISIONS[version_id] = cached
+        return cached
+
+
 class _Corpus:
-    """All provisions of one corpus version, indexed once per request."""
+    """All provisions of the latest corpus version. The version is looked up
+    per request (one small row); the provisions come from the process cache."""
 
     def __init__(self, session: Session):
-        self.version = (
-            session.execute(select(CorpusVersion).order_by(CorpusVersion.id.desc()))
-            .scalars()
-            .first()
-        )
-        if self.version is None:
+        row = session.execute(
+            select(CorpusVersion.id, CorpusVersion.consolidated_date)
+            .order_by(CorpusVersion.id.desc())
+            .limit(1)
+        ).first()
+        if row is None:
             raise LookupError("no corpus_version")
-        rows = (
-            session.execute(
-                select(Provision)
-                .where(Provision.corpus_version_id == self.version.id)
-                .order_by(Provision.id)  # document order
-            )
-            .scalars()
-            .all()
-        )
-        self.by_id = {r.citation_id: r for r in rows}
-        self.children: dict[str, list[str]] = {}
-        for r in rows:
-            parent = r.citation_id.rsplit(".", 1)[0] if "." in r.citation_id else None
-            if parent:
-                self.children.setdefault(parent, []).append(r.citation_id)
+        self.version = VersionRow(row.id, row.consolidated_date)
+        self.by_id, self.children = _load_provisions(session, self.version.id)
 
     def text(self, cid: str) -> str:
         row = self.by_id[cid]

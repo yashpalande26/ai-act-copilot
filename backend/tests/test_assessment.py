@@ -9,6 +9,8 @@ embedding or OpenAI.
 import os
 import pathlib
 import re
+import time
+from datetime import date
 
 import pytest
 from fastapi.testclient import TestClient
@@ -297,6 +299,111 @@ def test_turnover_status_tells_missing_from_zero():
     assert ts(undertaking=True, turnover_eur=0) == "zero"
     assert ts(undertaking=True, turnover_eur=2_000_000) == "provided"
     assert ts(undertaking=False, turnover_eur=None) == "not_needed"
+
+
+# --- provision cache: one load per corpus version (egress, ADR-38) -----------
+
+
+@pytest.fixture(autouse=True)
+def _fresh_provision_cache():
+    """The cache is per process: clear it around every test so a fake corpus
+    never reaches a DB-backed test and no test depends on another's load."""
+    from app.assessment import report
+
+    report.clear_cache()
+    yield
+    report.clear_cache()
+
+
+class _CountingSession:
+    """Answers the two statements _Corpus runs and counts provision loads."""
+
+    def __init__(self, version_id, query_seconds=0.0):
+        self.version_id = version_id
+        self.query_seconds = query_seconds  # widens the race window
+        self.provision_statements = []
+
+    def execute(self, stmt):
+        from collections import namedtuple
+        from types import SimpleNamespace
+
+        table = stmt.get_final_froms()[0].name
+        if table == "corpus_version":
+            Version = namedtuple("Version", ["id", "consolidated_date"])
+            row = Version(self.version_id, date(2026, 7, 27))
+            return SimpleNamespace(first=lambda: row)
+        assert table == "provision", table
+        self.provision_statements.append(stmt)
+        time.sleep(self.query_seconds)
+        Row = namedtuple("Row", ["citation_id", "text_content", "ordinal"])
+        rows = [
+            Row("art_1", "Subject matter", 1),
+            Row("art_1.par_1", "This Regulation", 2),
+        ]
+        return SimpleNamespace(all=lambda: rows)
+
+
+def test_provisions_load_once_per_corpus_version():
+    from app.assessment import report
+
+    session = _CountingSession(version_id=1)
+    report._Corpus(session)
+    corpus = report._Corpus(session)
+    assert len(session.provision_statements) == 1
+    assert corpus.version.id == 1
+    assert corpus.children["art_1"] == ("art_1.par_1",)
+    assert corpus.text("art_1.par_1") == "This Regulation"
+
+    session.version_id = 2  # a new corpus version is picked up on the next request
+    assert report._Corpus(session).version.id == 2
+    assert len(session.provision_statements) == 2
+
+    report.clear_cache()
+    report._Corpus(session)
+    assert len(session.provision_statements) == 3
+
+
+def test_provision_load_selects_only_the_columns_callers_read():
+    from app.assessment import report
+
+    session = _CountingSession(version_id=1)
+    report._Corpus(session)
+    stmt = session.provision_statements[0]
+    assert [c.name for c in stmt.selected_columns] == [
+        "citation_id",
+        "text_content",
+        "ordinal",
+    ]
+
+
+def test_cached_provisions_are_plain_read_only_data():
+    from app.assessment import report
+
+    corpus = report._Corpus(_CountingSession(version_id=1))
+    with pytest.raises(TypeError):
+        corpus.by_id["art_9"] = None  # shared across requests: not writable
+    with pytest.raises(AttributeError):
+        corpus.by_id["art_1"].text_content = "x"  # frozen dataclass
+
+
+def test_concurrent_first_loads_run_one_provision_query():
+    import threading
+
+    from app.assessment import report
+
+    session = _CountingSession(version_id=1, query_seconds=0.05)
+    start = threading.Barrier(8)
+
+    def build():
+        start.wait()
+        report._Corpus(session)
+
+    threads = [threading.Thread(target=build) for _ in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert len(session.provision_statements) == 1
 
 
 # --- corpus-backed: every referenced id exists; API end to end ---------------
