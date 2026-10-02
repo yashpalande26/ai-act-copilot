@@ -20,6 +20,12 @@ RUN_LIVE_TESTS
 
     The tests keep their own key checks for the case where the opt-in is set
     but a key is missing.
+
+ALLOW_REMOTE_DB_TESTS
+    Any test that opens a database session skips unless the DATABASE_URL
+    host is localhost or 127.0.0.1, so backend/.env (live Supabase) is never
+    reached by accident. Set ALLOW_REMOTE_DB_TESTS=1 to run against a remote
+    host on purpose. See tests/_db_guard.py.
 """
 
 import os
@@ -49,6 +55,27 @@ def _lane_flags_off(monkeypatch):
     monkeypatch.setenv("INTENT_GATE", "0")
     monkeypatch.setenv("CLARIFY_FOLLOWUP", "0")
     monkeypatch.setenv("CHAT_LANE", "0")
+
+
+@pytest.fixture(autouse=True)
+def _local_db_only(monkeypatch):
+    """Every session open (test fixtures and the API's get_db alike) goes
+    through app.db.session._get_session_factory; wrapped here so a test
+    skips before it can connect to a non-local host. See tests/_db_guard.py."""
+    from app.db import session as db_session
+    from tests._db_guard import REMOTE_DB_OPT_IN, skip_reason
+
+    real = db_session._get_session_factory
+
+    def guarded():
+        reason = skip_reason(
+            os.environ.get("DATABASE_URL"), os.environ.get(REMOTE_DB_OPT_IN)
+        )
+        if reason is not None:
+            pytest.skip(reason)
+        return real()
+
+    monkeypatch.setattr(db_session, "_get_session_factory", guarded)
 
 
 @pytest.fixture(autouse=True)
