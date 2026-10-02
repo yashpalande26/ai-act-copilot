@@ -1,24 +1,26 @@
 import os
 from collections import namedtuple
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import Alias, Column, select
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql.elements import Label
 
-from app.db.models import Chunk, CorpusVersion, Provision
+from app.db.models import Chunk, CorpusVersion
 from app.retrieval import search as search_module
 from app.retrieval.search import SearchResult
 
+# vector_search selects explicit columns (no embedding), so a DB row is a
+# named tuple of exactly these fields.
+_VecRow = namedtuple(
+    "_VecRow", ["id", "chunk_text", "citation_id", "heading", "distance"]
+)
+
 
 def _row(chunk_id, citation_id, chunk_text, distance, ancestor_heading=None):
-    chunk = Chunk(
-        id=chunk_id, chunk_text=chunk_text, index_text="ignored", embedding=None
-    )
-    provision = Provision(citation_id=citation_id)
-    ancestor = (
-        Provision(heading=ancestor_heading) if ancestor_heading is not None else None
-    )
-    return (chunk, provision, ancestor, distance)
+    return _VecRow(chunk_id, chunk_text, citation_id, ancestor_heading, distance)
 
 
 def _make_session(rows):
@@ -80,6 +82,110 @@ def test_vector_search_respects_top_k(monkeypatch):
     )
 
     assert len(results) == 3
+
+
+def test_vector_search_keeps_none_heading_for_a_chunk_without_parent(monkeypatch):
+    monkeypatch.setattr(search_module, "embed_query", lambda text: [0.1])
+    session = _make_session([_row(1, "rec_1", "text", distance=0.2)])
+
+    results = search_module.vector_search(session, "q", corpus_version_id=1)
+
+    assert results[0].article_heading is None
+
+
+# --- egress: chunk queries never select the embedding ---------------------
+# The embedding is ~6 KB per row and no caller reads it; the full Provision
+# and Ancestor rows carried two copies of provision text besides.
+
+
+def _captured_statement(session):
+    session.execute.assert_called_once()
+    return session.execute.call_args.args[0]
+
+
+def _selects_chunk_embedding(stmt) -> bool:
+    """True if chunk.embedding is selected, bare or under a label."""
+    cols = [c.element if isinstance(c, Label) else c for c in stmt.selected_columns]
+    return any(
+        isinstance(c, Column) and c.table is Chunk.__table__ and c.name == "embedding"
+        for c in cols
+    )
+
+
+def _sources(stmt) -> list[str]:
+    """table.column for each selected column; an aliased provision (the
+    Ancestor join) reads "ancestor.<col>", the direct join "provision.<col>"."""
+    out = []
+    for c in stmt.selected_columns:
+        if not isinstance(c, Column):
+            out.append(c.name)  # a labelled expression, e.g. distance
+        elif isinstance(c.table, Alias):
+            out.append(f"ancestor.{c.name}")
+        else:
+            out.append(f"{c.table.name}.{c.name}")
+    return out
+
+
+def test_vector_search_selects_only_result_columns(monkeypatch):
+    monkeypatch.setattr(search_module, "embed_query", lambda text: [0.1, 0.2])
+    session = _make_session([])
+
+    search_module.vector_search(session, "q", corpus_version_id=1)
+
+    stmt = _captured_statement(session)
+    assert not _selects_chunk_embedding(stmt)
+    assert _sources(stmt) == [
+        "chunk.id",
+        "chunk.chunk_text",
+        "provision.citation_id",
+        "ancestor.heading",
+        "distance",
+    ]
+    # Cosine distance stays server-side: ORDER BY uses the label of the
+    # `embedding <=> query` expression, so the vector never leaves the DB.
+    sql = " ".join(str(stmt.compile(dialect=postgresql.dialect())).split())
+    select_list, rest = sql.split(" FROM ", 1)
+    assert "chunk.embedding <=> " in select_list and "AS distance" in select_list
+    assert rest.split("ORDER BY", 1)[1].strip().startswith("distance ASC")
+
+
+def test_bm25_search_hydrate_selects_only_result_columns(monkeypatch):
+    class _Retriever:
+        def retrieve(self, tokens, k, show_progress):
+            return [[0]], [[1.5]]
+
+    monkeypatch.setattr(
+        search_module,
+        "load_index",
+        lambda v: SimpleNamespace(retriever=_Retriever(), chunk_ids=[42]),
+    )
+    session = _make_session([])
+
+    search_module.bm25_search(session, "risk", corpus_version_id=1)
+
+    stmt = _captured_statement(session)
+    assert not _selects_chunk_embedding(stmt)
+    assert _sources(stmt) == [
+        "chunk.id",
+        "chunk.chunk_text",
+        "provision.citation_id",
+        "ancestor.heading",
+    ]
+
+
+def test_fetch_provision_chunks_selects_only_result_columns():
+    session = _make_session([])
+
+    search_module.fetch_provision_chunks(session, 1, ["art_9"])
+
+    stmt = _captured_statement(session)
+    assert not _selects_chunk_embedding(stmt)
+    assert _sources(stmt) == [
+        "chunk.id",
+        "chunk.chunk_text",
+        "provision.citation_id",
+        "ancestor.heading",
+    ]
 
 
 # --- keyword_search ---------------------------------------------------

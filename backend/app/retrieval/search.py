@@ -27,6 +27,23 @@ def embed_query(text: str) -> list[float]:
     return response.data[0].embedding
 
 
+def _result_columns(ancestor) -> tuple:
+    """The four columns every chunk query selects. `heading` is NULL when the
+    chunk has no parent (outer join), as `ancestor.heading` was before."""
+    return (Chunk.id, Chunk.chunk_text, Provision.citation_id, ancestor.heading)
+
+
+def _to_result(row, similarity: float) -> SearchResult:
+    return SearchResult(
+        chunk_id=row.id,
+        citation_id=row.citation_id,
+        citation_label=citation_label(row.citation_id),
+        chunk_text=row.chunk_text,
+        similarity=similarity,
+        article_heading=row.heading,
+    )
+
+
 def vector_search(
     session: Session,
     query: str,
@@ -38,9 +55,12 @@ def vector_search(
     query_embedding = embed_query(query)
     distance = Chunk.embedding.cosine_distance(query_embedding).label("distance")
 
+    # Only the columns a SearchResult is built from. The embedding is used in
+    # ORDER BY server-side and never read here; selecting whole rows sent
+    # ~6 KB of vector plus two provisions' full text back per row (egress).
     Ancestor = aliased(Provision)
     stmt = (
-        select(Chunk, Provision, Ancestor, distance)
+        select(*_result_columns(Ancestor), distance)
         .join(Provision, Chunk.provision_id == Provision.id)
         .outerjoin(Ancestor, Chunk.parent_provision_id == Ancestor.id)
         .where(Chunk.corpus_version_id == corpus_version_id)
@@ -51,20 +71,11 @@ def vector_search(
     stmt = stmt.order_by(distance.asc()).limit(top_k)
 
     results: list[SearchResult] = []
-    for chunk, provision, ancestor, dist in session.execute(stmt).all():
-        similarity = 1 - dist
+    for row in session.execute(stmt).all():
+        similarity = 1 - row.distance
         if similarity < min_similarity:
             continue
-        results.append(
-            SearchResult(
-                chunk_id=chunk.id,
-                citation_id=provision.citation_id,
-                citation_label=citation_label(provision.citation_id),
-                chunk_text=chunk.chunk_text,
-                similarity=similarity,
-                article_heading=ancestor.heading if ancestor is not None else None,
-            )
-        )
+        results.append(_to_result(row, similarity))
     return results[:top_k]
 
 
@@ -96,25 +107,16 @@ def fetch_provision_chunks(
         for r in roots
     ]
     stmt = (
-        select(Chunk, Provision, Ancestor)
+        select(*_result_columns(Ancestor))
         .join(Provision, Chunk.provision_id == Provision.id)
         .outerjoin(Ancestor, Chunk.parent_provision_id == Ancestor.id)
         .where(Chunk.corpus_version_id == corpus_version_id, or_(*conds))
     )
     by_root: dict[str, list[SearchResult]] = {r: [] for r in roots}
-    for chunk, provision, ancestor in session.execute(stmt).all():
-        cid = provision.citation_id
+    for row in session.execute(stmt).all():
+        cid = row.citation_id
         root = next(r for r in roots if cid == r or cid.startswith(r + "."))
-        by_root[root].append(
-            SearchResult(
-                chunk_id=chunk.id,
-                citation_id=cid,
-                citation_label=citation_label(cid),
-                chunk_text=chunk.chunk_text,
-                similarity=0.0,
-                article_heading=ancestor.heading if ancestor is not None else None,
-            )
-        )
+        by_root[root].append(_to_result(row, 0.0))
     for rows in by_root.values():
         rows.sort(key=lambda x: _citation_sort_key(x.citation_id))
     return by_root
@@ -222,7 +224,7 @@ def bm25_search(
     score_by_chunk_id = dict(ranked)
     Ancestor = aliased(Provision)
     stmt = (
-        select(Chunk, Provision, Ancestor)
+        select(*_result_columns(Ancestor))
         .join(Provision, Chunk.provision_id == Provision.id)
         .outerjoin(Ancestor, Chunk.parent_provision_id == Ancestor.id)
         .where(Chunk.id.in_(score_by_chunk_id))
@@ -230,15 +232,8 @@ def bm25_search(
     if exclude_recitals:
         stmt = stmt.where(Provision.unit_type != "recital")
     hydrated = {
-        chunk.id: SearchResult(
-            chunk_id=chunk.id,
-            citation_id=provision.citation_id,
-            citation_label=citation_label(provision.citation_id),
-            chunk_text=chunk.chunk_text,
-            similarity=score_by_chunk_id[chunk.id],
-            article_heading=ancestor.heading if ancestor is not None else None,
-        )
-        for chunk, provision, ancestor in session.execute(stmt).all()
+        row.id: _to_result(row, score_by_chunk_id[row.id])
+        for row in session.execute(stmt).all()
     }
 
     # WHERE id IN (...) returns rows in ARBITRARY order, so rebuild the BM25

@@ -1,5 +1,6 @@
 import json
 import os
+from collections import namedtuple
 from unittest.mock import MagicMock
 
 import pytest
@@ -109,6 +110,10 @@ def test_load_index_raises_on_corpus_version_mismatch(tmp_path, monkeypatch):
 
 # --- bm25_search hydration ---------------------------------------------
 
+# The hydrate query selects explicit columns (no embedding), so a DB row is a
+# named tuple of exactly these fields.
+_HydrateRow = namedtuple("_HydrateRow", ["id", "chunk_text", "citation_id", "heading"])
+
 
 def test_bm25_search_returns_empty_when_no_index(tmp_path, monkeypatch):
     monkeypatch.setattr(bm25_index, "INDEX_ROOT", tmp_path / "absent")
@@ -124,16 +129,12 @@ def test_bm25_search_returns_empty_when_no_index(tmp_path, monkeypatch):
 def test_bm25_search_preserves_bm25_order_not_db_order(tmp_path, monkeypatch):
     """WHERE id IN (...) returns rows in arbitrary order - results must be
     re-sorted into BM25 rank order, or every rank metric downstream is wrong."""
-    from app.db.models import Chunk, Provision
     from app.retrieval import search as search_module
 
     _build_tiny_index(tmp_path, monkeypatch)
 
     def _row(chunk_id, citation_id, text):
-        chunk = Chunk(chunk_text=text)
-        chunk.id = chunk_id
-        provision = Provision(citation_id=citation_id)
-        return (chunk, provision, None)
+        return _HydrateRow(chunk_id, text, citation_id, None)
 
     # Deliberately shuffled relative to any plausible BM25 ranking.
     session = MagicMock()
@@ -211,16 +212,12 @@ def test_bm25_search_excluding_recitals_still_returns_at_most_top_k(
     the leg must still be top_k long: RRF fuses it with a top_k vector leg,
     and a longer lexical list would credit ranks the other leg never sees
     (measured: 67 rows against 25 on one question, before this test)."""
-    from app.db.models import Chunk, Provision
     from app.retrieval import search as search_module
 
     _build_tiny_index(tmp_path, monkeypatch)
 
-    def _row(chunk_id, citation_id, unit_type="article"):
-        chunk = Chunk(chunk_text="t")
-        chunk.id = chunk_id
-        provision = Provision(citation_id=citation_id, unit_type=unit_type)
-        return (chunk, provision, None)
+    def _row(chunk_id, citation_id):
+        return _HydrateRow(chunk_id, "t", citation_id, None)
 
     session = MagicMock()
     session.execute.return_value.all.return_value = [
